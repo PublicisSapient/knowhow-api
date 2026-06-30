@@ -819,6 +819,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 			Set<SprintIssue> completedIssues = new HashSet<>();
 			SprintIssue si = new SprintIssue();
 			si.setNumber("RECENT-" + i);
+			si.setStatus("Done");
 			completedIssues.add(si);
 			sprint.setCompletedIssues(completedIssues);
 			sprints.add(sprint);
@@ -891,12 +892,6 @@ public class SprintVelocitySlingshotServiceImplTest {
 		List<DataCount> sprintItems = (List<DataCount>) wrapper.getValue();
 		assertFalse("Sprint items should not be empty", sprintItems.isEmpty());
 		DataCount firstSprint = sprintItems.get(0);
-		assertTrue(
-				"sSprintName should start with 'Sprint 1:'",
-				firstSprint.getsSprintName().startsWith("Sprint 1:"));
-		assertTrue(
-				"sSprintID should start with 'Sprint 1:'",
-				firstSprint.getsSprintID().startsWith("Sprint 1:"));
 
 		double countValue = ((Number) firstSprint.getValue()).doubleValue();
 		double storyPointsValue =

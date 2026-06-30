@@ -1090,6 +1090,20 @@ public class SprintVelocitySlingshotServiceImpl
 			return List.of(wrapper);
 		}
 
+		List<String> configuredIssueTypes = fieldMapping.getJiraIterationIssueTypeKPI205();
+		List<String> combinedClosedStatuses = new ArrayList<>();
+		if (!CollectionUtils.isEmpty(fieldMapping.getJiraTicketClosedStatus())) {
+			combinedClosedStatuses.addAll(fieldMapping.getJiraTicketClosedStatus());
+		}
+		if (!CollectionUtils.isEmpty(fieldMapping.getJiraIterationCompletionStatusKPI205())) {
+			combinedClosedStatuses.addAll(fieldMapping.getJiraIterationCompletionStatusKPI205());
+		}
+
+		sprintDetailsList.forEach(
+				sprint ->
+						KpiDataHelper.processSprintBasedOnFieldMappings(
+								sprint, configuredIssueTypes, combinedClosedStatuses, null));
+
 		List<JiraIssue> allProjectIssues =
 				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
 
@@ -1107,10 +1121,10 @@ public class SprintVelocitySlingshotServiceImpl
 		Map<String, Double> storyPointsVelocityMap = new LinkedHashMap<>();
 		List<DataCount> sprintDataCounts = new ArrayList<>();
 
-		int sprintIndex = 1;
 		for (SprintDetails sprint : oldestFirst) {
 			Pair<String, String> key = Pair.of(basicProjectConfigId.toString(), sprint.getSprintID());
 			Set<JiraIssue> issues = sprintIssueMap.getOrDefault(key, Collections.emptySet());
+
 			double velocity = (double) issues.size();
 			velocityMap.put(sprint.getSprintID(), velocity);
 
@@ -1123,12 +1137,10 @@ public class SprintVelocitySlingshotServiceImpl
 			double avgVelocity = getAverageVelocity(velocityMap, sprint.getSprintID());
 			double avgSpVelocity = getAverageVelocity(storyPointsVelocityMap, sprint.getSprintID());
 
-			String sprintLabel = "Sprint " + sprintIndex + ": " + sprint.getSprintName();
-
 			DataCount dc = new DataCount();
 			dc.setSProjectName(trendLineName);
-			dc.setSSprintID(sprintLabel);
-			dc.setSSprintName(sprintLabel);
+			dc.setSSprintID(sprint.getSprintName());
+			dc.setSSprintName(sprint.getSprintName());
 			dc.setData(String.valueOf(roundingOff(velocity)));
 			dc.setValue(roundingOff(velocity));
 			dc.setLineValue(roundingOff(avgVelocity));
@@ -1147,7 +1159,6 @@ public class SprintVelocitySlingshotServiceImpl
 			dc.setSubfilterValues(subfilterValues);
 
 			sprintDataCounts.add(dc);
-			sprintIndex++;
 		}
 
 		wrapper.setValue(sprintDataCounts);
