@@ -1238,7 +1238,8 @@ public enum KPIExcelColumn {
 					"Developer",
 					"Email/Username",
 					"Merge Request Url",
-					"Total Lines Changed")),
+					"Total Lines Changed",
+					"Size Category")),
 	;
 
 	// @formatter:on
