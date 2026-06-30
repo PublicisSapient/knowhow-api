@@ -1602,11 +1602,14 @@ public class KPIExcelUtility {
 												excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 												excelData.setMergeRequestUrl(
 														Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
+												long lines = 0L;
 												try {
-													excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
+													lines = Long.parseLong(pr.getSize());
+													excelData.setTotalLineChanges(lines);
 												} catch (NumberFormatException e) {
 													excelData.setTotalLineChanges(0L);
 												}
+												excelData.setSizeCategory(resolveSizeCategory(lines));
 												kpiExcelData.add(excelData);
 											});
 						} else {
@@ -1619,9 +1622,22 @@ public class KPIExcelUtility {
 							excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 							excelData.setMergeRequestUrl(Collections.emptyMap());
 							excelData.setTotalLineChanges(0L);
+							excelData.setSizeCategory(DeveloperKpiHelper.BUCKET_SMALL);
 							kpiExcelData.add(excelData);
 						}
 					});
+		}
+	}
+
+	private static String resolveSizeCategory(long lines) {
+		if (lines < 50) {
+			return DeveloperKpiHelper.BUCKET_SMALL;
+		} else if (lines < 200) {
+			return DeveloperKpiHelper.BUCKET_MEDIUM;
+		} else if (lines < 500) {
+			return DeveloperKpiHelper.BUCKET_LARGE;
+		} else {
+			return DeveloperKpiHelper.BUCKET_EXTRA_LARGE;
 		}
 	}
 
