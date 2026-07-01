@@ -8,12 +8,14 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -35,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintVelocityServiceHelper;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -48,7 +51,9 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -67,14 +72,21 @@ public class SprintVelocitySlingshotServiceImpl
 	private static final String WEEKLY = "Weekly";
 	private static final String BI_WEEKLY = "Bi-Weekly";
 	private static final String MONTHLY = "Monthly";
+	private static final String SPRINT = "Sprint";
 	private static final DateTimeFormatter WEEK_LABEL_FORMATTER =
 			DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
 	private static final DateTimeFormatter MONTH_LABEL_FORMATTER =
 			DateTimeFormatter.ofPattern("MMM-yyyy", Locale.ENGLISH);
+	private static final int WEEKLY_DISPLAY_PERIODS = 12;
+	private static final int BI_WEEKLY_INPUT_WEEKS = 24;
+	private static final int MONTHLY_INPUT_WEEKS = 55;
+	private static final int SPRINT_DISPLAY_LIMIT = 12;
 
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private SprintRepository sprintRepository;
+	@Autowired private SprintVelocityServiceHelper velocityHelper;
 
 	/**
 	 * Gets Qualifier Type
@@ -117,19 +129,47 @@ public class SprintVelocitySlingshotServiceImpl
 				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.SPRINT_VELOCITY);
 
 		if (customApiConfig.isSlingshotSprintVelocityMultiGranularity()) {
+			Map<String, List<DataCount>> perProject = new LinkedHashMap<>();
+			for (DataCount dc : trendValueList) {
+				perProject.computeIfAbsent(dc.getSProjectName(), k -> new ArrayList<>()).add(dc);
+			}
+			LocalDate refDate = null;
+			FieldMapping fm = null;
+			if (!projectList.isEmpty()) {
+				fm =
+						configHelperService.getFieldMapping(
+								projectList.get(0).getProjectFilter().getBasicProjectConfigId());
+				if (fm != null) {
+					String rawRefDate = fm.getWeeklyDataStartDateKPI205();
+					if (rawRefDate != null && !rawRefDate.isBlank()) {
+						try {
+							refDate = LocalDate.parse(rawRefDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+						} catch (Exception e) {
+							log.warn(
+									"Invalid weeklyDataStartDateKPI205 '{}' for bi-weekly/monthly anchoring.",
+									rawRefDate);
+						}
+					}
+				}
+			}
 			List<DataCountGroup> groups = new ArrayList<>();
 			DataCountGroup weeklyGroup = new DataCountGroup();
 			weeklyGroup.setFilter(WEEKLY);
-			weeklyGroup.setValue(trendValues);
+			weeklyGroup.setValue(buildGranularityOutput(perProject, WEEKLY_DISPLAY_PERIODS, null));
 			groups.add(weeklyGroup);
 			DataCountGroup biWeeklyGroup = new DataCountGroup();
 			biWeeklyGroup.setFilter(BI_WEEKLY);
-			biWeeklyGroup.setValue(wrapAggregated(trendValues, this::aggregateWeeklyToBiWeekly));
+			biWeeklyGroup.setValue(buildBiWeeklyOutput(perProject, refDate));
 			groups.add(biWeeklyGroup);
 			DataCountGroup monthlyGroup = new DataCountGroup();
 			monthlyGroup.setFilter(MONTHLY);
-			monthlyGroup.setValue(wrapAggregated(trendValues, this::aggregateWeeklyToMonthly));
+			monthlyGroup.setValue(buildMonthlyOutput(perProject, refDate));
 			groups.add(monthlyGroup);
+			DataCountGroup sprintGroup = new DataCountGroup();
+			sprintGroup.setFilter(SPRINT);
+			sprintGroup.setValue(
+					buildSprintOutput(projectList.get(0), fm != null ? fm : new FieldMapping()));
+			groups.add(sprintGroup);
 			kpiElement.setTrendValueList(groups);
 		} else {
 			kpiElement.setTrendValueList(trendValues);
@@ -180,7 +220,9 @@ public class SprintVelocitySlingshotServiceImpl
 				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
 
 		LocalDateTime endDateTime = LocalDateTime.now();
-		LocalDateTime startDateTime = endDateTime.minusWeeks(11);
+		int weeksToFetch =
+				customApiConfig.isSlingshotSprintVelocityMultiGranularity() ? MONTHLY_INPUT_WEEKS : 13;
+		LocalDateTime startDateTime = endDateTime.minusWeeks(weeksToFetch);
 		List<String> closedStatusesLower = closedStatuses.stream().map(String::toLowerCase).toList();
 
 		List<JiraIssue> jiraIssuesFiltered =
@@ -313,7 +355,11 @@ public class SprintVelocitySlingshotServiceImpl
 			periodStartDate = LocalDateTime.now();
 		}
 
-		for (int i = 0; i < 12; i++) {
+		int totalPeriods =
+				customApiConfig.isSlingshotSprintVelocityMultiGranularity()
+						? MONTHLY_INPUT_WEEKS
+						: WEEKLY_DISPLAY_PERIODS;
+		for (int i = 0; i < totalPeriods; i++) {
 			CustomDateRange periodRange =
 					useReferenceAlignment
 							? buildReferencedPeriodRange(periodStartDate)
@@ -497,7 +543,7 @@ public class SprintVelocitySlingshotServiceImpl
 					LocalDate.parse(weeklyDataStartDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 			LocalDate today = LocalDate.now();
 			long daysDiff = ChronoUnit.DAYS.between(referenceDate, today);
-			long weeksDiff = Math.max(0, Math.floorDiv(daysDiff, 7));
+			long weeksDiff = Math.floorDiv(daysDiff, 7);
 			LocalDate boundary = referenceDate.plusWeeks(weeksDiff);
 			return boundary.atStartOfDay();
 		} catch (Exception e) {
@@ -517,6 +563,10 @@ public class SprintVelocitySlingshotServiceImpl
 		LocalDateTime start = periodStart.toLocalDate().atStartOfDay();
 		LocalDateTime end =
 				start.plusDays(6).withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
+		LocalDateTime todayEnd = LocalDate.now().atTime(23, 59, 59, 999_999_999);
+		if (end.isAfter(todayEnd)) {
+			end = todayEnd;
+		}
 		CustomDateRange range = new CustomDateRange();
 		range.setStartDateTime(start);
 		range.setEndDateTime(end);
@@ -528,14 +578,320 @@ public class SprintVelocitySlingshotServiceImpl
 	@SuppressWarnings("unchecked")
 	private List<DataCount> wrapAggregated(
 			List<DataCount> projectDataCounts, Function<List<DataCount>, List<DataCount>> aggregator) {
+		return wrapAggregated(projectDataCounts, aggregator, 0);
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<DataCount> wrapAggregated(
+			List<DataCount> projectDataCounts,
+			Function<List<DataCount>, List<DataCount>> aggregator,
+			int maxInputItems) {
 		List<DataCount> result = new ArrayList<>();
 		for (DataCount projectDc : projectDataCounts) {
 			if (projectDc.getValue() instanceof List<?> innerList) {
+				List<DataCount> inputList = (List<DataCount>) innerList;
+				if (maxInputItems > 0 && inputList.size() > maxInputItems) {
+					inputList = inputList.subList(0, maxInputItems);
+				}
 				DataCount wrapper = new DataCount();
 				wrapper.setData(projectDc.getData());
-				wrapper.setValue(aggregator.apply((List<DataCount>) innerList));
+				wrapper.setValue(aggregator.apply(inputList));
 				result.add(wrapper);
 			}
+		}
+		return result;
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<DataCount> limitInnerPeriods(List<DataCount> projectDataCounts, int maxItems) {
+		List<DataCount> result = new ArrayList<>();
+		for (DataCount projectDc : projectDataCounts) {
+			if (projectDc.getValue() instanceof List<?> innerList) {
+				List<DataCount> limited = (List<DataCount>) innerList;
+				if (limited.size() > maxItems) {
+					limited = limited.subList(0, maxItems);
+				}
+				DataCount wrapper = new DataCount();
+				wrapper.setData(projectDc.getData());
+				wrapper.setValue(new ArrayList<>(limited));
+				result.add(wrapper);
+			} else {
+				result.add(projectDc);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Builds per-project DataCounts for a specific granularity. Takes the most-recent {@code
+	 * maxInputPeriods} periods from the per-project lists (which are in most-recent-first order),
+	 * reverses them to oldest-to-newest order for display, then optionally applies an aggregation
+	 * function (bi-weekly or monthly).
+	 *
+	 * @param perProject map of project name → period DataCounts (most-recent-first)
+	 * @param maxInputPeriods max weekly periods to consider per project (0 = all)
+	 * @param aggregator aggregation function; null means no aggregation (weekly display)
+	 */
+	private List<DataCount> buildGranularityOutput(
+			Map<String, List<DataCount>> perProject,
+			int maxInputPeriods,
+			Function<List<DataCount>, List<DataCount>> aggregator) {
+		List<DataCount> result = new ArrayList<>();
+		for (Map.Entry<String, List<DataCount>> entry : perProject.entrySet()) {
+			List<DataCount> periods = entry.getValue();
+			if (maxInputPeriods > 0 && periods.size() > maxInputPeriods) {
+				periods = periods.subList(0, maxInputPeriods);
+			}
+			List<DataCount> oldestFirst = new ArrayList<>(periods);
+			Collections.reverse(oldestFirst);
+			DataCount wrapper = new DataCount();
+			wrapper.setData(entry.getKey());
+			wrapper.setValue(aggregator != null ? aggregator.apply(oldestFirst) : oldestFirst);
+			result.add(wrapper);
+		}
+		return result;
+	}
+
+	/**
+	 * Builds bi-weekly DataCounts by grouping weekly periods into 14-day buckets anchored to the
+	 * reference boundary. This guarantees the most-recent bi-weekly period always starts on the same
+	 * day-of-week as the reference date (e.g. if reference = 2026-06-24, the most-recent bi-weekly
+	 * starts 24-Jun-2026). Falls back to consecutive-pair aggregation when no boundary is available.
+	 */
+	private List<DataCount> buildBiWeeklyOutput(
+			Map<String, List<DataCount>> perProject, LocalDate boundary) {
+		if (boundary == null) {
+			return buildGranularityOutput(
+					perProject, BI_WEEKLY_INPUT_WEEKS, this::aggregateWeeklyToBiWeekly);
+		}
+		int maxBiWeekly = BI_WEEKLY_INPUT_WEEKS / 2;
+		List<DataCount> result = new ArrayList<>();
+		for (Map.Entry<String, List<DataCount>> entry : perProject.entrySet()) {
+			List<DataCount> weeklyPeriods = entry.getValue();
+			TreeMap<Long, List<DataCount>> buckets = new TreeMap<>();
+			for (DataCount dc : weeklyPeriods) {
+				String sprintId = dc.getsSprintID();
+				if (sprintId == null) continue;
+				try {
+					String startPart =
+							sprintId.contains(" to ") ? sprintId.split(" to ")[0].trim() : sprintId.trim();
+					LocalDate weekStart = LocalDate.parse(startPart, WEEK_LABEL_FORMATTER);
+					long daysDiff = ChronoUnit.DAYS.between(boundary, weekStart);
+					long bucketIdx = Math.floorDiv(daysDiff, 14);
+					buckets.computeIfAbsent(bucketIdx, k -> new ArrayList<>()).add(dc);
+				} catch (Exception e) {
+					log.warn("Could not parse week label for bi-weekly grouping: {}", sprintId);
+				}
+			}
+			List<Map.Entry<Long, List<DataCount>>> sortedBuckets = new ArrayList<>(buckets.entrySet());
+			if (sortedBuckets.size() > maxBiWeekly) {
+				sortedBuckets =
+						sortedBuckets.subList(sortedBuckets.size() - maxBiWeekly, sortedBuckets.size());
+			}
+			List<DataCount> biWeeklyList = new ArrayList<>();
+			for (Map.Entry<Long, List<DataCount>> bucketEntry : sortedBuckets) {
+				List<DataCount> pairMostRecentFirst = bucketEntry.getValue();
+				List<DataCount> pair = new ArrayList<>(pairMostRecentFirst);
+				Collections.reverse(pair);
+				String firstId = pair.get(0).getsSprintID();
+				String lastId = pair.get(pair.size() - 1).getsSprintID();
+				String startPart =
+						firstId != null && firstId.contains(" to ") ? firstId.split(" to ")[0].trim() : firstId;
+				String endPart =
+						lastId != null && lastId.contains(" to ") ? lastId.split(" to ")[1].trim() : lastId;
+				String biWeekLabel = startPart + " to " + endPart;
+				double pairVelocity =
+						pair.stream()
+								.mapToDouble(dc -> dc.getValue() instanceof Number n ? n.doubleValue() : 0.0)
+								.sum();
+				double pairCommittedScope =
+						pair.stream()
+								.filter(dc -> dc.getAggregationValue() instanceof Number)
+								.mapToDouble(dc -> ((Number) dc.getAggregationValue()).doubleValue())
+								.sum();
+				double avgLineValue =
+						pair.stream()
+								.filter(dc -> dc.getLineValue() instanceof Number)
+								.mapToDouble(dc -> ((Number) dc.getLineValue()).doubleValue())
+								.average()
+								.orElse(0.0);
+				double pairSP =
+						pair.stream()
+								.mapToDouble(
+										dc2 -> {
+											if (dc2.getSubfilterValues() == null) return 0.0;
+											Object v = dc2.getSubfilterValues().get("storyPoints");
+											return v instanceof Number n ? n.doubleValue() : 0.0;
+										})
+								.sum();
+				double pairSPCommitted =
+						pair.stream()
+								.mapToDouble(
+										dc2 -> {
+											if (dc2.getSubfilterValues() == null) return 0.0;
+											Object v = dc2.getSubfilterValues().get("storyPointsAggregationValue");
+											return v instanceof Number n ? n.doubleValue() : 0.0;
+										})
+								.sum();
+				double avgSPLineValue =
+						pair.stream()
+								.filter(
+										dc2 ->
+												dc2.getSubfilterValues() != null
+														&& dc2.getSubfilterValues().get("storyPointsLineValue")
+																instanceof Number)
+								.mapToDouble(
+										dc2 ->
+												((Number) dc2.getSubfilterValues().get("storyPointsLineValue"))
+														.doubleValue())
+								.average()
+								.orElse(0.0);
+				DataCount dc = new DataCount();
+				dc.setSProjectName(pair.get(0).getSProjectName());
+				dc.setSSprintID(biWeekLabel);
+				dc.setSSprintName(biWeekLabel);
+				dc.setData(String.valueOf(roundingOff(pairVelocity)));
+				dc.setValue(roundingOff(pairVelocity));
+				dc.setLineValue(roundingOff(avgLineValue));
+				dc.setAggregationValue(roundingOff(pairCommittedScope));
+				Map<String, Object> hoverValue = new HashMap<>();
+				hoverValue.put(COUNT, roundingOff(pairVelocity));
+				dc.setHoverValue(hoverValue);
+				Map<String, Object> subfilterValues = new HashMap<>();
+				subfilterValues.put("storyPoints", roundingOff(pairSP));
+				subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
+				subfilterValues.put("storyPointsAggregationValue", roundingOff(pairSPCommitted));
+				Map<String, Object> storyPointsHoverValue = new HashMap<>();
+				storyPointsHoverValue.put(STORY_POINTS, roundingOff(pairSP));
+				subfilterValues.put("hoverValue", storyPointsHoverValue);
+				dc.setSubfilterValues(subfilterValues);
+				biWeeklyList.add(dc);
+			}
+			DataCount wrapper = new DataCount();
+			wrapper.setData(entry.getKey());
+			wrapper.setValue(biWeeklyList);
+			result.add(wrapper);
+		}
+		return result;
+	}
+
+	/**
+	 * Builds monthly DataCounts by grouping weekly periods into 28-day buckets anchored to the raw
+	 * reference date. This guarantees one monthly period always starts exactly on the reference date
+	 * (bucket index 0 = refDate to refDate+27). Falls back to calendar-month aggregation when no
+	 * reference date is available.
+	 */
+	private List<DataCount> buildMonthlyOutput(
+			Map<String, List<DataCount>> perProject, LocalDate refDate) {
+		if (refDate == null) {
+			return buildGranularityOutput(perProject, 0, this::aggregateWeeklyToMonthly);
+		}
+		int maxMonthly = 12;
+		List<DataCount> result = new ArrayList<>();
+		for (Map.Entry<String, List<DataCount>> entry : perProject.entrySet()) {
+			List<DataCount> weeklyPeriods = entry.getValue();
+			TreeMap<Long, List<DataCount>> buckets = new TreeMap<>();
+			for (DataCount dc : weeklyPeriods) {
+				String sprintId = dc.getsSprintID();
+				if (sprintId == null) continue;
+				try {
+					String startPart =
+							sprintId.contains(" to ") ? sprintId.split(" to ")[0].trim() : sprintId.trim();
+					LocalDate weekStart = LocalDate.parse(startPart, WEEK_LABEL_FORMATTER);
+					long daysDiff = ChronoUnit.DAYS.between(refDate, weekStart);
+					long bucketIdx = Math.floorDiv(daysDiff, 28);
+					buckets.computeIfAbsent(bucketIdx, k -> new ArrayList<>()).add(dc);
+				} catch (Exception e) {
+					log.warn("Could not parse week label for monthly grouping: {}", sprintId);
+				}
+			}
+			List<Map.Entry<Long, List<DataCount>>> sortedBuckets = new ArrayList<>(buckets.entrySet());
+			if (sortedBuckets.size() > maxMonthly) {
+				sortedBuckets =
+						sortedBuckets.subList(sortedBuckets.size() - maxMonthly, sortedBuckets.size());
+			}
+			List<DataCount> monthlyList = new ArrayList<>();
+			for (Map.Entry<Long, List<DataCount>> bucketEntry : sortedBuckets) {
+				long bucketIdx = bucketEntry.getKey();
+				List<DataCount> bucketWeeks = new ArrayList<>(bucketEntry.getValue());
+				Collections.reverse(bucketWeeks);
+				double monthVelocity =
+						bucketWeeks.stream()
+								.mapToDouble(dc -> dc.getValue() instanceof Number n ? n.doubleValue() : 0.0)
+								.sum();
+				double monthCommittedScope =
+						bucketWeeks.stream()
+								.filter(dc -> dc.getAggregationValue() instanceof Number)
+								.mapToDouble(dc -> ((Number) dc.getAggregationValue()).doubleValue())
+								.sum();
+				double avgLineValue =
+						bucketWeeks.stream()
+								.filter(dc -> dc.getLineValue() instanceof Number)
+								.mapToDouble(dc -> ((Number) dc.getLineValue()).doubleValue())
+								.average()
+								.orElse(0.0);
+				double monthSP =
+						bucketWeeks.stream()
+								.mapToDouble(
+										dc -> {
+											if (dc.getSubfilterValues() == null) return 0.0;
+											Object v = dc.getSubfilterValues().get("storyPoints");
+											return v instanceof Number n ? n.doubleValue() : 0.0;
+										})
+								.sum();
+				double monthSPCommitted =
+						bucketWeeks.stream()
+								.mapToDouble(
+										dc -> {
+											if (dc.getSubfilterValues() == null) return 0.0;
+											Object v = dc.getSubfilterValues().get("storyPointsAggregationValue");
+											return v instanceof Number n ? n.doubleValue() : 0.0;
+										})
+								.sum();
+				double avgSPLineValue =
+						bucketWeeks.stream()
+								.filter(
+										dc ->
+												dc.getSubfilterValues() != null
+														&& dc.getSubfilterValues().get("storyPointsLineValue")
+																instanceof Number)
+								.mapToDouble(
+										dc ->
+												((Number) dc.getSubfilterValues().get("storyPointsLineValue"))
+														.doubleValue())
+								.average()
+								.orElse(0.0);
+				LocalDate bucketStart = refDate.plusDays(28L * bucketIdx);
+				LocalDate bucketEnd = bucketStart.plusDays(27);
+				String monthLabel =
+						bucketStart.format(WEEK_LABEL_FORMATTER)
+								+ " - "
+								+ bucketEnd.format(WEEK_LABEL_FORMATTER);
+				DataCount dc = new DataCount();
+				dc.setSProjectName(bucketWeeks.get(0).getSProjectName());
+				dc.setSSprintID(monthLabel);
+				dc.setSSprintName(monthLabel);
+				dc.setData(String.valueOf(roundingOff(monthVelocity)));
+				dc.setValue(roundingOff(monthVelocity));
+				dc.setLineValue(roundingOff(avgLineValue));
+				dc.setAggregationValue(roundingOff(monthCommittedScope));
+				Map<String, Object> hoverValue = new HashMap<>();
+				hoverValue.put(COUNT, roundingOff(monthVelocity));
+				dc.setHoverValue(hoverValue);
+				Map<String, Object> subfilterValues = new HashMap<>();
+				subfilterValues.put("storyPoints", roundingOff(monthSP));
+				subfilterValues.put("storyPointsLineValue", roundingOff(avgSPLineValue));
+				subfilterValues.put("storyPointsAggregationValue", roundingOff(monthSPCommitted));
+				Map<String, Object> storyPointsHoverValue = new HashMap<>();
+				storyPointsHoverValue.put(STORY_POINTS, roundingOff(monthSP));
+				subfilterValues.put("hoverValue", storyPointsHoverValue);
+				dc.setSubfilterValues(subfilterValues);
+				monthlyList.add(dc);
+			}
+			DataCount wrapper = new DataCount();
+			wrapper.setData(entry.getKey());
+			wrapper.setValue(monthlyList);
+			result.add(wrapper);
 		}
 		return result;
 	}
@@ -709,5 +1065,103 @@ public class SprintVelocitySlingshotServiceImpl
 					monthlyList.add(dc);
 				});
 		return monthlyList;
+	}
+
+	/**
+	 * Builds sprint-wise DataCounts for the Sprint granularity view. Fetches closed sprints from the
+	 * repository, matches completed issues using {@link SprintVelocityServiceHelper}, and computes
+	 * velocity per sprint. The {@code weeklyDataStartDateKPI205} reference date is intentionally not
+	 * used here — sprint boundaries are defined by their own start and completion dates, not by any
+	 * weekly cycle anchor.
+	 */
+	private List<DataCount> buildSprintOutput(Node projectNode, FieldMapping fieldMapping) {
+		ObjectId basicProjectConfigId = projectNode.getProjectFilter().getBasicProjectConfigId();
+		String trendLineName = projectNode.getProjectFilter().getName();
+
+		List<SprintDetails> sprintDetailsList =
+				sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+						Set.of(basicProjectConfigId), List.of(SprintDetails.SPRINT_STATE_CLOSED));
+
+		DataCount wrapper = new DataCount();
+		wrapper.setData(trendLineName);
+
+		if (CollectionUtils.isEmpty(sprintDetailsList)) {
+			wrapper.setValue(new ArrayList<>());
+			return List.of(wrapper);
+		}
+
+		List<String> configuredIssueTypes = fieldMapping.getJiraIterationIssueTypeKPI205();
+		List<String> combinedClosedStatuses = new ArrayList<>();
+		if (!CollectionUtils.isEmpty(fieldMapping.getJiraTicketClosedStatus())) {
+			combinedClosedStatuses.addAll(fieldMapping.getJiraTicketClosedStatus());
+		}
+		if (!CollectionUtils.isEmpty(fieldMapping.getJiraIterationCompletionStatusKPI205())) {
+			combinedClosedStatuses.addAll(fieldMapping.getJiraIterationCompletionStatusKPI205());
+		}
+
+		sprintDetailsList.forEach(
+				sprint ->
+						KpiDataHelper.processSprintBasedOnFieldMappings(
+								sprint, configuredIssueTypes, combinedClosedStatuses, null));
+
+		List<JiraIssue> allProjectIssues =
+				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
+
+		Map<Pair<String, String>, Set<JiraIssue>> sprintIssueMap = new HashMap<>();
+		velocityHelper.getSprintIssuesForProject(allProjectIssues, sprintDetailsList, sprintIssueMap);
+
+		List<SprintDetails> limited =
+				sprintDetailsList.size() > SPRINT_DISPLAY_LIMIT
+						? sprintDetailsList.subList(0, SPRINT_DISPLAY_LIMIT)
+						: sprintDetailsList;
+		List<SprintDetails> oldestFirst = new ArrayList<>(limited);
+		Collections.reverse(oldestFirst);
+
+		Map<String, Double> velocityMap = new LinkedHashMap<>();
+		Map<String, Double> storyPointsVelocityMap = new LinkedHashMap<>();
+		List<DataCount> sprintDataCounts = new ArrayList<>();
+
+		for (SprintDetails sprint : oldestFirst) {
+			Pair<String, String> key = Pair.of(basicProjectConfigId.toString(), sprint.getSprintID());
+			Set<JiraIssue> issues = sprintIssueMap.getOrDefault(key, Collections.emptySet());
+
+			double velocity = (double) issues.size();
+			velocityMap.put(sprint.getSprintID(), velocity);
+
+			double storyPointsVelocity =
+					issues.stream()
+							.mapToDouble(ji -> ji.getStoryPoints() != null ? ji.getStoryPoints() : 0.0)
+							.sum();
+			storyPointsVelocityMap.put(sprint.getSprintID(), storyPointsVelocity);
+
+			double avgVelocity = getAverageVelocity(velocityMap, sprint.getSprintID());
+			double avgSpVelocity = getAverageVelocity(storyPointsVelocityMap, sprint.getSprintID());
+
+			DataCount dc = new DataCount();
+			dc.setSProjectName(trendLineName);
+			dc.setSSprintID(sprint.getSprintName());
+			dc.setSSprintName(sprint.getSprintName());
+			dc.setData(String.valueOf(roundingOff(velocity)));
+			dc.setValue(roundingOff(velocity));
+			dc.setLineValue(roundingOff(avgVelocity));
+
+			Map<String, Object> hoverValue = new HashMap<>();
+			hoverValue.put(COUNT, roundingOff(velocity));
+			dc.setHoverValue(hoverValue);
+
+			Map<String, Object> subfilterValues = new HashMap<>();
+			subfilterValues.put("storyPoints", roundingOff(storyPointsVelocity));
+			subfilterValues.put("storyPointsLineValue", roundingOff(avgSpVelocity));
+			subfilterValues.put("storyPointsAggregationValue", 0.0);
+			Map<String, Object> storyPointsHoverValue = new HashMap<>();
+			storyPointsHoverValue.put(STORY_POINTS, roundingOff(storyPointsVelocity));
+			subfilterValues.put("hoverValue", storyPointsHoverValue);
+			dc.setSubfilterValues(subfilterValues);
+
+			sprintDataCounts.add(dc);
+		}
+
+		wrapper.setValue(sprintDataCounts);
+		return List.of(wrapper);
 	}
 }

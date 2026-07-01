@@ -10,13 +10,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "build_success_rate_kpi_insert",
-		order = "17136",
+		id = "pr_size_distribution_kpi_insert",
+		order = "17126",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
-public class BuildSuccessRateChangeUnit {
+public class PrSizeDistributionKpiChangeUnit {
 
-	private static final String KPI_ID = "kpi212";
+	private static final String KPI_ID = "kpi211";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -25,8 +25,6 @@ public class BuildSuccessRateChangeUnit {
 	private static final String ORDER = "order";
 	private static final String IS_SHOWN = "isShown";
 	private static final String IS_DEFAULT = "isDefault";
-	private static final String FIELD_NAME = "fieldName";
-	private static final String DEFINITION = "definition";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
@@ -39,34 +37,33 @@ public class BuildSuccessRateChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "Build Success Rate")
+						.append("kpiName", "PR Size Distribution")
 						.append("isDeleted", "False")
 						.append("defaultOrder", 4)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Speed")
-						.append("kpiUnit", "%")
-						.append("chartType", "line")
+						.append("kpiUnit", "Lines")
+						.append("chartType", "scatter")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Percentage")
-						.append("showTrend", true)
+						.append("yAxisLabel", "Count (Lines Changed)")
+						.append("showTrend", false)
 						.append("isPositiveTrend", false)
 						.append("calculateMaturity", false)
 						.append("hideOverallFilter", true)
-						.append("kpiSource", "Jenkins")
-						.append("maxValue", 15)
-						.append("thresholdValue", 55.0)
+						.append("kpiSource", "BitBucket")
 						.append("kanban", false)
-						.append("groupId", 8)
+						.append("groupId", 6)
 						.append(
 								"kpiInfo",
 								new Document()
-										.append(DEFINITION, "% of CI builds that pass on the main / master branch. "))
+										.append("definition", "Distribution of merged PR sizes (lines changed)."))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
-						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append(
-								"combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD");
+						.append("isRepoToolKpi", true)
+						.append("combinedKpiSource", "Bitbucket/AzureRepository/GitHub/GitLab")
+						.append("forecastModel", "thetaMethod");
+
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
 	}
 
@@ -89,7 +86,7 @@ public class BuildSuccessRateChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job Name / Pipeline Name")
+												.append(COLUMN_NAME, "Repo")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
@@ -99,18 +96,23 @@ public class BuildSuccessRateChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Start Date")
+												.append(COLUMN_NAME, "Developer")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Build URL")
+												.append(COLUMN_NAME, "Email/Username")
 												.append(ORDER, 6)
+												.append(IS_SHOWN, false)
+												.append(IS_DEFAULT, false),
+										new Document()
+												.append(COLUMN_NAME, "Merge Request Url")
+												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Build Status")
-												.append(ORDER, 7)
+												.append(COLUMN_NAME, "Total Lines Changed")
+												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
@@ -120,7 +122,7 @@ public class BuildSuccessRateChangeUnit {
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
 		Document fieldMapping =
 				new Document()
-						.append(FIELD_NAME, "thresholdValueKPI212")
+						.append("fieldName", "thresholdValueKPI211")
 						.append("fieldLabel", "Target KPI Value")
 						.append("fieldType", "number")
 						.append("section", "Project Level Threshold")
@@ -129,7 +131,7 @@ public class BuildSuccessRateChangeUnit {
 								"tooltip",
 								new Document()
 										.append(
-												DEFINITION,
+												"definition",
 												"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 6)
@@ -149,6 +151,6 @@ public class BuildSuccessRateChangeUnit {
 				.deleteOne(new Document(KPI_ID_FIELD, KPI_ID));
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteOne(new Document(FIELD_NAME, "thresholdValueKPI212"));
+				.deleteOne(new Document("fieldName", "thresholdValueKPI211"));
 	}
 }

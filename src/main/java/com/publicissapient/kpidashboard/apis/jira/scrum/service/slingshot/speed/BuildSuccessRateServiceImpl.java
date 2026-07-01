@@ -123,7 +123,7 @@ public class BuildSuccessRateServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI211(), KPICode.BUILD_SUCCESS_RATE.getKpiId());
+				fieldMapping.getThresholdValueKPI212(), KPICode.BUILD_SUCCESS_RATE.getKpiId());
 	}
 
 	/**

@@ -17,11 +17,14 @@
 
 package com.publicissapient.kpidashboard.apis.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +46,7 @@ import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
+import com.publicissapient.kpidashboard.common.model.application.DataValue;
 import com.publicissapient.kpidashboard.common.model.application.PullRequestsValue;
 import com.publicissapient.kpidashboard.common.model.application.Tool;
 import com.publicissapient.kpidashboard.common.model.jira.Assignee;
@@ -61,6 +65,11 @@ import lombok.extern.slf4j.Slf4j;
 public final class DeveloperKpiHelper {
 
 	private static final String CONNECTOR = " -> ";
+
+	public static final String BUCKET_SMALL = "Small (<50)";
+	public static final String BUCKET_MEDIUM = "Medium (50-200)";
+	public static final String BUCKET_LARGE = "Large (200-500)";
+	public static final String BUCKET_EXTRA_LARGE = "Extra Large (500+)";
 
 	@Autowired(required = false)
 	private static ForecastingManager forecastingManager;
@@ -315,15 +324,27 @@ public final class DeveloperKpiHelper {
 				updatedDataCount.setValue(
 						((Number) updatedDataCount.getValue()).longValue() + value.longValue());
 			} else if (value instanceof Double) {
-				updatedDataCount.setValue(
-						((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue());
+				double rounded =
+						BigDecimal.valueOf(
+										((Number) updatedDataCount.getValue()).doubleValue() + value.doubleValue())
+								.setScale(2, RoundingMode.HALF_UP)
+								.doubleValue();
+				updatedDataCount.setValue(rounded);
+				updatedDataCount.setData(String.valueOf(rounded));
 			}
 		} else {
 			DataCount newDataCount = new DataCount();
-			newDataCount.setData(String.valueOf(value));
+			if (value instanceof Double) {
+				double rounded =
+						BigDecimal.valueOf(value.doubleValue()).setScale(2, RoundingMode.HALF_UP).doubleValue();
+				newDataCount.setData(String.valueOf(rounded));
+				newDataCount.setValue(rounded);
+			} else {
+				newDataCount.setData(String.valueOf(value));
+				newDataCount.setValue(value);
+			}
 			newDataCount.setSProjectName(projectName);
 			newDataCount.setDate(dateLabel);
-			newDataCount.setValue(value);
 			newDataCount.setKpiGroup(kpiGroup);
 			newDataCount.setHoverValue(hoverValue);
 			dataCounts.add(newDataCount);
@@ -347,28 +368,22 @@ public final class DeveloperKpiHelper {
 			List<PullRequestsValue> pullRequestsValues,
 			Map<String, List<DataCount>> dataCountMap) {
 
-		// Get or create list of DataCount for this KPI group
 		List<DataCount> dataCounts = dataCountMap.computeIfAbsent(kpiGroup, k -> new ArrayList<>());
 
-		// Find existing DataCount for this date
 		Optional<DataCount> existingDataCountOpt =
 				dataCounts.stream().filter(dc -> dc.getDate().equals(dateLabel)).findFirst();
 
 		if (existingDataCountOpt.isPresent()) {
-			// Update existing entry
 			DataCount existingDataCount = existingDataCountOpt.get();
 
-			// Get existing PRs (initialize if null)
 			List<PullRequestsValue> existingPrValues =
 					existingDataCount.getBubblePoints() != null
 							? existingDataCount.getBubblePoints()
 							: new ArrayList<>();
 
-			// Build a set of existing PR IDs for fast duplicate check
 			Set<String> existingIds =
 					existingPrValues.stream().map(PullRequestsValue::getLabel).collect(Collectors.toSet());
 
-			// Add only new PRs (avoid duplicates)
 			for (PullRequestsValue newPr : pullRequestsValues) {
 				if (!existingIds.contains(newPr.getLabel())) {
 					existingPrValues.add(newPr);
@@ -376,16 +391,74 @@ public final class DeveloperKpiHelper {
 			}
 
 			existingDataCount.setBubblePoints(existingPrValues);
+			existingDataCount.setDataValue(computeSizeBuckets(existingPrValues));
 
 		} else {
-			// Create a new DataCount entry
 			DataCount newDataCount = new DataCount();
 			newDataCount.setSProjectName(projectName);
 			newDataCount.setDate(dateLabel);
 			newDataCount.setKpiGroup(kpiGroup);
-			newDataCount.setBubblePoints(new ArrayList<>(pullRequestsValues));
+			List<PullRequestsValue> prList = new ArrayList<>(pullRequestsValues);
+			newDataCount.setBubblePoints(prList);
+			newDataCount.setDataValue(computeSizeBuckets(prList));
 			dataCounts.add(newDataCount);
 		}
+	}
+
+	/**
+	 * Computes PR count per size bucket from a list of PullRequestsValue. Buckets: Small (<50),
+	 * Medium (50-200), Large (200-500), Extra Large (500+). Each bucket's DataValue also carries a
+	 * hoverValue map of PR label → line count, keeping it in sync with bubblePoints.
+	 *
+	 * @param pullRequestsValues list of PR values with size as string
+	 * @return ordered list of DataValue, one entry per bucket
+	 */
+	public static List<DataValue> computeSizeBuckets(List<PullRequestsValue> pullRequestsValues) {
+		Map<String, Long> counts = new LinkedHashMap<>();
+		counts.put(BUCKET_SMALL, 0L);
+		counts.put(BUCKET_MEDIUM, 0L);
+		counts.put(BUCKET_LARGE, 0L);
+		counts.put(BUCKET_EXTRA_LARGE, 0L);
+
+		Map<String, Map<String, Object>> bucketHoverValues = new LinkedHashMap<>();
+		bucketHoverValues.put(BUCKET_SMALL, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_MEDIUM, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_LARGE, new LinkedHashMap<>());
+		bucketHoverValues.put(BUCKET_EXTRA_LARGE, new LinkedHashMap<>());
+
+		for (PullRequestsValue pr : pullRequestsValues) {
+			long lines;
+			try {
+				lines = Long.parseLong(pr.getSize());
+			} catch (NumberFormatException e) {
+				lines = 0L;
+			}
+			String bucket;
+			if (lines < 50) {
+				bucket = BUCKET_SMALL;
+			} else if (lines < 200) {
+				bucket = BUCKET_MEDIUM;
+			} else if (lines < 500) {
+				bucket = BUCKET_LARGE;
+			} else {
+				bucket = BUCKET_EXTRA_LARGE;
+			}
+			counts.merge(bucket, 1L, Long::sum);
+			if (pr.getLabel() != null) {
+				bucketHoverValues.get(bucket).put("PR-" + pr.getLabel(), lines);
+			}
+		}
+
+		return counts.entrySet().stream()
+				.map(
+						e ->
+								DataValue.builder()
+										.name(e.getKey())
+										.value(e.getValue())
+										.data(String.valueOf(e.getValue()))
+										.hoverValue(bucketHoverValues.get(e.getKey()))
+										.build())
+				.collect(Collectors.toList());
 	}
 
 	public static LocalDate convertStringToDate(String dateString) {

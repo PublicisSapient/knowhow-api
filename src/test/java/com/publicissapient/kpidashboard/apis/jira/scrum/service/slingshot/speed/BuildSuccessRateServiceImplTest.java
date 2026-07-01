@@ -189,7 +189,7 @@ public class BuildSuccessRateServiceImplTest {
 	@Test
 	public void testCalculateThresholdValue_withValue() {
 		FieldMapping fieldMapping = new FieldMapping();
-		fieldMapping.setThresholdValueKPI211("85.0");
+		fieldMapping.setThresholdValueKPI212("85.0");
 		Double result = buildSuccessRateService.calculateThresholdValue(fieldMapping);
 		assertNotNull(result);
 		assertEquals(85.0, result, 0.01);
