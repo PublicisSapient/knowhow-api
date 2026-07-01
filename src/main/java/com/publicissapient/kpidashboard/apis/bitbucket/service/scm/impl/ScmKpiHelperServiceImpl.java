@@ -86,6 +86,21 @@ public class ScmKpiHelperServiceImpl implements ScmKpiHelperService {
 	}
 
 	@Override
+	public List<ScmMergeRequests> getMergedRequests(
+			ObjectId projectBasicConfigId, CustomDateRange dateRange) {
+		validateInputs(projectBasicConfigId, dateRange);
+
+		BasicDBList mergeFilter = buildProcessorItemFilter(projectBasicConfigId);
+
+		LocalDateTime startDateTime =
+				DateUtil.localDateTimeToUTC(dateRange.getStartDate().atStartOfDay());
+		LocalDateTime endDateTime =
+				DateUtil.localDateTimeToUTC(dateRange.getEndDate().atStartOfDay().plusDays(1));
+
+		return scmMergeRequestsRepository.findMergedList(startDateTime, endDateTime, mergeFilter);
+	}
+
+	@Override
 	public List<Assignee> getJiraAssigneeForScmUsers(ObjectId projectBasicConfigId) {
 		if (projectBasicConfigId == null) {
 			throw new IllegalArgumentException("projectBasicConfigId cannot be null");
