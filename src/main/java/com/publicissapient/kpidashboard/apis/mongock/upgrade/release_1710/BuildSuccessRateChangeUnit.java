@@ -11,7 +11,7 @@ import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
 		id = "build_success_rate_kpi_insert",
-		order = "17136",
+		order = "17137",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
 public class BuildSuccessRateChangeUnit {
