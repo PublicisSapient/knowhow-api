@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -21,9 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -828,6 +825,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 			SprintIssue si = new SprintIssue();
 			si.setNumber("RECENT-" + i);
 			si.setStatus("Done");
+			si.setStoryPoints(3.0);
 			completedIssues.add(si);
 			sprint.setCompletedIssues(completedIssues);
 			sprints.add(sprint);
@@ -852,29 +850,6 @@ public class SprintVelocitySlingshotServiceImplTest {
 		when(sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
 						any(), anyList()))
 				.thenReturn(mockSprints);
-		doAnswer(
-						invocation -> {
-							List<JiraIssue> allIssues = invocation.getArgument(0);
-							List<SprintDetails> sprints = invocation.getArgument(1);
-							Map<Pair<String, String>, Set<JiraIssue>> map = invocation.getArgument(2);
-							for (SprintDetails sd : sprints) {
-								if (sd.getCompletedIssues() == null) continue;
-								Set<String> completedNums =
-										sd.getCompletedIssues().stream()
-												.map(si -> si.getNumber())
-												.collect(Collectors.toSet());
-								Set<JiraIssue> matched =
-										allIssues.stream()
-												.filter(ji -> completedNums.contains(ji.getNumber()))
-												.collect(Collectors.toSet());
-								map.put(
-										Pair.of(sd.getBasicProjectConfigId().toString(), sd.getSprintID()), matched);
-							}
-							return null;
-						})
-				.when(velocityHelper)
-				.getSprintIssuesForProject(any(), any(), any());
-
 		KpiElement kpiElement = new KpiElement();
 		kpiElement.setKpiId("kpi205");
 

@@ -39,7 +39,6 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
-import com.publicissapient.kpidashboard.apis.jira.service.SprintVelocityServiceHelper;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -56,6 +55,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
@@ -93,7 +93,6 @@ public class SprintVelocitySlingshotServiceImpl
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Autowired private SprintRepository sprintRepository;
-	@Autowired private SprintVelocityServiceHelper velocityHelper;
 
 	/**
 	 * Gets Qualifier Type
@@ -1108,10 +1107,11 @@ public class SprintVelocitySlingshotServiceImpl
 
 	/**
 	 * Builds sprint-wise DataCounts for the Sprint granularity view. Fetches closed sprints from the
-	 * repository, matches completed issues using {@link SprintVelocityServiceHelper}, and computes
-	 * velocity per sprint. The {@code weeklyDataStartDateKPI205} reference date is intentionally not
-	 * used here — sprint boundaries are defined by their own start and completion dates, not by any
-	 * weekly cycle anchor.
+	 * repository, applies field-mapping filters via {@link
+	 * KpiDataHelper#processSprintBasedOnFieldMappings}, and computes velocity directly from {@link
+	 * SprintDetails#getCompletedIssues()} — no join with the jiraIssue collection. This avoids
+	 * silently under-counting when a JiraIssue record is absent for an issue that is correctly marked
+	 * completed in the sprint snapshot.
 	 */
 	private List<DataCount> buildSprintOutput(Node projectNode, FieldMapping fieldMapping) {
 		ObjectId basicProjectConfigId = projectNode.getProjectFilter().getBasicProjectConfigId();
@@ -1138,16 +1138,12 @@ public class SprintVelocitySlingshotServiceImpl
 			combinedClosedStatuses.addAll(fieldMapping.getJiraIterationCompletionStatusKPI205());
 		}
 
+		// processSprintBasedOnFieldMappings mutates sprint.completedIssues in place,
+		// retaining only issues that match the configured type and status filters.
 		sprintDetailsList.forEach(
 				sprint ->
 						KpiDataHelper.processSprintBasedOnFieldMappings(
 								sprint, configuredIssueTypes, combinedClosedStatuses, null));
-
-		List<JiraIssue> allProjectIssues =
-				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
-
-		Map<Pair<String, String>, Set<JiraIssue>> sprintIssueMap = new HashMap<>();
-		velocityHelper.getSprintIssuesForProject(allProjectIssues, sprintDetailsList, sprintIssueMap);
 
 		List<SprintDetails> limited =
 				sprintDetailsList.size() > SPRINT_DISPLAY_LIMIT
@@ -1161,15 +1157,17 @@ public class SprintVelocitySlingshotServiceImpl
 		List<DataCount> sprintDataCounts = new ArrayList<>();
 
 		for (SprintDetails sprint : oldestFirst) {
-			Pair<String, String> key = Pair.of(basicProjectConfigId.toString(), sprint.getSprintID());
-			Set<JiraIssue> issues = sprintIssueMap.getOrDefault(key, Collections.emptySet());
+			Set<SprintIssue> completedIssues =
+					CollectionUtils.isNotEmpty(sprint.getCompletedIssues())
+							? sprint.getCompletedIssues()
+							: Collections.emptySet();
 
-			double velocity = (double) issues.size();
+			double velocity = (double) completedIssues.size();
 			velocityMap.put(sprint.getSprintID(), velocity);
 
 			double storyPointsVelocity =
-					issues.stream()
-							.mapToDouble(ji -> ji.getStoryPoints() != null ? ji.getStoryPoints() : 0.0)
+					completedIssues.stream()
+							.mapToDouble(si -> si.getStoryPoints() != null ? si.getStoryPoints() : 0.0)
 							.sum();
 			storyPointsVelocityMap.put(sprint.getSprintID(), storyPointsVelocity);
 
