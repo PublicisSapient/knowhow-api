@@ -32,12 +32,16 @@ public class BuildFrequencyInfo {
 	private List<String> buildUrlList;
 	private List<String> buildStartDate;
 	private List<String> weeksList;
+	private List<String> statusList;
+	private List<String> buildBranchList;
 
 	public BuildFrequencyInfo() {
 		buildJobNameList = new ArrayList<>();
 		buildUrlList = new ArrayList<>();
 		buildStartDate = new ArrayList<>();
+		buildBranchList = new ArrayList<>();
 		weeksList = new ArrayList<>();
+		statusList = new ArrayList<>();
 	}
 
 	/**
@@ -128,6 +132,10 @@ public class BuildFrequencyInfo {
 		return weeksList;
 	}
 
+	public List<String> getStatusList() {
+		return statusList;
+	}
+
 	/**
 	 * set week list
 	 *
@@ -144,5 +152,21 @@ public class BuildFrequencyInfo {
 	 */
 	public void addWeeks(String week) {
 		weeksList.add(week);
+	}
+
+	public void addStatuses(String status) {
+		statusList.add(status);
+	}
+
+	public void addBuildBranch(String buildBranch) {
+		buildBranchList.add(buildBranch);
+	}
+
+	public List<String> getBuildBranchList() {
+		return buildBranchList;
+	}
+
+	public void setBuildBranchList(List<String> buildBranchList) {
+		this.buildBranchList = buildBranchList;
 	}
 }

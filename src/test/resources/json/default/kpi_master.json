@@ -3946,5 +3946,34 @@
     "isTrendCalculative": false,
     "isAdditionalFilterSupport": false,
     "combinedKpiSource": "Jira/Azure"
+  },
+  {
+    "kpiId" : "kpi212",
+    "kpiName" : "Build Success Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 4,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "maxValue" : 15,
+    "thresholdValue" : 55,
+    "kanban" : false,
+    "groupId" : 8,
+    "kpiInfo" : {
+      "definition" : "% of CI builds that pass on the main / master branch. "
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD"
   }
 ]

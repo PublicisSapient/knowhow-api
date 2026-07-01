@@ -1240,6 +1240,16 @@ public enum KPIExcelColumn {
 					"Merge Request Url",
 					"Total Lines Changed",
 					"Size Category")),
+	BUILD_SUCCESS_RATE(
+			"kpi211",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project Name",
+					"Job Name / Pipeline Name",
+					"Branch",
+					"Start Date",
+					"Build Url",
+					"Build Status")),
 	;
 
 	// @formatter:on

@@ -330,7 +330,8 @@ public enum KPICode {
 	PR_THROUGHPUT("kpi208", KPISource.BITBUCKET.name()),
 	PR_CYCLE_TIME_SLINGSHOT("kpi209", KPISource.BITBUCKET.name()),
 	TIME_TO_FIRST_REVIEW("kpi210", KPISource.BITBUCKET.name()),
-	PR_SIZE_DISTRIBUTION("kpi211", KPISource.BITBUCKET.name());
+	PR_SIZE_DISTRIBUTION("kpi211", KPISource.BITBUCKET.name()),
+	BUILD_SUCCESS_RATE("kpi212", KPISource.JENKINS.name());
 
 	// @formatter:on
 
