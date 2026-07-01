@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -211,7 +210,6 @@ public class BuildSuccessRateServiceImpl
 			Map<String, List<DataCount>> aggDataMap) {
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 
-		Map<String, Double> weekRange = new LinkedHashMap<>();
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
 					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, CommonConstant.WEEK);
