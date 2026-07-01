@@ -53,8 +53,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BuildSuccessRateServiceImpl
 		extends JenkinsKPIService<Long, List<Object>, Map<String, List<Object>>> {
 
-	private static final String TOTAL_BUILDS = "No. of Total Builds";
-	private static final String SUCCESS_BUILDS = "No. of Succeeded Builds";
+	private static final String TOTAL_BUILDS = "Total Builds";
+	private static final String SUCCESS_BUILDS = "Successful Builds";
 
 	private final BuildRepository buildRepository;
 
