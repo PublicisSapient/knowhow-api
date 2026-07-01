@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -52,6 +52,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BuildSuccessRateServiceImpl
 		extends JenkinsKPIService<Long, List<Object>, Map<String, List<Object>>> {
+
+	private static final String TOTAL_BUILDS = "No. of Total Builds";
+	private static final String SUCCESS_BUILDS = "No. of Succeeded Builds";
 
 	private final BuildRepository buildRepository;
 
@@ -207,7 +210,6 @@ public class BuildSuccessRateServiceImpl
 			Map<String, List<DataCount>> aggDataMap) {
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 
-		Map<String, Double> weekRange = new LinkedHashMap<>();
 		for (int i = 0; i < 12; i++) {
 			CustomDateRange periodRange =
 					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, CommonConstant.WEEK);
@@ -216,7 +218,6 @@ public class BuildSuccessRateServiceImpl
 			String date = KpiHelperService.getDateRange(periodRange, CommonConstant.WEEK);
 			int totalBuilds = 0;
 			int successBuilds = 0;
-			double buildSuccess = 0.0;
 			for (Build build : buildList) {
 				if (checkDateIsInWeeks(monday, sunday, build)) {
 					totalBuilds++;
@@ -225,16 +226,12 @@ public class BuildSuccessRateServiceImpl
 					buildFrequencyInfo(buildFrequencyInfo, build, date);
 				}
 			}
-			if (totalBuilds > 0) buildSuccess = ((double) successBuilds / totalBuilds) * 100;
-			weekRange.put(date, buildSuccess);
+
+			aggDataMap.putIfAbsent(jobName, new ArrayList<>());
+			DataCount dataCount = createDataCount(trendLineName, totalBuilds, successBuilds, date);
+			aggDataMap.get(jobName).add(dataCount);
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
 		}
-		aggDataMap.putIfAbsent(jobName, new ArrayList<>());
-		weekRange.forEach(
-				(date, valueForCurrentLeaf) -> {
-					DataCount dataCount = createDataCount(trendLineName, valueForCurrentLeaf, date);
-					aggDataMap.get(jobName).add(dataCount);
-				});
 	}
 
 	/**
@@ -253,20 +250,26 @@ public class BuildSuccessRateServiceImpl
 				buildFrequencyInfo.addBuildJobNameList(build.getPipelineName());
 			}
 			buildFrequencyInfo.addBuildUrl(build.getBuildUrl());
-			buildFrequencyInfo.addBuildStartTime(DateUtil.dateConverter(new Date(build.getStartTime())));
+			buildFrequencyInfo.addBuildStartTime(String.valueOf(build.getStartTime()));
 			buildFrequencyInfo.addWeeks(date);
 			buildFrequencyInfo.addStatuses(build.getBuildStatus().name());
 			buildFrequencyInfo.addBuildBranch(build.getBuildBranch());
 		}
 	}
 
-	private DataCount createDataCount(String trendLineName, double valueForCurrentLeaf, String date) {
+	private DataCount createDataCount(
+			String trendLineName, int totalBuilds, int successBuilds, String date) {
 		DataCount dataCount = new DataCount();
-		dataCount.setData(String.valueOf(valueForCurrentLeaf));
+		double buildSuccess = 0;
+		if (totalBuilds > 0) buildSuccess = ((double) successBuilds / totalBuilds) * 100;
+		dataCount.setData(String.valueOf(buildSuccess));
 		dataCount.setSProjectName(trendLineName);
 		dataCount.setDate(date);
-		dataCount.setHoverValue(new HashMap<>());
-		dataCount.setValue(valueForCurrentLeaf);
+		Map<String, Object> hoverMap = new HashMap<>();
+		hoverMap.put(TOTAL_BUILDS, totalBuilds);
+		hoverMap.put(SUCCESS_BUILDS, successBuilds);
+		dataCount.setHoverValue(hoverMap);
+		dataCount.setValue(buildSuccess);
 		return dataCount;
 	}
 
@@ -278,6 +281,11 @@ public class BuildSuccessRateServiceImpl
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateBuildSuccessRate(excelData, projectName, buildFrequencyInfo);
+			excelData.sort(Comparator.comparingLong(data -> Long.parseLong(data.getStartDate())));
+			excelData.forEach(
+					data ->
+							data.setStartDate(
+									DateUtil.dateConverter(new Date(Long.parseLong(data.getStartDate())))));
 		}
 	}
 }
