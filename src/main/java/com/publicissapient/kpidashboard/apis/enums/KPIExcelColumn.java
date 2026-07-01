@@ -1227,6 +1227,16 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Review Time",
 					"Time to First Review (In Hours)")),
+	BUILD_SUCCESS_RATE(
+			"kpi211",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project Name",
+					"Job Name / Pipeline Name",
+					"Branch",
+					"Start Date",
+					"Build Url",
+					"Build Status")),
 	;
 
 	// @formatter:on

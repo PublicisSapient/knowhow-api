@@ -1527,6 +1527,25 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateBuildSuccessRate(
+			List<KPIExcelData> kpiExcelData, String projectName, BuildFrequencyInfo buildFrequencyInfo) {
+
+		for (int i = 0; i < buildFrequencyInfo.getBuildJobList().size(); i++) {
+			KPIExcelData excelData = new KPIExcelData();
+			excelData.setProject(projectName);
+			excelData.setJobName(buildFrequencyInfo.getBuildJobList().get(i));
+			Map<String, String> buildUrl = new HashMap<>();
+			buildUrl.put(
+					buildFrequencyInfo.getBuildUrlList().get(i), buildFrequencyInfo.getBuildUrlList().get(i));
+			excelData.setBuildUrl(buildUrl);
+			excelData.setStartDate(buildFrequencyInfo.getBuildStartTimeList().get(i));
+			excelData.setDaysWeeks(buildFrequencyInfo.getWeeksList().get(i));
+			excelData.setBuildStatus(buildFrequencyInfo.getStatusList().get(i));
+			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
+			kpiExcelData.add(excelData);
+		}
+	}
+
 	public static void populateMeanTimeMergeExcelData(
 			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {

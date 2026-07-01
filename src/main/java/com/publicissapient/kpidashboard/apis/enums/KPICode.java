@@ -329,7 +329,8 @@ public enum KPICode {
 	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", KPISource.JIRA.name()),
 	PR_THROUGHPUT("kpi208", KPISource.BITBUCKET.name()),
 	PR_CYCLE_TIME_SLINGSHOT("kpi209", KPISource.BITBUCKET.name()),
-	TIME_TO_FIRST_REVIEW("kpi210", KPISource.BITBUCKET.name());
+	TIME_TO_FIRST_REVIEW("kpi210", KPISource.BITBUCKET.name()),
+	BUILD_SUCCESS_RATE("kpi211", KPISource.JENKINS.name());
 
 	// @formatter:on
 
