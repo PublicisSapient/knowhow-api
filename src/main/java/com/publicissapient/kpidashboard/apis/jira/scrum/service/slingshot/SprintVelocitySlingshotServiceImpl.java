@@ -9,11 +9,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,8 +52,11 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -69,6 +74,7 @@ public class SprintVelocitySlingshotServiceImpl
 	// private static final String COMMITTED_SCOPE = "Committed Scope";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
 	private static final String NON_VELOCITY_ISSUES = "NON_VELOCITY_ISSUES";
+	private static final String JIRA_HISTORY = "JIRAHISTORY";
 	private static final String WEEKLY = "Weekly";
 	private static final String BI_WEEKLY = "Bi-Weekly";
 	private static final String MONTHLY = "Monthly";
@@ -85,6 +91,7 @@ public class SprintVelocitySlingshotServiceImpl
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Autowired private SprintRepository sprintRepository;
 	@Autowired private SprintVelocityServiceHelper velocityHelper;
 
@@ -253,8 +260,17 @@ public class SprintVelocitySlingshotServiceImpl
 																		.isBefore(startDateTime))))
 						.toList();
 
+		Set<String> velocityIssueNumbers =
+				jiraIssuesFiltered.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+		List<JiraIssueCustomHistory> issueHistories =
+				velocityIssueNumbers.isEmpty()
+						? List.of()
+						: jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigId(
+								velocityIssueNumbers, basicProjectConfigId.toString());
+
 		resultListMap.put(JIRA_ISSUES, jiraIssuesFiltered);
 		resultListMap.put(NON_VELOCITY_ISSUES, nonVelocityIssues);
+		resultListMap.put(JIRA_HISTORY, issueHistories);
 
 		return resultListMap;
 	}
@@ -304,6 +320,9 @@ public class SprintVelocitySlingshotServiceImpl
 		List<JiraIssue> allJiraIssue = (List<JiraIssue>) sprintVelocityStoryMap.get(JIRA_ISSUES);
 		List<JiraIssue> allNonVelocityIssues =
 				(List<JiraIssue>) sprintVelocityStoryMap.get(NON_VELOCITY_ISSUES);
+		@SuppressWarnings("unchecked")
+		List<JiraIssueCustomHistory> issueHistories =
+				(List<JiraIssueCustomHistory>) sprintVelocityStoryMap.get(JIRA_HISTORY);
 
 		FieldMapping fieldMapping =
 				configHelperService
@@ -330,11 +349,31 @@ public class SprintVelocitySlingshotServiceImpl
 							.toList());
 		}
 
+		Map<String, LocalDateTime> lastCompletionStatusDateMap = new HashMap<>();
+		if (CollectionUtils.isNotEmpty(issueHistories)) {
+			for (JiraIssueCustomHistory history : issueHistories) {
+				if (CollectionUtils.isEmpty(history.getStatusUpdationLog())) {
+					continue;
+				}
+				history.getStatusUpdationLog().stream()
+						.filter(
+								log ->
+										log.getChangedTo() != null
+												&& committedClosedStatusesLower.contains(log.getChangedTo().toLowerCase()))
+						.map(JiraHistoryChangeLog::getUpdatedOn)
+						.filter(Objects::nonNull)
+						.max(Comparator.naturalOrder())
+						.ifPresent(date -> lastCompletionStatusDateMap.put(history.getStoryID(), date));
+			}
+		}
+
 		Map<String, LocalDateTime> issueDateTimeCache = new HashMap<>();
 		allJiraIssue.forEach(
 				ji ->
 						issueDateTimeCache.put(
-								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
+								ji.getNumber(),
+								lastCompletionStatusDateMap.getOrDefault(
+										ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate()))));
 
 		Map<String, LocalDateTime> nonVelocityCreatedDateCache = new HashMap<>();
 		Map<String, LocalDateTime> nonVelocityChangeDateCache = new HashMap<>();

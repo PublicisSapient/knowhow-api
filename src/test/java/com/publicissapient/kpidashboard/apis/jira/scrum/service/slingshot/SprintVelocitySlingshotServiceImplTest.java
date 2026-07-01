@@ -58,6 +58,7 @@ import com.publicissapient.kpidashboard.common.model.application.ProjectBasicCon
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
@@ -69,6 +70,8 @@ public class SprintVelocitySlingshotServiceImplTest {
 	@Mock private ConfigHelperService configHelperService;
 
 	@Mock private JiraIssueRepository jiraIssueRepository;
+
+	@Mock private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
 	@Mock private CacheService cacheService;
 
@@ -122,6 +125,11 @@ public class SprintVelocitySlingshotServiceImplTest {
 
 		JiraIssueDataFactory jiraIssueDataFactory = JiraIssueDataFactory.newInstance();
 		jiraIssueList = jiraIssueDataFactory.getJiraIssues();
+
+		// Default: no history records — falls back to changeDate for bucketing
+		when(jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigId(
+						any(), anyString()))
+				.thenReturn(new ArrayList<>());
 
 		// Mock sprint velocity limit
 		when(customApiConfig.getSprintVelocityLimit()).thenReturn(5);
