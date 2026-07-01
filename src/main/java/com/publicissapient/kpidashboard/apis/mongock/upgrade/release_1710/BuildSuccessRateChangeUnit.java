@@ -41,7 +41,7 @@ public class BuildSuccessRateChangeUnit {
 						.append(KPI_ID_FIELD, KPI_ID)
 						.append("kpiName", "Build Success Rate")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 4)
+						.append("defaultOrder", 5)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Speed")
 						.append("kpiUnit", "%")
