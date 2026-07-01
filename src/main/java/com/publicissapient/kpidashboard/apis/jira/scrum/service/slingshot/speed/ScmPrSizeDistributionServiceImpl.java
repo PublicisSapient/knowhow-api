@@ -114,7 +114,7 @@ public class ScmPrSizeDistributionServiceImpl
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> scmDataMap = new HashMap<>();
 		List<ScmMergeRequests> scmMergeRequests =
-				scmKpiHelperService.getMergeRequests(
+				scmKpiHelperService.getMergedRequests(
 						leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId(),
 						DeveloperKpiHelper.getStartAndEndDate(kpiRequest));
 		List<Assignee> assigneeList =
