@@ -5632,6 +5632,7 @@
     "calculateMaturity" : false,
     "hideOverallFilter" : true,
     "kpiSource" : "BitBucket",
+    "thresholdValue" : 10,
     "kanban" : false,
     "groupId" : 6,
     "kpiInfo" : {
