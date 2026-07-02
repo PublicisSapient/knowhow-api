@@ -149,7 +149,7 @@ public class BuildSuccessRateServiceImpl
 				fetchKPIDataFromDb(
 						List.of(projectLeafNode),
 						LocalDate.now().minusWeeks(12).toString(),
-						LocalDate.now().toString(),
+						LocalDate.now().plusDays(1).toString(),
 						kpiRequest);
 
 		String projectId = projectLeafNode.getProjectFilter().getBasicProjectConfigId().toString();
