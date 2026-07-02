@@ -10,13 +10,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "pr_throughput_kpi_insert",
-		order = "17123",
+		id = "build_success_rate_kpi_insert",
+		order = "17137",
 		author = "kunkambl",
 		systemVersion = "17.1.0")
-public class PRThroughputKpiChangeUnit {
+public class BuildSuccessRateChangeUnit {
 
-	private static final String KPI_ID = "kpi208";
+	private static final String KPI_ID = "kpi212";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -25,6 +25,8 @@ public class PRThroughputKpiChangeUnit {
 	private static final String ORDER = "order";
 	private static final String IS_SHOWN = "isShown";
 	private static final String IS_DEFAULT = "isDefault";
+	private static final String FIELD_NAME = "fieldName";
+	private static final String DEFINITION = "definition";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
@@ -37,45 +39,35 @@ public class PRThroughputKpiChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "PR Throughput")
+						.append("kpiName", "Build Success Rate")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 1)
+						.append("defaultOrder", 5)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Speed")
-						.append("kpiUnit", "PRs")
+						.append("kpiUnit", "%")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Count")
+						.append("yAxisLabel", "Percentage")
 						.append("showTrend", true)
-						.append("isPositiveTrend", true)
+						.append("isPositiveTrend", false)
 						.append("calculateMaturity", false)
 						.append("hideOverallFilter", true)
-						.append("kpiSource", "BitBucket")
+						.append("kpiSource", "Jenkins")
 						.append("maxValue", 15)
 						.append("thresholdValue", 55.0)
 						.append("kanban", false)
-						.append("groupId", 6)
+						.append("groupId", 8)
 						.append(
 								"kpiInfo",
 								new Document()
-										.append(
-												"definition",
-												"Merged pull requests per engineer per week, at team / org level only. "))
+										.append(DEFINITION, "% of CI builds that pass on the main / master branch. "))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append("isRepoToolKpi", true)
-						.append("combinedKpiSource", "Bitbucket/AzureRepository/GitHub/GitLab")
-						.append("forecastModel", "thetaMethod");
-
+						.append(
+								"combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD");
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
-
-		mongoTemplate
-				.getCollection(KPI_MASTER_COLLECTION)
-				.updateOne(
-						new Document(KPI_ID, "kpi206"),
-						new Document("$set", new Document("kpiFilter", "dropDown")));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -87,32 +79,37 @@ public class PRThroughputKpiChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Project")
+												.append(COLUMN_NAME, "Days/Weeks")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Repo")
+												.append(COLUMN_NAME, "Project")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Branch")
+												.append(COLUMN_NAME, "Job Name / Pipeline Name")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Days/Weeks")
+												.append(COLUMN_NAME, "Branch")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Developer")
+												.append(COLUMN_NAME, "Start Date")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "No of Merge")
+												.append(COLUMN_NAME, "Build URL")
+												.append(ORDER, 6)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Build Status")
 												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
@@ -123,7 +120,7 @@ public class PRThroughputKpiChangeUnit {
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
 		Document fieldMapping =
 				new Document()
-						.append("fieldName", "thresholdValueKPI208")
+						.append(FIELD_NAME, "thresholdValueKPI212")
 						.append("fieldLabel", "Target KPI Value")
 						.append("fieldType", "number")
 						.append("section", "Project Level Threshold")
@@ -132,7 +129,7 @@ public class PRThroughputKpiChangeUnit {
 								"tooltip",
 								new Document()
 										.append(
-												"definition",
+												DEFINITION,
 												"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 6)
@@ -152,6 +149,6 @@ public class PRThroughputKpiChangeUnit {
 				.deleteOne(new Document(KPI_ID_FIELD, KPI_ID));
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteOne(new Document("fieldName", "thresholdValueKPI208"));
+				.deleteOne(new Document(FIELD_NAME, "thresholdValueKPI212"));
 	}
 }

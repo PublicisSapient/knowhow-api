@@ -494,6 +494,9 @@ public class KPIExcelData {
 	@JsonProperty("Total Lines Changed")
 	private Long totalLineChanges;
 
+	@JsonProperty("Size Category")
+	private String sizeCategory;
+
 	@JsonProperty("Defect PR")
 	private Long defectPRs;
 

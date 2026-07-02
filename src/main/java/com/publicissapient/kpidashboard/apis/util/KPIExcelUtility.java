@@ -1008,11 +1008,11 @@ public class KPIExcelUtility {
 			for (int i = 0; i < sortedEntries.size(); i++) {
 				String weekLabel = sortedEntries.get(i).getKey();
 				Set<JiraIssue> issueSet = sortedEntries.get(i).getValue();
-				String weekRange = (i + 1) + " (" + weekLabel + ")";
 				for (JiraIssue jiraIssue : issueSet) {
 					KPIExcelData excelData = new KPIExcelData();
-					setSpeedKPIExcelData(null, jiraIssue, fieldMapping, excelData);
-					excelData.setWeekRange(weekRange);
+					setSpeedKPIExcelData(jiraIssue.getSprintName(), jiraIssue, fieldMapping, excelData);
+					excelData.setDaysWeeks(weekLabel);
+					excelData.setIssueStatus(null);
 					excelData.setStatus(jiraIssue.getStatus());
 					setEstimateAndOrgTimeSpent(jiraIssue, excelData);
 					kpiExcelData.add(excelData);
@@ -1527,6 +1527,25 @@ public class KPIExcelUtility {
 		}
 	}
 
+	public static void populateBuildSuccessRate(
+			List<KPIExcelData> kpiExcelData, String projectName, BuildFrequencyInfo buildFrequencyInfo) {
+
+		for (int i = 0; i < buildFrequencyInfo.getBuildJobList().size(); i++) {
+			KPIExcelData excelData = new KPIExcelData();
+			excelData.setProject(projectName);
+			excelData.setJobName(buildFrequencyInfo.getBuildJobList().get(i));
+			Map<String, String> buildUrl = new HashMap<>();
+			buildUrl.put(
+					buildFrequencyInfo.getBuildUrlList().get(i), buildFrequencyInfo.getBuildUrlList().get(i));
+			excelData.setBuildUrl(buildUrl);
+			excelData.setStartDate(buildFrequencyInfo.getBuildStartTimeList().get(i));
+			excelData.setDaysWeeks(buildFrequencyInfo.getWeeksList().get(i));
+			excelData.setBuildStatus(buildFrequencyInfo.getStatusList().get(i));
+			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
+			kpiExcelData.add(excelData);
+		}
+	}
+
 	public static void populateMeanTimeMergeExcelData(
 			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
 		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
@@ -1594,32 +1613,50 @@ public class KPIExcelUtility {
 									.forEach(
 											pr -> {
 												KPIExcelData excelData = new KPIExcelData();
+												excelData.setDaysWeeks(repoToolValidationData.getDate());
 												excelData.setProject(repoToolValidationData.getProjectName());
 												excelData.setRepo(repoToolValidationData.getRepoUrl());
 												excelData.setBranch(repoToolValidationData.getBranchName());
-												excelData.setAuthor(repoToolValidationData.getDeveloperName());
-												excelData.setDaysWeeks(repoToolValidationData.getDate());
+												excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+												excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 												excelData.setMergeRequestUrl(
 														Collections.singletonMap(pr.getPrUrl(), pr.getPrUrl()));
+												long lines = 0L;
 												try {
-													excelData.setTotalLineChanges(Long.parseLong(pr.getSize()));
+													lines = Long.parseLong(pr.getSize());
+													excelData.setTotalLineChanges(lines);
 												} catch (NumberFormatException e) {
 													excelData.setTotalLineChanges(0L);
 												}
+												excelData.setSizeCategory(resolveSizeCategory(lines));
 												kpiExcelData.add(excelData);
 											});
 						} else {
 							KPIExcelData excelData = new KPIExcelData();
+							excelData.setDaysWeeks(repoToolValidationData.getDate());
 							excelData.setProject(repoToolValidationData.getProjectName());
 							excelData.setRepo(repoToolValidationData.getRepoUrl());
 							excelData.setBranch(repoToolValidationData.getBranchName());
-							excelData.setAuthor(repoToolValidationData.getDeveloperName());
-							excelData.setDaysWeeks(repoToolValidationData.getDate());
+							excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+							excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 							excelData.setMergeRequestUrl(Collections.emptyMap());
 							excelData.setTotalLineChanges(0L);
+							excelData.setSizeCategory(DeveloperKpiHelper.BUCKET_SMALL);
 							kpiExcelData.add(excelData);
 						}
 					});
+		}
+	}
+
+	private static String resolveSizeCategory(long lines) {
+		if (lines < 50) {
+			return DeveloperKpiHelper.BUCKET_SMALL;
+		} else if (lines < 200) {
+			return DeveloperKpiHelper.BUCKET_MEDIUM;
+		} else if (lines < 500) {
+			return DeveloperKpiHelper.BUCKET_LARGE;
+		} else {
+			return DeveloperKpiHelper.BUCKET_EXTRA_LARGE;
 		}
 	}
 
