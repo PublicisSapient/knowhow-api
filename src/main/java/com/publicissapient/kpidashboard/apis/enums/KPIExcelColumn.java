@@ -163,10 +163,11 @@ public enum KPIExcelColumn {
 	SPRINT_VELOCITY_SLINGSHOT(
 			"kpi205",
 			Arrays.asList(
-					"Week",
+					"Days/Weeks",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",
+					"Sprint Name",
 					"Squad",
 					"Priority",
 					"Story Points",
@@ -1227,6 +1228,28 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Review Time",
 					"Time to First Review (In Hours)")),
+	SCM_PR_SIZE_DISTRIBUTION(
+			"kpi211",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"Total Lines Changed",
+					"Size Category")),
+	BUILD_SUCCESS_RATE(
+			"kpi211",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project Name",
+					"Job Name / Pipeline Name",
+					"Branch",
+					"Start Date",
+					"Build Url",
+					"Build Status")),
 	;
 
 	// @formatter:on
