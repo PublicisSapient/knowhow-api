@@ -9,11 +9,13 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,7 +39,6 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
-import com.publicissapient.kpidashboard.apis.jira.service.SprintVelocityServiceHelper;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -50,8 +51,12 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.SprintIssue;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -69,6 +74,7 @@ public class SprintVelocitySlingshotServiceImpl
 	// private static final String COMMITTED_SCOPE = "Committed Scope";
 	private static final String JIRA_ISSUES = "JIRAISSUES";
 	private static final String NON_VELOCITY_ISSUES = "NON_VELOCITY_ISSUES";
+	private static final String EFFECTIVE_DATE_MAP = "EFFECTIVE_DATE_MAP";
 	private static final String WEEKLY = "Weekly";
 	private static final String BI_WEEKLY = "Bi-Weekly";
 	private static final String MONTHLY = "Monthly";
@@ -80,13 +86,17 @@ public class SprintVelocitySlingshotServiceImpl
 	private static final int WEEKLY_DISPLAY_PERIODS = 12;
 	private static final int BI_WEEKLY_INPUT_WEEKS = 24;
 	private static final int MONTHLY_INPUT_WEEKS = 55;
+	private static final int MONTHLY_DISPLAY_PERIODS = 6;
 	private static final int SPRINT_DISPLAY_LIMIT = 12;
+	private static final int EXPLORE_WEEKLY_LIMIT = 12; // last 12 weeks
+	private static final int EXPLORE_BIWEEKLY_LIMIT = 24; // last 24 weeks = 12 bi-weekly periods
+	private static final int EXPLORE_MONTHLY_LIMIT = 26; // ~6 months
 
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Autowired private SprintRepository sprintRepository;
-	@Autowired private SprintVelocityServiceHelper velocityHelper;
 
 	/**
 	 * Gets Qualifier Type
@@ -225,17 +235,56 @@ public class SprintVelocitySlingshotServiceImpl
 		LocalDateTime startDateTime = endDateTime.minusWeeks(weeksToFetch);
 		List<String> closedStatusesLower = closedStatuses.stream().map(String::toLowerCase).toList();
 
-		List<JiraIssue> jiraIssuesFiltered =
+		// Pre-filter by type+status only (no date gate) to scope the history query
+		List<JiraIssue> typeStatusMatched =
 				jiraIssueList.stream()
 						.filter(
 								jiraIssue ->
 										(issueTypesKPI205.isEmpty()
 														|| issueTypesKPI205.contains(jiraIssue.getTypeName().toLowerCase()))
-												&& closedStatusesLower.contains(jiraIssue.getStatus().toLowerCase())
-												&& DateUtil.isWithinDateTimeRange(
-														DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()),
-														startDateTime,
-														endDateTime))
+												&& closedStatusesLower.contains(jiraIssue.getStatus().toLowerCase()))
+						.toList();
+
+		Set<String> matchedNumbers =
+				typeStatusMatched.stream().map(JiraIssue::getNumber).collect(Collectors.toSet());
+		List<JiraIssueCustomHistory> issueHistories =
+				matchedNumbers.isEmpty()
+						? List.of()
+						: jiraIssueCustomHistoryRepository.findByStoryIDInAndBasicProjectConfigId(
+								matchedNumbers, basicProjectConfigId.toString());
+
+		// Build effective completion date map: last transition to a completion status
+		// per issue
+		Map<String, LocalDateTime> effectiveCompletionDateMap = new HashMap<>();
+		for (JiraIssueCustomHistory history : issueHistories) {
+			if (CollectionUtils.isEmpty(history.getStatusUpdationLog())) {
+				continue;
+			}
+			history.getStatusUpdationLog().stream()
+					.filter(
+							log ->
+									log.getChangedTo() != null
+											&& closedStatusesLower.contains(log.getChangedTo().toLowerCase()))
+					.map(JiraHistoryChangeLog::getUpdatedOn)
+					.filter(Objects::nonNull)
+					.max(Comparator.naturalOrder())
+					.ifPresent(date -> effectiveCompletionDateMap.put(history.getStoryID(), date));
+		}
+
+		// Apply date filter using effective date — includes issues whose changeDate
+		// drifted outside
+		// the window after completion (e.g. a field edit bumped changeDate to a future
+		// sync date)
+		List<JiraIssue> jiraIssuesFiltered =
+				typeStatusMatched.stream()
+						.filter(
+								jiraIssue -> {
+									LocalDateTime effectiveDate =
+											effectiveCompletionDateMap.getOrDefault(
+													jiraIssue.getNumber(),
+													DateUtil.convertToUTCLocalDateTime(jiraIssue.getChangeDate()));
+									return DateUtil.isWithinDateTimeRange(effectiveDate, startDateTime, endDateTime);
+								})
 						.toList();
 
 		List<JiraIssue> nonVelocityIssues =
@@ -255,6 +304,7 @@ public class SprintVelocitySlingshotServiceImpl
 
 		resultListMap.put(JIRA_ISSUES, jiraIssuesFiltered);
 		resultListMap.put(NON_VELOCITY_ISSUES, nonVelocityIssues);
+		resultListMap.put(EFFECTIVE_DATE_MAP, effectiveCompletionDateMap);
 
 		return resultListMap;
 	}
@@ -304,6 +354,10 @@ public class SprintVelocitySlingshotServiceImpl
 		List<JiraIssue> allJiraIssue = (List<JiraIssue>) sprintVelocityStoryMap.get(JIRA_ISSUES);
 		List<JiraIssue> allNonVelocityIssues =
 				(List<JiraIssue>) sprintVelocityStoryMap.get(NON_VELOCITY_ISSUES);
+		@SuppressWarnings("unchecked")
+		Map<String, LocalDateTime> lastCompletionStatusDateMap =
+				(Map<String, LocalDateTime>)
+						sprintVelocityStoryMap.getOrDefault(EFFECTIVE_DATE_MAP, new HashMap<>());
 
 		FieldMapping fieldMapping =
 				configHelperService
@@ -334,7 +388,9 @@ public class SprintVelocitySlingshotServiceImpl
 		allJiraIssue.forEach(
 				ji ->
 						issueDateTimeCache.put(
-								ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate())));
+								ji.getNumber(),
+								lastCompletionStatusDateMap.getOrDefault(
+										ji.getNumber(), DateUtil.convertToUTCLocalDateTime(ji.getChangeDate()))));
 
 		Map<String, LocalDateTime> nonVelocityCreatedDateCache = new HashMap<>();
 		Map<String, LocalDateTime> nonVelocityChangeDateCache = new HashMap<>();
@@ -418,7 +474,11 @@ public class SprintVelocitySlingshotServiceImpl
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		populateExcelDataObject(
-				requestTrackerId, excelData, jiraIssuesByDateRange, projectNode, fieldMapping);
+				requestTrackerId,
+				excelData,
+				limitExploreByGranularity(jiraIssuesByDateRange),
+				projectNode,
+				fieldMapping);
 		Map<String, Integer> avgVelocityCount = new HashMap<>();
 
 		velocityByDateRange.forEach(
@@ -784,9 +844,10 @@ public class SprintVelocitySlingshotServiceImpl
 	private List<DataCount> buildMonthlyOutput(
 			Map<String, List<DataCount>> perProject, LocalDate refDate) {
 		if (refDate == null) {
-			return buildGranularityOutput(perProject, 0, this::aggregateWeeklyToMonthly);
+			return buildGranularityOutput(
+					perProject, MONTHLY_DISPLAY_PERIODS * 4, this::aggregateWeeklyToMonthly);
 		}
-		int maxMonthly = 12;
+		int maxMonthly = MONTHLY_DISPLAY_PERIODS;
 		List<DataCount> result = new ArrayList<>();
 		for (Map.Entry<String, List<DataCount>> entry : perProject.entrySet()) {
 			List<DataCount> weeklyPeriods = entry.getValue();
@@ -1069,10 +1130,11 @@ public class SprintVelocitySlingshotServiceImpl
 
 	/**
 	 * Builds sprint-wise DataCounts for the Sprint granularity view. Fetches closed sprints from the
-	 * repository, matches completed issues using {@link SprintVelocityServiceHelper}, and computes
-	 * velocity per sprint. The {@code weeklyDataStartDateKPI205} reference date is intentionally not
-	 * used here — sprint boundaries are defined by their own start and completion dates, not by any
-	 * weekly cycle anchor.
+	 * repository, applies field-mapping filters via {@link
+	 * KpiDataHelper#processSprintBasedOnFieldMappings}, and computes velocity directly from {@link
+	 * SprintDetails#getCompletedIssues()} — no join with the jiraIssue collection. This avoids
+	 * silently under-counting when a JiraIssue record is absent for an issue that is correctly marked
+	 * completed in the sprint snapshot.
 	 */
 	private List<DataCount> buildSprintOutput(Node projectNode, FieldMapping fieldMapping) {
 		ObjectId basicProjectConfigId = projectNode.getProjectFilter().getBasicProjectConfigId();
@@ -1099,16 +1161,12 @@ public class SprintVelocitySlingshotServiceImpl
 			combinedClosedStatuses.addAll(fieldMapping.getJiraIterationCompletionStatusKPI205());
 		}
 
+		// processSprintBasedOnFieldMappings mutates sprint.completedIssues in place,
+		// retaining only issues that match the configured type and status filters.
 		sprintDetailsList.forEach(
 				sprint ->
 						KpiDataHelper.processSprintBasedOnFieldMappings(
 								sprint, configuredIssueTypes, combinedClosedStatuses, null));
-
-		List<JiraIssue> allProjectIssues =
-				jiraIssueRepository.findByBasicProjectConfigId(basicProjectConfigId.toString());
-
-		Map<Pair<String, String>, Set<JiraIssue>> sprintIssueMap = new HashMap<>();
-		velocityHelper.getSprintIssuesForProject(allProjectIssues, sprintDetailsList, sprintIssueMap);
 
 		List<SprintDetails> limited =
 				sprintDetailsList.size() > SPRINT_DISPLAY_LIMIT
@@ -1122,15 +1180,17 @@ public class SprintVelocitySlingshotServiceImpl
 		List<DataCount> sprintDataCounts = new ArrayList<>();
 
 		for (SprintDetails sprint : oldestFirst) {
-			Pair<String, String> key = Pair.of(basicProjectConfigId.toString(), sprint.getSprintID());
-			Set<JiraIssue> issues = sprintIssueMap.getOrDefault(key, Collections.emptySet());
+			Set<SprintIssue> completedIssues =
+					CollectionUtils.isNotEmpty(sprint.getCompletedIssues())
+							? sprint.getCompletedIssues()
+							: Collections.emptySet();
 
-			double velocity = (double) issues.size();
+			double velocity = (double) completedIssues.size();
 			velocityMap.put(sprint.getSprintID(), velocity);
 
 			double storyPointsVelocity =
-					issues.stream()
-							.mapToDouble(ji -> ji.getStoryPoints() != null ? ji.getStoryPoints() : 0.0)
+					completedIssues.stream()
+							.mapToDouble(si -> si.getStoryPoints() != null ? si.getStoryPoints() : 0.0)
 							.sum();
 			storyPointsVelocityMap.put(sprint.getSprintID(), storyPointsVelocity);
 
@@ -1163,5 +1223,31 @@ public class SprintVelocitySlingshotServiceImpl
 
 		wrapper.setValue(sprintDataCounts);
 		return List.of(wrapper);
+	}
+
+	/**
+	 * Limits the weekly-bucketed issue map for the Explore drill-down. The full map spans up to
+	 * {@link #MONTHLY_INPUT_WEEKS} weeks; each granularity view should only expose its own window: 12
+	 * weeks (Weekly), 24 weeks (Bi-Weekly), 26 weeks / ~6 months (Monthly).
+	 *
+	 * <p>The map is ordered most-recent-first, so {@code limit(N)} retains the N most recent weeks.
+	 */
+	private Map<String, Set<JiraIssue>> limitExploreByGranularity(
+			Map<String, Set<JiraIssue>> jiraIssuesByDateRange) {
+		if (!customApiConfig.isSlingshotSprintVelocityMultiGranularity()) {
+			return jiraIssuesByDateRange;
+		}
+		// Monthly is the widest view — cap the explore at ~6 months so all three
+		// granularities
+		// are covered. The frontend can further filter per the active granularity tab.
+		int limit = EXPLORE_MONTHLY_LIMIT;
+		if (jiraIssuesByDateRange.size() <= limit) {
+			return jiraIssuesByDateRange;
+		}
+		return jiraIssuesByDateRange.entrySet().stream()
+				.limit(limit)
+				.collect(
+						Collectors.toMap(
+								Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 	}
 }

@@ -32,6 +32,14 @@ public interface ScmKpiHelperService {
 
 	List<ScmMergeRequests> getMergeRequests(ObjectId projectBasicConfigId, CustomDateRange dateRange);
 
+	/**
+	 * Returns merged requests whose mergedAt date falls within the given range. Use this instead of
+	 * {@link #getMergeRequests} for KPIs that bucket by merge date, so the DB pre-filter and the
+	 * in-memory week filter use the same field.
+	 */
+	List<ScmMergeRequests> getMergedRequests(
+			ObjectId projectBasicConfigId, CustomDateRange dateRange);
+
 	List<Assignee> getJiraAssigneeForScmUsers(ObjectId projectBasicConfigId);
 
 	List<User> getScmUser(ObjectId projectBasicConfigId);
