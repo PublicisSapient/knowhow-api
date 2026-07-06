@@ -307,7 +307,12 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 			for (FieldMappingResponse fieldMappingResponse : fieldMappingResponseList) {
 				FieldMappingStructure mappingStructure =
 						fieldMappingStructureMap.get(fieldMappingResponse.getFieldName());
-				update.set(fieldMappingResponse.getFieldName(), fieldMappingResponse.getOriginalValue());
+				Object valueToSet = fieldMappingResponse.getOriginalValue();
+				if (fieldMappingResponse.getFieldName().startsWith("thresholdValue")
+						&& valueToSet instanceof Number) {
+					valueToSet = valueToSet.toString();
+				}
+				update.set(fieldMappingResponse.getFieldName(), valueToSet);
 
 				if (null != mappingStructure) {
 					cleanTraceLog =
@@ -678,13 +683,26 @@ public class FieldMappingServiceImpl implements FieldMappingService {
 			List<String> projectLevelThresholdFields,
 			Object value,
 			FieldMappingResponse mappingResponse) {
-		if (projectLevelThresholdFields.contains(field) && ObjectUtils.isEmpty(value)) {
-			List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
-			value =
-					masterList.stream()
-							.filter(j -> j.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
-							.mapToDouble(j -> j.getThresholdValue() != null ? j.getThresholdValue() : 0.0)
-							.sum();
+		if (projectLevelThresholdFields.contains(field)) {
+			if (ObjectUtils.isEmpty(value)) {
+				List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
+				value =
+						masterList.stream()
+								.filter(j -> j.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
+								.mapToDouble(j -> j.getThresholdValue() != null ? j.getThresholdValue() : 0.0)
+								.sum();
+			} else {
+				try {
+					value = Double.parseDouble(value.toString());
+				} catch (NumberFormatException e) {
+					List<KpiMaster> masterList = (List<KpiMaster>) configHelperService.loadKpiMaster();
+					value =
+							masterList.stream()
+									.filter(j -> j.getKpiId().equalsIgnoreCase(kpi.getKpiId()))
+									.mapToDouble(j -> j.getThresholdValue() != null ? j.getThresholdValue() : 0.0)
+									.sum();
+				}
+			}
 		}
 		mappingResponse.setFieldName(field);
 		mappingResponse.setOriginalValue(value);

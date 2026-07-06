@@ -878,7 +878,8 @@ public enum FieldMappingEnum {
 	KPI208("PR Throughput", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI208")),
 	KPI210("Time To First Review", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI210")),
 	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211")),
-	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212"));
+	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212")),
+	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;
