@@ -43,7 +43,8 @@ public class DeploymentFrequencySlingshotGroupIdUpdateChangeUnit {
 	@RollbackExecution
 	public void rollback() {
 		Document rollbackUpdate = new Document();
-		rollbackUpdate.append("$set", new Document(GROUP_ID, 8).append(KPI_FILTER, "multiSelectDropDown"));
+		rollbackUpdate.append(
+				"$set", new Document(GROUP_ID, 8).append(KPI_FILTER, "multiSelectDropDown"));
 		rollbackUpdate.append("$unset", new Document(FORECAST_MODEL, ""));
 		mongoTemplate
 				.getCollection(KPI_MASTER)
