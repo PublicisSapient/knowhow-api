@@ -61,7 +61,7 @@ public class DeploymentFrequencySlingshotChangeUnit {
 								"kpiInfo",
 								new Document()
 										.append(DEFINITION, "How often code is successfully\ndeployed to production."))
-						.append("kpiFilter", "multiSelectDropDown")
+						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "sum")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)

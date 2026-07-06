@@ -23,6 +23,7 @@ public class DeploymentFrequencySlingshotGroupIdUpdateChangeUnit {
 	private static final String KPI_MASTER = "kpi_master";
 	private static final String GROUP_ID = "groupId";
 	private static final String FORECAST_MODEL = "forecastModel";
+	private static final String KPI_FILTER = "kpiFilter";
 
 	private final MongoTemplate mongoTemplate;
 
@@ -35,13 +36,14 @@ public class DeploymentFrequencySlingshotGroupIdUpdateChangeUnit {
 						new Document(
 								"$set",
 								new Document(GROUP_ID, 47)
-										.append(FORECAST_MODEL, ForecastingModel.THETA_METHOD.getName())));
+										.append(FORECAST_MODEL, ForecastingModel.THETA_METHOD.getName())
+										.append(KPI_FILTER, "dropDown")));
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		Document rollbackUpdate = new Document();
-		rollbackUpdate.append("$set", new Document(GROUP_ID, 8));
+		rollbackUpdate.append("$set", new Document(GROUP_ID, 8).append(KPI_FILTER, "multiSelectDropDown"));
 		rollbackUpdate.append("$unset", new Document(FORECAST_MODEL, ""));
 		mongoTemplate
 				.getCollection(KPI_MASTER)
