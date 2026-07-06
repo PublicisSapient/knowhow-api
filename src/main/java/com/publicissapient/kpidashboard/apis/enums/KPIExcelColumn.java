@@ -1250,6 +1250,10 @@ public enum KPIExcelColumn {
 					"Start Date",
 					"Build Url",
 					"Build Status")),
+	DEPLOYMENT_FREQUENCY_SLINGSHOT(
+			"kpi213",
+			Arrays.asList(
+					"Days/Weeks", "Project Name", "Job Name / Pipeline Name", "Environment", "Start Date")),
 	;
 
 	// @formatter:on
