@@ -7,10 +7,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,12 +25,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsKPIService;
+import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencySlingshotInfo;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -143,9 +148,12 @@ public class DeploymentFrequencySlingshotServiceImpl
 			Map<String, Node> mapTmp, List<Node> projectLeafNodeList, KpiElement kpiElement) {
 
 		String requestTrackerId = getRequestTrackerId();
-		Map<String, Object> durationFilter = KpiDataHelper.getDurationFilter(kpiElement);
-		LocalDateTime localStartDate = (LocalDateTime) durationFilter.get(Constant.DATE);
 		LocalDateTime localEndDate = DateUtil.getTodayTime();
+		LocalDateTime localStartDate = localEndDate.minusWeeks(12);
+		Map<String, Object> durationFilter = new HashMap<>();
+		durationFilter.put(Constant.DATE, localStartDate);
+		durationFilter.put(Constant.DURATION, CommonConstant.WEEK);
+		durationFilter.put(Constant.COUNT, 12);
 		DateTimeFormatter formatterMonth = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
 		String startDate = localStartDate.format(formatterMonth);
 		String endDate = localEndDate.format(formatterMonth);
@@ -170,6 +178,17 @@ public class DeploymentFrequencySlingshotServiceImpl
 								durationFilter,
 								excelData,
 								requestTrackerId));
+		DateTimeFormatter displayFmt =
+				DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_FORMAT, Locale.ENGLISH);
+		excelData.sort(
+				Comparator.comparing(
+						(KPIExcelData d) -> {
+							try {
+								return LocalDate.parse(d.getStartDate(), displayFmt);
+							} catch (Exception e) {
+								return LocalDate.MIN;
+							}
+						}));
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.DEPLOYMENT_FREQUENCY_SLINGSHOT.getColumns());
 	}
@@ -260,7 +279,7 @@ public class DeploymentFrequencySlingshotServiceImpl
 	 * @param trendValueMap environment-wise trend value map to populate
 	 * @param trendLineName project trend line name
 	 * @param deploymentFrequencySlingshotInfo excel info bean to populate
-	 * @param durationFilter duration filter (week/month + count)
+	 * @param durationFilter duration filter (count)
 	 */
 	private void prepareDeploymentTrendForProject(
 			List<Deployment> deploymentListProjectWise,
@@ -269,8 +288,7 @@ public class DeploymentFrequencySlingshotServiceImpl
 			String trendLineName,
 			DeploymentFrequencySlingshotInfo deploymentFrequencySlingshotInfo,
 			Map<String, Object> durationFilter) {
-		String duration = (String) durationFilter.getOrDefault(Constant.DURATION, CommonConstant.WEEK);
-		int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 5);
+		int previousTimeCount = (int) durationFilter.getOrDefault(Constant.COUNT, 12);
 		Map<String, List<Deployment>> deploymentMapEnvWise =
 				deploymentListProjectWise.stream()
 						.collect(Collectors.groupingBy(Deployment::getEnvName, Collectors.toList()));
@@ -281,18 +299,17 @@ public class DeploymentFrequencySlingshotServiceImpl
 							&& CollectionUtils.isNotEmpty(deploymentListEnvWise)) {
 
 						Map<String, List<Deployment>> deploymentMapTimeWise =
-								duration.equalsIgnoreCase(CommonConstant.WEEK)
-										? buildLastNWeekBuckets(previousTimeCount)
-										: buildLastNMonthBuckets(previousTimeCount);
+								buildLastNWeekBuckets(previousTimeCount);
 						List<DataCount> dataCountList = new ArrayList<>();
 
 						for (Deployment deployment : deploymentListEnvWise) {
 							DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
 							LocalDateTime dateValue = LocalDateTime.parse(deployment.getStartTime(), formatter);
+							CustomDateRange deploymentPeriod =
+									KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+											dateValue, CommonConstant.WEEK);
 							String timeValue =
-									duration.equalsIgnoreCase(CommonConstant.WEEK)
-											? DateUtil.getWeekRange(dateValue.toLocalDate())
-											: dateValue.getYear() + Constant.DASH + dateValue.getMonthValue();
+									KpiHelperService.getDateRange(deploymentPeriod, CommonConstant.WEEK);
 
 							deploymentMapTimeWise.computeIfPresent(
 									timeValue,
@@ -392,45 +409,34 @@ public class DeploymentFrequencySlingshotServiceImpl
 						DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
 						LocalDateTime dateTime = LocalDateTime.parse(deployment.getStartTime(), formatter);
 						deploymentFrequencySlingshotInfo.addWeeks(
-								DateUtil.getWeekRange(dateTime.toLocalDate()));
+								KpiHelperService.getDateRange(
+										KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
+												dateTime, CommonConstant.WEEK),
+										CommonConstant.WEEK));
 					});
 		}
 	}
 
 	/**
-	 * Builds an ordered map of the last N months (as empty buckets) keyed by "yyyy-M".
-	 *
-	 * @param count number of months
-	 * @return ordered map of month buckets
-	 */
-	private Map<String, List<Deployment>> buildLastNMonthBuckets(int count) {
-		Map<String, List<Deployment>> lastNMonth = new LinkedHashMap<>();
-		LocalDateTime currentDate = LocalDateTime.now();
-		String currentDateStr = currentDate.getYear() + Constant.DASH + currentDate.getMonthValue();
-		lastNMonth.put(currentDateStr, new ArrayList<>());
-		LocalDateTime lastMonth = LocalDateTime.now();
-		for (int i = 1; i < count; i++) {
-			lastMonth = lastMonth.minusMonths(1);
-			String lastMonthStr = lastMonth.getYear() + Constant.DASH + lastMonth.getMonthValue();
-			lastNMonth.put(lastMonthStr, new ArrayList<>());
-		}
-		return lastNMonth;
-	}
-
-	/**
-	 * Builds an ordered map of the last N weeks (as empty buckets) keyed by the week range label.
+	 * Builds an ordered map of the last N weeks (as empty buckets) keyed by the week range label,
+	 * ordered oldest to newest so chart and excel data render left-to-right chronologically.
 	 *
 	 * @param count number of weeks
-	 * @return ordered map of week buckets
+	 * @return ordered map of week buckets (oldest first)
 	 */
 	private Map<String, List<Deployment>> buildLastNWeekBuckets(int count) {
-		Map<String, List<Deployment>> lastNWeek = new LinkedHashMap<>();
-		LocalDate endDateTime = LocalDate.now();
-
+		List<String> weekLabels = new ArrayList<>();
+		LocalDateTime currentDate = DateUtil.getTodayTime();
 		for (int i = 0; i < count; i++) {
-			String currentWeekStr = DateUtil.getWeekRange(endDateTime);
-			lastNWeek.put(currentWeekStr, new ArrayList<>());
-			endDateTime = endDateTime.minusWeeks(1);
+			CustomDateRange periodRange =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, CommonConstant.WEEK);
+			weekLabels.add(KpiHelperService.getDateRange(periodRange, CommonConstant.WEEK));
+			currentDate = currentDate.minusWeeks(1);
+		}
+		Collections.reverse(weekLabels);
+		Map<String, List<Deployment>> lastNWeek = new LinkedHashMap<>();
+		for (String label : weekLabels) {
+			lastNWeek.put(label, new ArrayList<>());
 		}
 		return lastNWeek;
 	}

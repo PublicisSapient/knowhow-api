@@ -56,7 +56,7 @@ public class DeploymentFrequencySlingshotChangeUnit {
 						.append("maxValue", 15)
 						.append("thresholdValue", 55.0)
 						.append("kanban", false)
-						.append("groupId", 8)
+						.append("groupId", 47)
 						.append(
 								"kpiInfo",
 								new Document()
@@ -65,7 +65,8 @@ public class DeploymentFrequencySlingshotChangeUnit {
 						.append("aggregationCriteria", "sum")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity");
+						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity")
+						.append("forecastModel", "thetaMethod");
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
 	}
 
