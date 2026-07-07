@@ -529,6 +529,11 @@ public enum FieldMappingEnum {
 					"jiraIssueTypeKPI156",
 					"thresholdValueKPI156")),
 
+	KPI214(
+			"Lead Time For Change (SCM + Deployment)",
+			KPISource.JENKINS.name(),
+			Arrays.asList("productionBranchKPI214", "thresholdValueKPI214")),
+
 	KPI163(
 			"Defect by Testing Phase",
 			KPISource.JIRA.name(),
