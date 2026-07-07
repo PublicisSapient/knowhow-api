@@ -5632,6 +5632,7 @@
     "calculateMaturity" : false,
     "hideOverallFilter" : true,
     "kpiSource" : "BitBucket",
+    "thresholdValue" : 10,
     "kanban" : false,
     "groupId" : 6,
     "kpiInfo" : {
@@ -5672,5 +5673,35 @@
     "isTrendCalculative" : false,
     "isAdditionalFilterSupport" : false,
     "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD"
+  },
+  {
+    "kpiId" : "kpi213",
+    "kpiName" : "Deployment Frequency",
+    "isDeleted" : "False",
+    "defaultOrder" : 6,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Number",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Count",
+    "showTrend" : true,
+    "isPositiveTrend" : true,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "maxValue" : 15,
+    "thresholdValue" : 55,
+    "kanban" : false,
+    "groupId" : 47,
+    "kpiInfo" : {
+      "definition" : "How often code is successfully\ndeployed to production."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "sum",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
+    "forecastModel" : "thetaMethod"
   }
 ]
