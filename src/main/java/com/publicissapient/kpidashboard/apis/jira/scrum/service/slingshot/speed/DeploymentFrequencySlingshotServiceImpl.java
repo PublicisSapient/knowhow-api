@@ -403,15 +403,17 @@ public class DeploymentFrequencySlingshotServiceImpl
 						} else {
 							deploymentFrequencySlingshotInfo.addJobName(deployment.getJobName());
 						}
+						DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+						LocalDateTime deploymentDateTime =
+								LocalDateTime.parse(deployment.getStartTime(), inputFormatter);
 						deploymentFrequencySlingshotInfo.addDeploymentDate(
-								DateUtil.dateTimeConverter(
-										deployment.getStartTime(), DateUtil.TIME_FORMAT, DateUtil.DISPLAY_DATE_FORMAT));
-						DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
-						LocalDateTime dateTime = LocalDateTime.parse(deployment.getStartTime(), formatter);
+								deploymentDateTime.format(
+												DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT))
+										+ " UTC");
 						deploymentFrequencySlingshotInfo.addWeeks(
 								KpiHelperService.getDateRange(
 										KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
-												dateTime, CommonConstant.WEEK),
+												deploymentDateTime, CommonConstant.WEEK),
 										CommonConstant.WEEK));
 					});
 		}
