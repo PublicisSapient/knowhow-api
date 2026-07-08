@@ -53,6 +53,7 @@ import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.DSRValidationData;
 import com.publicissapient.kpidashboard.apis.model.DefectTransitionInfo;
 import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencyInfo;
+import com.publicissapient.kpidashboard.apis.model.DeploymentFrequencySlingshotInfo;
 import com.publicissapient.kpidashboard.apis.model.IssueKpiModalValue;
 import com.publicissapient.kpidashboard.apis.model.IterationKpiModalValue;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
@@ -1543,6 +1544,41 @@ public class KPIExcelUtility {
 			excelData.setBuildStatus(buildFrequencyInfo.getStatusList().get(i));
 			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
 			kpiExcelData.add(excelData);
+		}
+	}
+
+	/**
+	 * Populates excel data for the Deployment Frequency (Speed) KPI. This is a standalone copy kept
+	 * independent from {@link #populateDeploymentFrequencyExcelData} so the DORA KPI can evolve
+	 * without impacting this one.
+	 *
+	 * @param kpiExcelData kpiExcelData
+	 * @param projectName projectName
+	 * @param deploymentFrequencySlingshotInfo deploymentFrequencySlingshotInfo
+	 * @param deploymentMapPipelineNameWise deploymentMapPipelineNameWise
+	 */
+	public static void populateDeploymentFrequencySlingshotExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String projectName,
+			DeploymentFrequencySlingshotInfo deploymentFrequencySlingshotInfo,
+			Map<String, String> deploymentMapPipelineNameWise) {
+
+		if (deploymentFrequencySlingshotInfo != null) {
+			for (int i = 0; i < deploymentFrequencySlingshotInfo.getJobNameList().size(); i++) {
+				KPIExcelData excelData = new KPIExcelData();
+				excelData.setProject(projectName);
+				excelData.setDaysWeeks(deploymentFrequencySlingshotInfo.getWeeksList().get(i));
+				String jobName = deploymentFrequencySlingshotInfo.getJobNameList().get(i);
+				if (StringUtils.isNotEmpty(deploymentMapPipelineNameWise.get(jobName))) {
+					excelData.setJobName(deploymentMapPipelineNameWise.get(jobName));
+				} else {
+					excelData.setJobName(jobName);
+				}
+				excelData.setDeploymentEnvironment(
+						deploymentFrequencySlingshotInfo.getEnvironmentList().get(i));
+				excelData.setStartDate(deploymentFrequencySlingshotInfo.getDeploymentDateList().get(i));
+				kpiExcelData.add(excelData);
+			}
 		}
 	}
 
