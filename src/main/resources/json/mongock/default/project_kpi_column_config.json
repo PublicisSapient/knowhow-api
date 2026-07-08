@@ -4059,6 +4059,66 @@
         "isDefault" : false
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi214",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Project",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Repo",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Branch",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Author",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Merge Request Url",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "First Commit Date (UTC)",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Deployment Date (UTC)",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Lead Time (Hrs)",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 

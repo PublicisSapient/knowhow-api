@@ -75,7 +75,9 @@ public abstract class ToolsKPIService<R, S> {
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(
 					Arrays.asList(
-							KPICode.CYCLE_TIME_SLINGSHOT.name(), KPICode.CYCLE_TIME_TREND_SLINGSHOT.name()));
+							KPICode.CYCLE_TIME_SLINGSHOT.name(),
+							KPICode.CYCLE_TIME_TREND_SLINGSHOT.name(),
+							KPICode.DEPLOYMENT_FREQUENCY_SLINGSHOT.name()));
 
 	@Autowired private CustomApiConfig customApiConfig;
 
