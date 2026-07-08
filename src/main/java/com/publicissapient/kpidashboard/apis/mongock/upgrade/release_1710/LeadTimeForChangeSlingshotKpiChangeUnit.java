@@ -86,7 +86,8 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 						.append("isAdditionalFilterSupport", false)
 						.append(
 								"combinedKpiSource",
-								"Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD");
+								"Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD")
+						.append("forecastModel", "thetaMethod");
 
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
 	}
@@ -100,7 +101,7 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Weeks")
+												.append(COLUMN_NAME, "Days/Weeks")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
@@ -110,18 +111,38 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "First Commit Date")
+												.append(COLUMN_NAME, "Repo")
+												.append(ORDER, 3)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Branch")
+												.append(ORDER, 4)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Author")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Deployment Date")
+												.append(COLUMN_NAME, "Merge Request Url")
 												.append(ORDER, 6)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Lead Time (hrs)")
+												.append(COLUMN_NAME, "First Commit Date (UTC)")
 												.append(ORDER, 7)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Deployment Date (UTC)")
+												.append(ORDER, 8)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Lead Time (Hrs)")
+												.append(ORDER, 9)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 

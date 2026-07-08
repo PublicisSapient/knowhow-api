@@ -5731,6 +5731,7 @@
     "isTrendCalculative" : false,
     "isAdditionalFilterSupport" : false,
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD",
-    "kpiFilter" : "dropDown"
+    "kpiFilter" : "dropDown",
+    "forecastModel" : "thetaMethod"
   }
 ]

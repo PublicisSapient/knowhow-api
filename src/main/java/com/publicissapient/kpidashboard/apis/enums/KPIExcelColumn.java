@@ -1261,7 +1261,15 @@ public enum KPIExcelColumn {
 	LEAD_TIME_FOR_CHANGE_SLINGSHOT(
 			"kpi214",
 			Arrays.asList(
-					"Weeks", "Project Name", "First Commit Date", "Deployment Date", "Lead Time (hrs)")),
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Author",
+					"Merge Request Url",
+					"First Commit Date (UTC)",
+					"Deployment Date (UTC)",
+					"Lead Time (Hrs)")),
 	;
 
 	// @formatter:on
