@@ -5703,5 +5703,34 @@
     "isAdditionalFilterSupport" : false,
     "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi214",
+    "kpiName" : "Lead Time For Change",
+    "isDeleted" : "False",
+    "defaultOrder" : 6,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Hours",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Hours",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "maxValue" : 15,
+    "thresholdValue" : 24,
+    "kanban" : false,
+    "groupId" : 9,
+    "kpiInfo" : {
+      "definition" : "Time from first commit on a PR branch to the change running in production. Lead Time = ts(deploy to prod) - ts(first commit on PR branch)."
+    },
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD",
+    "kpiFilter" : "dropDown"
   }
 ]
