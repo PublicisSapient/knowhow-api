@@ -566,6 +566,9 @@ public class KPIExcelData {
 	@JsonProperty("First Commit Date")
 	private String firstCommitDate;
 
+	@JsonProperty("Commit Sha")
+	private String commitSha;
+
 	@JsonProperty("Deployment Date")
 	private String deploymentDate;
 

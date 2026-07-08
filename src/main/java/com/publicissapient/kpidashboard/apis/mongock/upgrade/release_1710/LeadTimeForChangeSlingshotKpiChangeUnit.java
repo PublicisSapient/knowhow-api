@@ -100,12 +100,22 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Weeks")
+												.append(COLUMN_NAME, "Days/Weeks")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
 												.append(COLUMN_NAME, "Project")
+												.append(ORDER, 2)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Repo")
+												.append(ORDER, 2)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Commit Sha")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

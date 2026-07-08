@@ -516,8 +516,9 @@ public class LeadTimeForChangeSlingshotServiceImpl
 			for (LeadTimeRecord r : records) {
 				KPIExcelData row = new KPIExcelData();
 				row.setProject(projectName);
-				row.setWeeks(DateUtil.getWeekRangeUsingDateTime(r.deploymentTime));
-				row.setBranch(productionBranch);
+				row.setDaysWeeks(DateUtil.getWeekDaysRangeUsingDateTime(r.deploymentTime));
+				row.setRepo(r.repoName);
+				row.setCommitSha(r.commitSha);
 				row.setFirstCommitDate(
 						r.commitDateTime == null
 								? Constant.EMPTY_STRING
@@ -652,7 +653,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				firstNonBlank(
 						getRepoNameFromUrl(earliestDeployment.getRepoUrl()),
 						firstNonBlank(commit.getRepositoryName(), earliestMr.getRepositoryName()));
-		return new LeadTimeRecord(lastDeployEndTime, leadTimeHours, repoName, commitDateTime);
+		return new LeadTimeRecord(
+				lastDeployEndTime, leadTimeHours, repoName, commit.getSha(), commitDateTime);
 	}
 
 	private static String firstNonBlank(String a, String b) {
@@ -737,16 +739,19 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		private final LocalDateTime deploymentTime;
 		private final double leadTimeHours;
 		private final String repoName;
+		private final String commitSha;
 		private final LocalDateTime commitDateTime;
 
 		LeadTimeRecord(
 				LocalDateTime deploymentTime,
 				double leadTimeHours,
 				String repoName,
+				String commitSha,
 				LocalDateTime commitDateTime) {
 			this.deploymentTime = deploymentTime;
 			this.leadTimeHours = leadTimeHours;
 			this.repoName = repoName;
+			this.commitSha = commitSha;
 			this.commitDateTime = commitDateTime;
 		}
 	}
