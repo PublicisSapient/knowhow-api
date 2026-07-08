@@ -22,6 +22,7 @@ import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HI
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -364,8 +365,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 					kpiRequest != null && kpiRequest.getXAxisDataPoints() > 0
 							? kpiRequest.getXAxisDataPoints()
 							: DEFAULT_DATA_POINTS;
-			range.setStartDate(LocalDate.now().minusWeeks(weeks));
-			range.setEndDate(LocalDate.now().plusDays(1));
+			range.setStartDate(LocalDate.now(ZoneId.systemDefault()).minusWeeks(weeks));
+			range.setEndDate(LocalDate.now(ZoneId.systemDefault()).plusDays(1));
 		}
 		return range;
 	}
@@ -381,8 +382,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		int dataPoints = kpiRequest.getXAxisDataPoints();
 		String duration = kpiRequest.getDuration();
 
-		String startDate = LocalDate.now().minusWeeks(dataPoints).toString();
-		String endDate = LocalDate.now().plusDays(1).toString();
+		String startDate = LocalDate.now(ZoneId.systemDefault()).minusWeeks(dataPoints).toString();
+		String endDate = LocalDate.now(ZoneId.systemDefault()).plusDays(1).toString();
 
 		Map<String, Object> scmDataMap =
 				fetchKPIDataFromDb(List.of(projectLeafNode), startDate, endDate, kpiRequest);
@@ -583,9 +584,9 @@ public class LeadTimeForChangeSlingshotServiceImpl
 
 		List<LeadTimeRecord> records = new ArrayList<>();
 		for (ScmCommits commit : commits) {
-			LeadTimeRecord record = buildLeadTimeRecord(commit, mrBySha, deploymentBySha);
-			if (record != null) {
-				records.add(record);
+			LeadTimeRecord leadTimeRecord = buildLeadTimeRecord(commit, mrBySha, deploymentBySha);
+			if (leadTimeRecord != null) {
+				records.add(leadTimeRecord);
 			}
 		}
 		return records;
@@ -651,8 +652,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				firstNonBlank(
 						getRepoNameFromUrl(earliestDeployment.getRepoUrl()),
 						firstNonBlank(commit.getRepositoryName(), earliestMr.getRepositoryName()));
-		return new LeadTimeRecord(
-				lastDeployEndTime, leadTimeHours, repoName, earliestMr.getExternalId(), commitDateTime);
+		return new LeadTimeRecord(lastDeployEndTime, leadTimeHours, repoName, commitDateTime);
 	}
 
 	private static String firstNonBlank(String a, String b) {
@@ -737,19 +737,16 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		private final LocalDateTime deploymentTime;
 		private final double leadTimeHours;
 		private final String repoName;
-		private final String mergeRequestId;
 		private final LocalDateTime commitDateTime;
 
 		LeadTimeRecord(
 				LocalDateTime deploymentTime,
 				double leadTimeHours,
 				String repoName,
-				String mergeRequestId,
 				LocalDateTime commitDateTime) {
 			this.deploymentTime = deploymentTime;
 			this.leadTimeHours = leadTimeHours;
 			this.repoName = repoName;
-			this.mergeRequestId = mergeRequestId;
 			this.commitDateTime = commitDateTime;
 		}
 	}
