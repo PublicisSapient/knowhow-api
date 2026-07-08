@@ -1258,6 +1258,10 @@ public enum KPIExcelColumn {
 					"Job Name / Pipeline Name",
 					"Environment",
 					"Start Date Time (UTC)")),
+	LEAD_TIME_FOR_CHANGE_SLINGSHOT(
+			"kpi214",
+			Arrays.asList(
+					"Weeks", "Project Name", "First Commit Date", "Deployment Date", "Lead Time (hrs)")),
 	;
 
 	// @formatter:on

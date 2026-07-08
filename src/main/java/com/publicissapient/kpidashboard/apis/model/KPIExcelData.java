@@ -563,6 +563,15 @@ public class KPIExcelData {
 	@JsonProperty("Time to First Review (In Hours)")
 	private String timeToFirstReview;
 
+	@JsonProperty("First Commit Date")
+	private String firstCommitDate;
+
+	@JsonProperty("Deployment Date")
+	private String deploymentDate;
+
+	@JsonProperty("Lead Time (hrs)")
+	private String leadTimeForChangeHrs;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

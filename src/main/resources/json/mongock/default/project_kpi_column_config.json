@@ -4059,6 +4059,42 @@
         "isDefault" : false
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi214",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Project",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "First Commit Date",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Deployment Date",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Lead Time (hrs)",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 

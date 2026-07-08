@@ -5259,5 +5259,34 @@
     "sectionOrder" : 4,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI214",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. Value is interpreted in hours. If the threshold is empty, then a common target KPI line will be shown."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+
+  {
+    "fieldName" : "productionBranchKPI214",
+    "fieldLabel" : "Production Branch Name",
+    "fieldType" : "text",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Production branch in which all the child branches are merged. Merge requests whose target branch matches this value are used to compute lead time. <br> e.g. master <hr>"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]
