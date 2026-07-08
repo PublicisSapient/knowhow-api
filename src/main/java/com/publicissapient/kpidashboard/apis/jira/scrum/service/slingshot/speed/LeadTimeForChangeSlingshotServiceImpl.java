@@ -20,22 +20,23 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -303,52 +304,57 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				Comparator.comparing(
 						Deployment::getStartTime, Comparator.nullsLast(Comparator.naturalOrder())));
 
-		AtomicReference<LocalDateTime> previousDeploymentTime = new AtomicReference<>();
+		// Pre-compute once: a SHA→timestamp map for O(1) head-commit pointer advance,
+		// and a filtered list with pre-computed timestamps so the per-deployment window
+		// filter runs in O(C) total rather than O(D×C) with repeated
+		// convertMillisToLocalDateTime.
+		Map<String, LocalDateTime> commitTsBySha = new HashMap<>(commits.size() * 2);
+		List<Pair<ScmCommits, LocalDateTime>> timedCommits = new ArrayList<>(commits.size());
+		for (ScmCommits c : commits) {
+			if (c == null || c.getSha() == null || c.getCommitTimestamp() == null) {
+				continue;
+			}
+			LocalDateTime ts = DateUtil.convertMillisToLocalDateTime(c.getCommitTimestamp());
+			if (ts != null) {
+				commitTsBySha.putIfAbsent(c.getSha().toLowerCase(), ts);
+				timedCommits.add(Pair.of(c, ts));
+			}
+		}
+
+		LocalDateTime previousDeploymentTime = null;
 		for (Deployment deployment : deployments) {
 			LocalDateTime deployStartDateTime = parseDeploymentTime(deployment.getStartTime());
 			if (deployStartDateTime == null) {
 				continue;
 			}
 
-			if (previousDeploymentTime.get() != null) {
+			if (previousDeploymentTime != null) {
 				String deployRepo = normalizeRepo(getRepoNameFromUrl(deployment.getRepoUrl()));
-				LocalDateTime prev = previousDeploymentTime.get();
+				final LocalDateTime prev = previousDeploymentTime;
 				List<String> changeSetShas =
-						commits.stream()
-								.filter(Objects::nonNull)
-								.filter(c -> c.getSha() != null && c.getCommitTimestamp() != null)
+						timedCommits.stream()
 								.filter(
-										c -> {
-											String commitRepo = normalizeRepo(c.getRepositoryName());
+										p -> {
+											String commitRepo = normalizeRepo(p.getLeft().getRepositoryName());
 											return deployRepo == null
 													|| commitRepo == null
 													|| deployRepo.equals(commitRepo);
 										})
 								.filter(
-										c -> {
-											LocalDateTime ts =
-													DateUtil.convertMillisToLocalDateTime(c.getCommitTimestamp());
-											return ts != null && ts.isAfter(prev) && ts.isBefore(deployStartDateTime);
-										})
-								.map(ScmCommits::getSha)
+										p -> p.getRight().isAfter(prev) && p.getRight().isBefore(deployStartDateTime))
+								.map(p -> p.getLeft().getSha())
 								.toList();
 				deployment.setChangeSets(changeSetShas);
 			}
 
 			// Advance the "previous deployment head" pointer to this deployment's head
-			// commit time so
-			// the next iteration expands its changeSets correctly.
+			// commit time so the next iteration expands its changeSets correctly.
 			List<String> currentChangeSets = deployment.getChangeSets();
 			if (CollectionUtils.isNotEmpty(currentChangeSets)) {
-				String headSha = currentChangeSets.get(0);
-				Optional<ScmCommits> headCommit =
-						commits.stream()
-								.filter(c -> c != null && headSha.equalsIgnoreCase(c.getSha()))
-								.findFirst();
-				headCommit.ifPresent(
-						c ->
-								previousDeploymentTime.set(
-										DateUtil.convertMillisToLocalDateTime(c.getCommitTimestamp())));
+				LocalDateTime headTs = commitTsBySha.get(currentChangeSets.get(0).toLowerCase());
+				if (headTs != null) {
+					previousDeploymentTime = headTs;
+				}
 			}
 		}
 	}
@@ -491,13 +497,15 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	 * the KPI element. Columns match {@link KPIExcelColumn#LEAD_TIME_FOR_CHANGE_SLINGSHOT}:
 	 *
 	 * <ul>
-	 *   <li>Weeks
-	 *   <li>Project Name
-	 *   <li>Merge Request Id
-	 *   <li>Production Branch
-	 *   <li>First Commit Date
-	 *   <li>Deployment Date
-	 *   <li>Lead Time (hrs)
+	 *   <li>Days/Weeks
+	 *   <li>Project
+	 *   <li>Repo
+	 *   <li>Branch (production branch)
+	 *   <li>Author
+	 *   <li>Merge Request Url (PR number as label, clickable link)
+	 *   <li>First Commit Date (UTC)
+	 *   <li>Deployment Date (UTC)
+	 *   <li>Lead Time (Hrs)
 	 * </ul>
 	 */
 	private void populateLeadTimeExcelData(
@@ -515,9 +523,14 @@ public class LeadTimeForChangeSlingshotServiceImpl
 			List<KPIExcelData> excelRows = new ArrayList<>();
 			for (LeadTimeRecord r : records) {
 				KPIExcelData row = new KPIExcelData();
+				row.setDaysWeeks(formatWeekRange(r.deploymentTime));
 				row.setProject(projectName);
-				row.setWeeks(DateUtil.getWeekRangeUsingDateTime(r.deploymentTime));
+				row.setRepo(resolveRepoLabel(r.repoName));
 				row.setBranch(productionBranch);
+				row.setAuthor(r.author != null ? r.author : Constant.EMPTY_STRING);
+				if (r.prId != null && r.prUrl != null && !r.prUrl.isEmpty()) {
+					row.setMergeRequestUrl(Map.of(r.prId, r.prUrl));
+				}
 				row.setFirstCommitDate(
 						r.commitDateTime == null
 								? Constant.EMPTY_STRING
@@ -582,9 +595,37 @@ public class LeadTimeForChangeSlingshotServiceImpl
 										e -> e.getKey().toLowerCase(),
 										Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
+		// Pre-parse deployment timestamps once — the same Deployment object is
+		// referenced by many
+		// commits, so parsing its start/end string per commit multiplies the cost
+		// unnecessarily.
+		// IdentityHashMap uses reference equality, which is correct here since we hold
+		// the same
+		// Deployment instances throughout.
+		Map<Deployment, LocalDateTime> deployStartTimes = new IdentityHashMap<>(deployments.size() * 2);
+		Map<Deployment, LocalDateTime> deployEndTimes = new IdentityHashMap<>(deployments.size() * 2);
+		for (Deployment d : deployments) {
+			if (d == null) {
+				continue;
+			}
+			if (d.getStartTime() != null) {
+				LocalDateTime t = parseDeploymentTime(d.getStartTime());
+				if (t != null) {
+					deployStartTimes.put(d, t);
+				}
+			}
+			if (d.getEndTime() != null) {
+				LocalDateTime t = parseDeploymentTime(d.getEndTime());
+				if (t != null) {
+					deployEndTimes.put(d, t);
+				}
+			}
+		}
+
 		List<LeadTimeRecord> records = new ArrayList<>();
 		for (ScmCommits commit : commits) {
-			LeadTimeRecord leadTimeRecord = buildLeadTimeRecord(commit, mrBySha, deploymentBySha);
+			LeadTimeRecord leadTimeRecord =
+					buildLeadTimeRecord(commit, mrBySha, deploymentBySha, deployStartTimes, deployEndTimes);
 			if (leadTimeRecord != null) {
 				records.add(leadTimeRecord);
 			}
@@ -598,7 +639,9 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	private LeadTimeRecord buildLeadTimeRecord(
 			ScmCommits commit,
 			Map<String, List<ScmMergeRequests>> mrBySha,
-			Map<String, List<Deployment>> deploymentBySha) {
+			Map<String, List<Deployment>> deploymentBySha,
+			Map<Deployment, LocalDateTime> deployStartTimes,
+			Map<Deployment, LocalDateTime> deployEndTimes) {
 		if (commit == null || commit.getSha() == null || commit.getCommitTimestamp() == null) {
 			return null;
 		}
@@ -627,14 +670,14 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		LocalDateTime commitDateTime =
 				DateUtil.convertMillisToLocalDateTime(commit.getCommitTimestamp());
 		LocalDateTime mergeDateTime = earliestMr.getMergedAt();
-		LocalDateTime deployStartDateTime = parseDeploymentTime(earliestDeployment.getStartTime());
+		LocalDateTime deployStartDateTime = deployStartTimes.get(earliestDeployment);
 		if (commitDateTime == null || mergeDateTime == null || deployStartDateTime == null) {
 			return null;
 		}
 
 		LocalDateTime lastDeployEndTime =
 				matchingDeployments.stream()
-						.map(d -> parseDeploymentTime(d.getEndTime()))
+						.map(deployEndTimes::get)
 						.filter(Objects::nonNull)
 						.max(Comparator.naturalOrder())
 						.orElse(deployStartDateTime);
@@ -652,7 +695,11 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				firstNonBlank(
 						getRepoNameFromUrl(earliestDeployment.getRepoUrl()),
 						firstNonBlank(commit.getRepositoryName(), earliestMr.getRepositoryName()));
-		return new LeadTimeRecord(lastDeployEndTime, leadTimeHours, repoName, commitDateTime);
+		String author = firstNonBlank(commit.getAuthorName(), commit.getAuthor());
+		String prId = earliestMr.getExternalId();
+		String prUrl = earliestMr.getMergeRequestUrl();
+		return new LeadTimeRecord(
+				lastDeployEndTime, leadTimeHours, repoName, commitDateTime, author, prId, prUrl);
 	}
 
 	private static String firstNonBlank(String a, String b) {
@@ -693,6 +740,19 @@ public class LeadTimeForChangeSlingshotServiceImpl
 			labels.add(resolveRepoLabel(r.repoName));
 		}
 		return labels;
+	}
+
+	/**
+	 * Formats the week containing {@code dt} as "dd-MMM-yyyy to dd-MMM-yyyy" (e.g. "20-Apr-2026 to
+	 * 26-Apr-2026").
+	 */
+	private static final DateTimeFormatter WEEK_RANGE_FORMATTER =
+			DateTimeFormatter.ofPattern("dd-MMM-yyyy");
+
+	private static String formatWeekRange(LocalDateTime dt) {
+		LocalDate monday = dt.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+		LocalDate sunday = dt.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+		return monday.format(WEEK_RANGE_FORMATTER) + " to " + sunday.format(WEEK_RANGE_FORMATTER);
 	}
 
 	private LocalDateTime parseDeploymentTime(String startTime) {
@@ -738,16 +798,25 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		private final double leadTimeHours;
 		private final String repoName;
 		private final LocalDateTime commitDateTime;
+		private final String author;
+		private final String prId;
+		private final String prUrl;
 
 		LeadTimeRecord(
 				LocalDateTime deploymentTime,
 				double leadTimeHours,
 				String repoName,
-				LocalDateTime commitDateTime) {
+				LocalDateTime commitDateTime,
+				String author,
+				String prId,
+				String prUrl) {
 			this.deploymentTime = deploymentTime;
 			this.leadTimeHours = leadTimeHours;
 			this.repoName = repoName;
 			this.commitDateTime = commitDateTime;
+			this.author = author;
+			this.prId = prId;
+			this.prUrl = prUrl;
 		}
 	}
 }
