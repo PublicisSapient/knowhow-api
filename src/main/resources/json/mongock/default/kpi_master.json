@@ -5708,7 +5708,7 @@
     "kpiId" : "kpi214",
     "kpiName" : "Lead Time For Change",
     "isDeleted" : "False",
-    "defaultOrder" : 6,
+    "defaultOrder" : 7,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Speed",
     "kpiUnit" : "Hours",

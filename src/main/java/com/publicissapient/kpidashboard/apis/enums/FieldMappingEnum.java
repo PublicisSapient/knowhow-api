@@ -532,7 +532,7 @@ public enum FieldMappingEnum {
 	KPI214(
 			"Lead Time For Change (SCM + Deployment)",
 			KPISource.JENKINS.name(),
-			Arrays.asList("productionBranchKPI214", "thresholdValueKPI214")),
+			Arrays.asList("productionBranchKPI214", "productionJobNameKPI214", "thresholdValueKPI214")),
 
 	KPI163(
 			"Defect by Testing Phase",
