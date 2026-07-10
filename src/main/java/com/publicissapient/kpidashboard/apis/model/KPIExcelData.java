@@ -572,6 +572,27 @@ public class KPIExcelData {
 	@JsonProperty("Lead Time (Hrs)")
 	private String leadTimeForChangeHrs;
 
+	@JsonProperty("Repository Name")
+	private String repositoryName;
+
+	@JsonProperty("Source Branch")
+	private String sourceBranch;
+
+	@JsonProperty("Final Pull Request")
+	private Map<String, String> finalPullRequest;
+
+	@JsonProperty("Job/Pipeline Name")
+	private String jobPipelineName;
+
+	@JsonProperty("Deployed Environment")
+	private String deployedEnvironment;
+
+	@JsonProperty("Deployment Status")
+	private String deploymentStatus;
+
+	@JsonProperty("Deployment End Date (UTC)")
+	private String deploymentEndDate;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

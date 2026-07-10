@@ -83,6 +83,9 @@ public class CommonServiceImpl implements CommonService {
 			if (actualMaturityVal == null || Constant.NOT_AVAILABLE.equalsIgnoreCase(actualMaturityVal)) {
 				return Constant.ZERO;
 			}
+			if (maturityRangeList == null || maturityRangeList.isEmpty()) {
+				return Constant.ZERO;
+			}
 
 			String[] array = maturityRangeList.get(3).split("-");
 			boolean upFlag = isBasedOnHighVal(kpiId, array);
