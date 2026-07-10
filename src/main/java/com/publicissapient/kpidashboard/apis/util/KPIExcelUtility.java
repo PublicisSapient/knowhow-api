@@ -1568,15 +1568,21 @@ public class KPIExcelUtility {
 				KPIExcelData excelData = new KPIExcelData();
 				excelData.setProject(projectName);
 				excelData.setDaysWeeks(deploymentFrequencySlingshotInfo.getWeeksList().get(i));
+				excelData.setRepositoryName(deploymentFrequencySlingshotInfo.getRepoNameList().get(i));
 				String jobName = deploymentFrequencySlingshotInfo.getJobNameList().get(i);
 				if (StringUtils.isNotEmpty(deploymentMapPipelineNameWise.get(jobName))) {
-					excelData.setJobName(deploymentMapPipelineNameWise.get(jobName));
+					excelData.setJobPipelineName(deploymentMapPipelineNameWise.get(jobName));
 				} else {
-					excelData.setJobName(jobName);
+					excelData.setJobPipelineName(jobName);
 				}
-				excelData.setDeploymentEnvironment(
+				excelData.setDeployedEnvironment(
 						deploymentFrequencySlingshotInfo.getEnvironmentList().get(i));
-				excelData.setStartDate(deploymentFrequencySlingshotInfo.getDeploymentDateList().get(i));
+				excelData.setDeploymentStatus(
+						deploymentFrequencySlingshotInfo.getDeploymentStatusList().get(i));
+				excelData.setDeploymentDate(
+						deploymentFrequencySlingshotInfo.getDeploymentDateList().get(i));
+				excelData.setDeploymentEndDate(
+						deploymentFrequencySlingshotInfo.getDeploymentEndDateList().get(i));
 				kpiExcelData.add(excelData);
 			}
 		}

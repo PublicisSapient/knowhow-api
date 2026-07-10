@@ -5288,5 +5288,20 @@
     "sectionOrder" : 5,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+
+  {
+    "fieldName" : "productionJobNameKPI214",
+    "fieldLabel" : "Production Deployment Job Name",
+    "fieldType" : "text",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Job name of the production deployment pipeline. Only deployments with this job name are used to compute lead time. When left blank, all deployments are considered. <br> e.g. my-service-prod <hr>"
+    },
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]
