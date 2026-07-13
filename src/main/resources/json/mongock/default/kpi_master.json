@@ -5733,5 +5733,34 @@
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD",
     "kpiFilter" : "dropDown",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi215",
+    "kpiName" : "PR Revert Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 1,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "5-", "3-5", "2-3", "1-2", "-1" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "BitBucket",
+    "kanban" : false,
+    "groupId" : 67,
+    "kpiInfo" : {
+      "definition" : "% of merged PRs that are subsequently reverted. Strong proxy for code-review effectiveness."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isAdditionalFilterSupport" : false,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "forecastModel" : "thetaMethod"
   }
 ]
