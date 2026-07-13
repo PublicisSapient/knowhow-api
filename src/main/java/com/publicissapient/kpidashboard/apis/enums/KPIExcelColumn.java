@@ -1275,6 +1275,18 @@ public enum KPIExcelColumn {
 					"First Commit Date (UTC)",
 					"Deployment Date (UTC)",
 					"Lead Time (Hrs)")),
+	SCM_PR_REVERT_RATE(
+			"kpi215",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Revert PR",
+					"No of Merge",
+					"Revert Rate")),
 	;
 
 	// @formatter:on
