@@ -284,6 +284,21 @@ public enum FieldMappingEnum {
 					"jiraBugRaisedByValue",
 					"jiraBugRaisedByIdentification")),
 
+	KPI216(
+			"Defect Escape Rate",
+			KPISource.JIRA.name(),
+			Arrays.asList(
+					"jiraIssueTypeKPI216",
+					"resolutionTypeForRejectionKPI216",
+					"jiraDefectRejectionStatusKPI216",
+					"thresholdValueKPI216",
+					"defectPriorityKPI216",
+					"includeRCAForKPI216",
+					"excludeUnlinkedDefects",
+					"jiraBugRaisedByCustomField",
+					"jiraBugRaisedByValue",
+					"jiraBugRaisedByIdentification")),
+
 	KPI133(
 			"Quality Status",
 			KPISource.JIRA.name(),

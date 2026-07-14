@@ -5762,5 +5762,38 @@
     "isRepoToolKpi" : true,
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi216",
+    "kpiName" : "Defect Escape Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 2,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "30-", "25-30", "20-25", "15-20", "-15" ],
+    "hideOverallFilter" : false,
+    "kpiSource" : "Jira",
+    "maxValue" : 100,
+    "thresholdValue" : 10,
+    "kanban" : false,
+    "groupId" : 68,
+    "kpiInfo" : {
+      "definition" : "% of defects discovered in production vs. discovered preproduction."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : true,
+    "combinedKpiSource" : "Jira/Azure/Rally",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "forecastModel" : "exponentialSmoothing"
   }
 ]
