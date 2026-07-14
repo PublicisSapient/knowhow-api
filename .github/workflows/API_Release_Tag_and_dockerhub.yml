@@ -120,10 +120,6 @@ jobs:
             -H "Authorization: token ${{ secrets.KNOWHOW_ADMIN_PAT }}" \
             https://api.github.com/user
 
-      - name: Show remote
-        run: |
-          git remote -v
-
       - name: Push commit + tag to origin/master
         run: |
           # avoid staging a submodule path accidentally if knowhow-common exists in the superproject
