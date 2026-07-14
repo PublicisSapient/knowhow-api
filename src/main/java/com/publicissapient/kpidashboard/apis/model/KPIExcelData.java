@@ -140,6 +140,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Description")
 	private String defectDesc;
 
+	@JsonProperty("Description")
+	private String description;
+
 	@JsonProperty("Defect Priority")
 	private String defectPriority;
 

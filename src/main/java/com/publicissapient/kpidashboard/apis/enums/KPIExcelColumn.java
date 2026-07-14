@@ -1287,6 +1287,20 @@ public enum KPIExcelColumn {
 					"Revert PR",
 					"No of Merge",
 					"Revert Rate")),
+	DEFECT_ESCAPE_RATE_SLINGSHOT(
+			"kpi216",
+			Arrays.asList(
+					"Days/Weeks",
+					"Sprint Name",
+					"Defect ID",
+					"Description",
+					"Escaped Defect",
+					"Escaped defect identifier",
+					"Defect Priority",
+					"Defect Status",
+					"Story ID",
+					"Squad",
+					"Time Spent (in hours)")),
 	;
 
 	// @formatter:on
