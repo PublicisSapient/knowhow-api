@@ -85,6 +85,7 @@ public class KpiDataProvider {
 	private static final String SPRINT_WISE_SUB_TASK_BUGS = "sprintWiseSubTaskBugs";
 	private static final String SUB_TASK_BUGS_HISTORY = "SubTaskBugsHistory";
 	private static final String STORY_LIST = "storyList";
+	public static final String CALENDAR_STORIES = "calendarStories";
 	private static final String REJECTED_DEFECT_DATA = "rejectedBugKey";
 	private static final String TOTAL_DEFECT_LIST = "totalDefectList";
 	private static final String TOTAL_SPRINT_SUBTASK_DEFECTS = "totalSprintSubtaskDefects";
