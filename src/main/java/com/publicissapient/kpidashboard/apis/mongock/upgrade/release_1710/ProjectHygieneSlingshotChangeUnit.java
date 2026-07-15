@@ -153,7 +153,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append(FIELD_NAME, JIRA_FIELDS_SELECTION_FIELD)
 						.append("fieldLabel", "fields to write prompts")
 						.append("placeHolderText", "fields to write prompts")
-						.append("fieldType", "text")
+						.append("fieldType", "chips")
 						.append("fieldCategory", "fields")
 						.append("processorCommon", false)
 						.append(
