@@ -253,7 +253,14 @@ public class ScmPrRevertRateServiceImpl
 				(userEmail, userMergeRequests) -> {
 					String developerName = emailToNameMap.getOrDefault(userEmail, userEmail);
 					long userTotal = userMergeRequests.size();
-					long userReverted = countRevertedPRs(userMergeRequests);
+					List<ScmMergeRequests> revertedUserPRs =
+							userMergeRequests.stream().filter(this::isRevertedPR).toList();
+					long userReverted = revertedUserPRs.size();
+					List<String> revertPrUrls =
+							revertedUserPRs.stream()
+									.map(ScmMergeRequests::getMergeRequestUrl)
+									.filter(Objects::nonNull)
+									.collect(Collectors.toList());
 
 					String userKpiGroup = branchName + "#" + developerName;
 					setDataCount(
@@ -261,7 +268,14 @@ public class ScmPrRevertRateServiceImpl
 
 					validationDataList.add(
 							createValidationData(
-									projectName, tool, developerName, userEmail, dateLabel, userReverted, userTotal));
+									projectName,
+									tool,
+									developerName,
+									userEmail,
+									dateLabel,
+									userReverted,
+									userTotal,
+									revertPrUrls));
 				});
 	}
 
@@ -326,7 +340,8 @@ public class ScmPrRevertRateServiceImpl
 			String developerEmail,
 			String dateLabel,
 			long revertedCount,
-			long totalMerged) {
+			long totalMerged,
+			List<String> revertPrUrls) {
 		RepoToolValidationData validationData = new RepoToolValidationData();
 		validationData.setProjectName(projectName);
 		validationData.setBranchName(tool.getBranch());
@@ -337,6 +352,7 @@ public class ScmPrRevertRateServiceImpl
 		validationData.setDate(dateLabel);
 		validationData.setMrCount(totalMerged);
 		validationData.setKpiPRs(revertedCount);
+		validationData.setMergeRequestUrls(revertPrUrls);
 		long nonRevertTotal = totalMerged - revertedCount;
 		validationData.setRevertRate(
 				nonRevertTotal > 0 ? (revertedCount * 100.0 / nonRevertTotal) : 0.0);

@@ -121,8 +121,13 @@ public class PrRevertRateKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Revert Rate")
+												.append(COLUMN_NAME, "Merge Request Url")
 												.append(ORDER, 9)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Revert Rate")
+												.append(ORDER, 10)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
