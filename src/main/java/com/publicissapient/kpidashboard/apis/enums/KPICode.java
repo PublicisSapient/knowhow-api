@@ -333,7 +333,8 @@ public enum KPICode {
 	PR_SIZE_DISTRIBUTION("kpi211", KPISource.BITBUCKET.name()),
 	BUILD_SUCCESS_RATE("kpi212", KPISource.JENKINS.name()),
 	DEPLOYMENT_FREQUENCY_SLINGSHOT("kpi213", KPISource.JENKINS.name()),
-	LEAD_TIME_FOR_CHANGE_SLINGSHOT("kpi214", KPISource.JENKINS.name());
+	LEAD_TIME_FOR_CHANGE_SLINGSHOT("kpi214", KPISource.JENKINS.name()),
+	PROJECT_HYGIENE("kpi215", KPISource.JIRA.name());
 
 	// @formatter:on
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2014 CapitalOne, LLC.
+  * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -884,7 +884,8 @@ public enum FieldMappingEnum {
 	KPI210("Time To First Review", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI210")),
 	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211")),
 	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212")),
-	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213"));
+	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213")),
+	KPI215("Project Hygiene", KPISource.JIRA.name(), List.of("jiraFieldsSelectionKPI215"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

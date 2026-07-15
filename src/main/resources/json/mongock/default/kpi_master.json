@@ -5733,5 +5733,35 @@
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD",
     "kpiFilter" : "dropDown",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi215",
+    "kpiName" : "Project Hygiene",
+    "isDeleted" : "False",
+    "defaultOrder" : 7,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Speed",
+    "kpiUnit" : "Percentage",
+    "chartType" : "line",
+    "xAxisLabel" : "Sprints",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : true,
+    "calculateMaturity" : false,
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jira",
+    "maxValue" : 100,
+    "thresholdValue" : 80,
+    "kanban" : false,
+    "groupId" : 48,
+    "kpiInfo" : {
+      "definition" : "AI-driven hygiene score (0-100) that evaluates every Jira issue in a sprint against a Definition-of-Ready style checklist (story points, summary, priority, assignee, labels, sprint, epic link, resolution, worklog, staleness, etc.) and reports the percentage of applicable rules passed."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jira/Azure Boards/Rally",
+    "forecastModel" : "thetaMethod"
   }
 ]
