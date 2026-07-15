@@ -1836,8 +1836,13 @@ public class KPIExcelUtility {
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
-						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
+						if (CollectionUtils.isNotEmpty(repoToolValidationData.getMergeRequestUrls())) {
+							Map<String, String> mergeUrls = new HashMap<>();
+							repoToolValidationData.getMergeRequestUrls().forEach(url -> mergeUrls.put(url, url));
+							excelData.setMergeRequestUrl(mergeUrls);
+						}
 						excelData.setRevertRate(
 								Math.round(repoToolValidationData.getRevertRate() * 100.0) / 100.0);
 						kpiExcelData.add(excelData);

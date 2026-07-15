@@ -13,12 +13,12 @@ import io.mongock.api.annotations.RollbackExecution;
 import lombok.RequiredArgsConstructor;
 
 @ChangeUnit(
-		id = "pr_revert_rate_column_reorder",
-		order = "17156",
+		id = "pr_revert_rate_add_merge_request_url_column",
+		order = "17160",
 		author = "knowhow",
 		systemVersion = "17.1.0")
 @RequiredArgsConstructor
-public class PrRevertRateColumnReorderChangeUnit {
+public class PrRevertRateAddMergeRequestUrlColumnChangeUnit {
 
 	private static final String KPI_ID = "kpiId";
 	private static final String KPI_215 = "kpi215";
@@ -76,6 +76,6 @@ public class PrRevertRateColumnReorderChangeUnit {
 
 	@RollbackExecution
 	public void rollback() {
-		// no-op: the document is owned by PrRevertRateKpiChangeUnit
+		// no-op: PrRevertRateColumnReorderChangeUnit owns the base document
 	}
 }
