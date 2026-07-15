@@ -30,8 +30,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -128,6 +130,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	private static final String PRODUCTION_BRANCH = "productionBranch";
 	private static final String DEFAULT_PRODUCTION_BRANCH = "master";
 	private static final String PRODUCTION_JOB_NAME = "productionJobName";
+	private static final String CALCULATION_STRATEGY = "calculationStrategy";
+	private static final String STRATEGY_COMMIT = "COMMIT";
 	private static final int DEFAULT_DATA_POINTS = 12;
 
 	private static final DateTimeFormatter DEPLOYMENT_TS_FORMATTER =
@@ -251,6 +255,26 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	}
 
 	/**
+	 * Returns {@value #STRATEGY_COMMIT} when the field mapping opts into commit-based calculation,
+	 * otherwise returns {@code "DEPLOYMENT"} (the default, backward-compatible path).
+	 */
+	String resolveCalculationStrategy(ObjectId basicProjectConfigId) {
+		if (basicProjectConfigId == null || configHelperService == null) {
+			return "DEPLOYMENT";
+		}
+		Map<ObjectId, FieldMapping> fieldMappingMap = configHelperService.getFieldMappingMap();
+		if (fieldMappingMap == null) {
+			return "DEPLOYMENT";
+		}
+		FieldMapping fieldMapping = fieldMappingMap.get(basicProjectConfigId);
+		if (fieldMapping == null) {
+			return "DEPLOYMENT";
+		}
+		String strategy = fieldMapping.getCalculationStrategyKPI214();
+		return STRATEGY_COMMIT.equalsIgnoreCase(strategy) ? STRATEGY_COMMIT : "DEPLOYMENT";
+	}
+
+	/**
 	 * Fetches SCM merged PRs and deployment records for the given project(s). No Jira issue fetch is
 	 * performed.
 	 */
@@ -269,6 +293,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 
 		String productionBranch = resolveProductionBranch(basicProjectConfigId);
 		String productionJobName = resolveProductionJobName(basicProjectConfigId);
+		String calculationStrategy = resolveCalculationStrategy(basicProjectConfigId);
 
 		List<ScmMergeRequests> allMergedPrs =
 				scmKpiHelperService.getMergedRequests(basicProjectConfigId, dateRange).stream()
@@ -279,30 +304,34 @@ public class LeadTimeForChangeSlingshotServiceImpl
 						.filter(mr -> productionBranch.equalsIgnoreCase(mr.getToBranch().trim()))
 						.toList();
 
-		List<Deployment> deployments =
-				deploymentRepository.findDeploymentList(
-						new HashMap<>(), Collections.singleton(basicProjectConfigId), startDate, endDate);
-
-		// When a production job name is configured, restrict to that ArgoCD application
-		// only so we measure time-to-production rather than time-to-first-deploy.
-		if (productionJobName != null) {
-			final String jobNameFilter = productionJobName;
-			deployments =
-					deployments.stream()
-							.filter(d -> jobNameFilter.equalsIgnoreCase(d.getJobName()))
-							.collect(Collectors.toList());
-		}
-
-		// For tools like ArgoCD / GitHubAction, each deployment record carries only the
-		// HEAD commit SHA (not the full list of commits included in the release).
-		// Expand
-		// the changeSets for those deployments by pulling in every commit that landed
-		// on
-		// the deployed repo between the previous deployment's head commit and this
-		// deployment's start time.
 		List<ScmCommits> commits =
 				scmKpiHelperService.getCommitDetails(basicProjectConfigId, dateRange);
-		enrichHeadOnlyDeployments(deployments, commits);
+
+		List<Deployment> deployments;
+		if (STRATEGY_COMMIT.equals(calculationStrategy)) {
+			// In COMMIT mode, deployments are not needed — the PR merge date is the proxy.
+			deployments = Collections.emptyList();
+		} else {
+			deployments =
+					deploymentRepository.findDeploymentList(
+							new HashMap<>(), Collections.singleton(basicProjectConfigId), startDate, endDate);
+
+			// When a production job name is configured, restrict to that ArgoCD application
+			// only so we measure time-to-production rather than time-to-first-deploy.
+			if (productionJobName != null) {
+				final String jobNameFilter = productionJobName;
+				deployments =
+						deployments.stream()
+								.filter(d -> jobNameFilter.equalsIgnoreCase(d.getJobName()))
+								.collect(Collectors.toList());
+			}
+
+			// For tools like ArgoCD / GitHubAction, each deployment record carries only the
+			// HEAD commit SHA. Expand the changeSets by pulling in every commit that landed
+			// on the deployed repo between the previous deployment's head commit and this
+			// deployment's start time.
+			enrichHeadOnlyDeployments(deployments, commits);
+		}
 
 		resultMap.put(MERGED_PRS, mergedPrs);
 		resultMap.put(ALL_MERGED_PRS, allMergedPrs);
@@ -310,6 +339,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		resultMap.put(COMMITS, commits);
 		resultMap.put(PRODUCTION_BRANCH, productionBranch);
 		resultMap.put(PRODUCTION_JOB_NAME, productionJobName);
+		resultMap.put(CALCULATION_STRATEGY, calculationStrategy);
 		return resultMap;
 	}
 
@@ -438,20 +468,29 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				(List<Deployment>) scmDataMap.getOrDefault(DEPLOYMENTS, Collections.emptyList());
 		List<ScmCommits> commits =
 				(List<ScmCommits>) scmDataMap.getOrDefault(COMMITS, Collections.emptyList());
+		String calculationStrategy =
+				(String) scmDataMap.getOrDefault(CALCULATION_STRATEGY, "DEPLOYMENT");
 
-		if (CollectionUtils.isEmpty(mergedPrs) || CollectionUtils.isEmpty(deployments)) {
+		boolean isCommitStrategy = STRATEGY_COMMIT.equals(calculationStrategy);
+
+		if (CollectionUtils.isEmpty(mergedPrs)
+				|| (!isCommitStrategy && CollectionUtils.isEmpty(deployments))) {
 			log.info(
 					"[LEAD-TIME-FOR-CHANGE-SLINGSHOT] Missing SCM/deployment data for project {} "
-							+ "(prs={}, deployments={})",
+							+ "(prs={}, deployments={}, strategy={})",
 					projectLeafNode.getProjectFilter(),
 					mergedPrs.size(),
-					deployments.size());
+					deployments.size(),
+					calculationStrategy);
 			mapTmp.get(projectLeafNode.getId()).setValue(new LinkedHashMap<String, List<DataCount>>());
 			return;
 		}
 
 		List<LeadTimeRecord> records =
-				new ArrayList<>(computeLeadTimeRecords(mergedPrs, allMergedPrs, deployments, commits));
+				isCommitStrategy
+						? new ArrayList<>(computeLeadTimeRecordsFromMerges(mergedPrs, allMergedPrs, commits))
+						: new ArrayList<>(
+								computeLeadTimeRecords(mergedPrs, allMergedPrs, deployments, commits));
 		records.sort(
 				Comparator.comparing((LeadTimeRecord r) -> r.deploymentTime)
 						.thenComparing(r -> r.commitDateTime, Comparator.nullsLast(Comparator.naturalOrder())));
@@ -576,6 +615,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 								? r.fromBranch
 								: productionBranch);
 				row.setAuthor(r.author != null ? r.author : Constant.EMPTY_STRING);
+				row.setPrTrail(r.prTrail != null ? r.prTrail : Constant.EMPTY_STRING);
 				if (r.prId != null && r.prUrl != null && !r.prUrl.isEmpty()) {
 					row.setFinalPullRequest(Map.of(r.prId, r.prUrl));
 				}
@@ -585,12 +625,276 @@ public class LeadTimeForChangeSlingshotServiceImpl
 						r.commitDateTime == null
 								? Constant.EMPTY_STRING
 								: r.commitDateTime.format(EXCEL_DATE_FORMATTER));
-				row.setDeploymentDate(r.deploymentTime.format(EXCEL_DATE_FORMATTER));
+				row.setDeploymentOrMergedDate(r.deploymentTime.format(EXCEL_DATE_FORMATTER));
 				row.setLeadTimeForChangeHrs(String.valueOf(Math.round(r.leadTimeHours * 100d) / 100d));
 				excelRows.add(row);
 			}
 			kpiElement.setExcelData(excelRows);
 		}
+	}
+
+	/**
+	 * COMMIT strategy: computes lead-time records purely from merged pull requests.
+	 *
+	 * <p>For each PR merged into the production branch:
+	 *
+	 * <pre>
+	 *   lead time (hours) = (pr.mergedAt − min(commitTimestamp for that PR)) / 3600
+	 * </pre>
+	 *
+	 * <p>The record is bucketed by {@code pr.mergedAt}. No deployment data is required.
+	 */
+	private List<LeadTimeRecord> computeLeadTimeRecordsFromMerges(
+			List<ScmMergeRequests> mergedPrs,
+			List<ScmMergeRequests> allMergedPrs,
+			List<ScmCommits> commits) {
+
+		if (CollectionUtils.isEmpty(mergedPrs)) {
+			return Collections.emptyList();
+		}
+
+		// Build a SHA→timestamp lookup so we can find the earliest commit in each PR.
+		Map<String, Long> commitTsByShа = new HashMap<>(commits == null ? 0 : commits.size() * 2);
+		if (!CollectionUtils.isEmpty(commits)) {
+			for (ScmCommits c : commits) {
+				if (c != null && c.getSha() != null && c.getCommitTimestamp() != null) {
+					commitTsByShа.putIfAbsent(c.getSha().toLowerCase(), c.getCommitTimestamp());
+				}
+			}
+		}
+
+		// Build a SHA→PRs lookup across ALL merged PRs for Option-2 trail walk.
+		// This map lets us follow commit SHAs back through every integration branch
+		// PR to reach the original feature branch PR and its createdDate.
+		Map<String, List<ScmMergeRequests>> allPrBySha = new HashMap<>();
+		if (!CollectionUtils.isEmpty(allMergedPrs)) {
+			for (ScmMergeRequests mr : allMergedPrs) {
+				if (mr == null || CollectionUtils.isEmpty(mr.getCommitShas())) {
+					continue;
+				}
+				for (String sha : mr.getCommitShas()) {
+					if (sha != null) {
+						allPrBySha.computeIfAbsent(sha.toLowerCase(), k -> new ArrayList<>()).add(mr);
+					}
+				}
+			}
+		}
+
+		List<LeadTimeRecord> records = new ArrayList<>();
+		for (ScmMergeRequests pr : mergedPrs) {
+			if (pr == null || pr.getMergedAt() == null) {
+				continue;
+			}
+
+			// Find the earliest commit timestamp across all SHAs in this PR.
+			Long earliestCommitMillis = null;
+			if (!CollectionUtils.isEmpty(pr.getCommitShas())) {
+				for (String sha : pr.getCommitShas()) {
+					if (sha == null) {
+						continue;
+					}
+					Long ts = commitTsByShа.get(sha.toLowerCase());
+					if (ts != null && (earliestCommitMillis == null || ts < earliestCommitMillis)) {
+						earliestCommitMillis = ts;
+					}
+				}
+			}
+			// Fall back to firstCommitDate carried on the PR model itself.
+			if (earliestCommitMillis == null && pr.getFirstCommitDate() != null) {
+				earliestCommitMillis =
+						pr.getFirstCommitDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+			}
+			// Always build the PR trail — used for the Excel column and as Option-2
+			// fallback.
+			TrailResult trailResult = buildTrailResult(pr, allPrBySha);
+
+			// Option-2 fallback: when no commit timestamps exist in scm_commits, use the
+			// earliest PR createdDate from the trail as a proxy for "first commit time".
+			// This WARN disappears once the SCM processor is rebuilt and populates
+			// scm_commits.
+			if (earliestCommitMillis == null) {
+				if (trailResult.earliestCreatedDate != null) {
+					earliestCommitMillis = trailResult.earliestCreatedDate;
+					log.warn(
+							"[LTC-OPTION2-FALLBACK] PR #{} repo '{}': no commit timestamps in scm_commits — "
+									+ "walked PR trail, earliest PR in chain opened at epoch-ms {}. "
+									+ "This warning will stop once the SCM processor populates scm_commits.",
+							pr.getExternalId(),
+							pr.getRepositoryName(),
+							trailResult.earliestCreatedDate);
+				}
+			}
+			if (earliestCommitMillis == null) {
+				continue;
+			}
+
+			LocalDateTime firstCommitDateTime =
+					DateUtil.convertMillisToLocalDateTime(earliestCommitMillis);
+			LocalDateTime mergedAt = pr.getMergedAt();
+			if (firstCommitDateTime == null || mergedAt.isBefore(firstCommitDateTime)) {
+				continue;
+			}
+
+			double leadTimeMinutes = KpiDataHelper.calWeekMinutes(firstCommitDateTime, mergedAt);
+			if (leadTimeMinutes < 0) {
+				continue;
+			}
+			double leadTimeHours = leadTimeMinutes / 60d;
+
+			String repoName = pr.getRepositoryName();
+			String author =
+					pr.getAuthorId() != null
+							? firstNonBlank(pr.getAuthorId().getDisplayName(), pr.getAuthorId().getUsername())
+							: pr.getAuthorUserId();
+			String prId = pr.getExternalId();
+			String prUrl = pr.getMergeRequestUrl();
+			String fromBranch = pr.getFromBranch();
+			records.add(
+					new LeadTimeRecord(
+							mergedAt,
+							leadTimeHours,
+							repoName,
+							firstCommitDateTime,
+							author,
+							prId,
+							prUrl,
+							null,
+							null,
+							fromBranch,
+							trailResult.trailString));
+		}
+		return records;
+	}
+
+	/**
+	 * Builds a PR trail for the DEPLOYMENT strategy by looking up all PRs that contain a specific
+	 * commit SHA in {@code allMrBySha}, then sorting by {@code mergedAt} ascending.
+	 *
+	 * <p>This is reliable because {@code allMrBySha} is indexed by individual commit SHAs (not
+	 * PR-level commitShas), the same lookup already used to find {@code originMr}. A commit that
+	 * flowed feature → dev → qa → prod will appear in every integration PR's commitShas list, so the
+	 * full chain surfaces naturally.
+	 */
+	private TrailResult buildTrailFromCommitSha(
+			String sha, Map<String, List<ScmMergeRequests>> allMrBySha) {
+
+		List<ScmMergeRequests> candidates = allMrBySha.getOrDefault(sha, Collections.emptyList());
+
+		// Deduplicate by externalId preserving mergedAt order
+		Map<String, ScmMergeRequests> seen = new LinkedHashMap<>();
+		candidates.stream()
+				.filter(mr -> mr != null && mr.getExternalId() != null)
+				.sorted(
+						Comparator.comparing(
+								ScmMergeRequests::getMergedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+				.forEach(mr -> seen.putIfAbsent(mr.getExternalId(), mr));
+
+		List<ScmMergeRequests> chain = new ArrayList<>(seen.values());
+
+		Long earliestCreatedDate =
+				chain.stream()
+						.map(ScmMergeRequests::getCreatedDate)
+						.filter(Objects::nonNull)
+						.min(Long::compareTo)
+						.orElse(null);
+
+		String trailString =
+				chain.stream()
+						.map(
+								mr -> {
+									String entry = "#" + mr.getExternalId();
+									String branch = mr.getFromBranch();
+									return (branch != null && !branch.isEmpty())
+											? entry + " (" + branch + ")"
+											: entry;
+								})
+						.collect(Collectors.joining(" → "));
+
+		return new TrailResult(earliestCreatedDate, trailString);
+	}
+
+	/**
+	 * Walks backward through the PR integration chain using directed branch matching.
+	 *
+	 * <p>At each step, the current PR's {@code fromBranch} tells us which branch was the source. We
+	 * find the upstream PR whose {@code toBranch} equals that value and which shares at least one
+	 * commit SHA with the current PR — confirming the code actually flowed through it. This produces
+	 * a clean linear chain (feature → dev → qa → prod) with no repeated branches, unlike a pure SHA
+	 * BFS which finds every PR that ever touched any shared commit.
+	 *
+	 * <p>Returns the earliest {@code createdDate} in the chain (Option-2 fallback) and the formatted
+	 * trail string.
+	 */
+	private TrailResult buildTrailResult(
+			ScmMergeRequests productionPr, Map<String, List<ScmMergeRequests>> allPrBySha) {
+
+		LinkedList<ScmMergeRequests> chain = new LinkedList<>();
+		chain.addFirst(productionPr);
+
+		Set<String> visitedIds = new HashSet<>();
+		if (productionPr.getExternalId() != null) {
+			visitedIds.add(productionPr.getExternalId());
+		}
+
+		ScmMergeRequests current = productionPr;
+		int maxDepth = 20;
+		while (maxDepth-- > 0
+				&& current.getFromBranch() != null
+				&& !CollectionUtils.isEmpty(current.getCommitShas())) {
+
+			String targetBranch = current.getFromBranch();
+			ScmMergeRequests best = null;
+
+			for (String sha : current.getCommitShas()) {
+				if (sha == null) {
+					continue;
+				}
+				List<ScmMergeRequests> candidates = allPrBySha.get(sha.toLowerCase());
+				if (CollectionUtils.isEmpty(candidates)) {
+					continue;
+				}
+				for (ScmMergeRequests c : candidates) {
+					if (c == null || c.getExternalId() == null) {
+						continue;
+					}
+					if (visitedIds.contains(c.getExternalId())) {
+						continue;
+					}
+					if (!targetBranch.equals(c.getToBranch())) {
+						continue;
+					}
+					// Among multiple matches prefer the most recently merged
+					if (best == null
+							|| (c.getMergedAt() != null
+									&& (best.getMergedAt() == null || c.getMergedAt().isAfter(best.getMergedAt())))) {
+						best = c;
+					}
+				}
+			}
+
+			if (best == null) {
+				break;
+			}
+			visitedIds.add(best.getExternalId());
+			chain.addFirst(best);
+			current = best;
+		}
+
+		Long earliestCreatedDate = chain.getFirst().getCreatedDate();
+
+		String trailString =
+				chain.stream()
+						.map(
+								mr -> {
+									String entry = "#" + mr.getExternalId();
+									String branch = mr.getFromBranch();
+									return (branch != null && !branch.isEmpty())
+											? entry + " (" + branch + ")"
+											: entry;
+								})
+						.collect(Collectors.joining(" → "));
+
+		return new TrailResult(earliestCreatedDate, trailString);
 	}
 
 	/**
@@ -796,6 +1100,10 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		String jobName = earliestDeployment.getJobName();
 		String envName = earliestDeployment.getEnvName();
 		String fromBranch = originMr != null ? originMr.getFromBranch() : earliestMr.getFromBranch();
+		// Use the individual commit SHA — same lookup that correctly finds originMr —
+		// to collect every PR this commit flowed through, then sort by mergedAt for the
+		// trail.
+		TrailResult trailResult = buildTrailFromCommitSha(sha, allMrBySha);
 		return new LeadTimeRecord(
 				lastDeployEndTime,
 				leadTimeHours,
@@ -806,7 +1114,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				prUrl,
 				jobName,
 				envName,
-				fromBranch);
+				fromBranch,
+				trailResult.trailString);
 	}
 
 	private static String firstNonBlank(String a, String b) {
@@ -911,6 +1220,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 		private final String jobName;
 		private final String envName;
 		private final String fromBranch;
+		private final String prTrail;
 
 		LeadTimeRecord(
 				LocalDateTime deploymentTime,
@@ -922,7 +1232,8 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				String prUrl,
 				String jobName,
 				String envName,
-				String fromBranch) {
+				String fromBranch,
+				String prTrail) {
 			this.deploymentTime = deploymentTime;
 			this.leadTimeHours = leadTimeHours;
 			this.repoName = repoName;
@@ -933,6 +1244,18 @@ public class LeadTimeForChangeSlingshotServiceImpl
 			this.jobName = jobName;
 			this.envName = envName;
 			this.fromBranch = fromBranch;
+			this.prTrail = prTrail;
+		}
+	}
+
+	/** Holds the result of a PR-trail walk: the earliest createdDate and the formatted trail. */
+	private static final class TrailResult {
+		final Long earliestCreatedDate;
+		final String trailString;
+
+		TrailResult(Long earliestCreatedDate, String trailString) {
+			this.earliestCreatedDate = earliestCreatedDate;
+			this.trailString = trailString;
 		}
 	}
 }

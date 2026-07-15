@@ -4119,6 +4119,78 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi216",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Sprint Name",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect ID",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Description",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Escaped Defect",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Escaped defect identifier",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect Priority",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Defect Status",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Story ID",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Squad",
+        "order" : 10,
+        "isShown" : true,
+        "isDefault" : false
+      },
+      {
+        "columnName" : "Time Spent (in hours)",
+        "order" : 11,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 

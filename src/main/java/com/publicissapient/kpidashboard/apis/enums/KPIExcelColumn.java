@@ -1273,8 +1273,35 @@ public enum KPIExcelColumn {
 					"Job/Pipeline Name",
 					"Deployed Environment",
 					"First Commit Date (UTC)",
-					"Deployment Date (UTC)",
+					"Deployment / Merged Date (UTC)",
 					"Lead Time (Hrs)")),
+	SCM_PR_REVERT_RATE(
+			"kpi215",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repo",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"No of Merge",
+					"No of Revert PR",
+					"Merge Request Url",
+					"Revert Rate")),
+	DEFECT_ESCAPE_RATE_SLINGSHOT(
+			"kpi216",
+			Arrays.asList(
+					"Days/Weeks",
+					"Sprint Name",
+					"Defect ID",
+					"Description",
+					"Escaped Defect",
+					"Escaped defect identifier",
+					"Defect Priority",
+					"Defect Status",
+					"Story ID",
+					"Squad",
+					"Time Spent (in hours)")),
 	;
 
 	// @formatter:on
