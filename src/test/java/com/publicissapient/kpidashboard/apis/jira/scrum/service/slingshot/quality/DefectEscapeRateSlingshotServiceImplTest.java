@@ -71,6 +71,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.ProjectBasicConfig;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefectEscapeRateSlingshotServiceImplTest {
@@ -95,6 +96,7 @@ public class DefectEscapeRateSlingshotServiceImplTest {
 	@Mock private CommonService commonService;
 	@Mock private KpiDataCacheService kpiDataCacheService;
 	@Mock private KpiDataProvider kpiDataProvider;
+	@Mock private SprintRepository sprintRepository;
 	@InjectMocks DefectEscapeRateSlingshotServiceImpl defectEscapeRateSlingshotServiceImpl;
 
 	private List<AccountHierarchyData> accountHierarchyDataList = new ArrayList<>();

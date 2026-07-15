@@ -67,7 +67,9 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.model.jira.SprintWiseStory;
+import com.publicissapient.kpidashboard.common.repository.jira.SprintRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,11 +98,13 @@ public class DefectEscapeRateSlingshotServiceImpl
 	private static final int WEEKLY_DISPLAY_PERIODS = 12;
 	private static final int BI_WEEKLY_INPUT_WEEKS = 24;
 	private static final int MONTHLY_DISPLAY_PERIODS = 6;
+	private static final int SPRINT_DISPLAY_LIMIT = 12;
 
 	private final FilterHelperService filterHelperService;
 	private final CacheService cacheService;
 	private final KpiDataCacheService kpiDataCacheService;
 	private final KpiDataProvider kpiDataProvider;
+	private final SprintRepository sprintRepository;
 
 	@Autowired(required = false)
 	private ForecastingManager forecastingManager;
@@ -161,15 +165,20 @@ public class DefectEscapeRateSlingshotServiceImpl
 				getTrendValuesMap(
 						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEFECT_ESCAPE_RATE_SLINGSHOT);
 
-		List<DataCountGroup> groups = buildMultiGranularityGroups(perProjectWeeklyDc, trendValueList);
+		List<DataCountGroup> groups =
+				buildMultiGranularityGroups(
+						perProjectWeeklyDc,
+						treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER),
+						kpiRequest);
 		kpiElement.setTrendValueList(groups);
 
 		return kpiElement;
 	}
 
-	@SuppressWarnings("unchecked")
 	private List<DataCountGroup> buildMultiGranularityGroups(
-			Map<String, List<DataCount>> perProjectWeeklyDc, List<DataCount> sprintTrendValueList) {
+			Map<String, List<DataCount>> perProjectWeeklyDc,
+			List<Node> sprintLeafNodes,
+			KpiRequest kpiRequest) {
 
 		String kpiId = KPICode.DEFECT_ESCAPE_RATE_SLINGSHOT.getKpiId();
 		List<DataCountGroup> groups = new ArrayList<>();
@@ -202,7 +211,7 @@ public class DefectEscapeRateSlingshotServiceImpl
 						fm -> fm.addForecastsToDataCount(monthlyGroup, flattenInner(monthlyOutput), kpiId));
 		groups.add(monthlyGroup);
 
-		List<DataCount> sprintOutput = buildSprintEscapeRateOutput(sprintTrendValueList);
+		List<DataCount> sprintOutput = buildSprintViewFromRepository(sprintLeafNodes, kpiRequest);
 		DataCountGroup sprintGroup = new DataCountGroup();
 		sprintGroup.setFilter(SPRINT);
 		sprintGroup.setValue(sprintOutput);
@@ -358,22 +367,123 @@ public class DefectEscapeRateSlingshotServiceImpl
 		return result;
 	}
 
-	/** Wraps per-sprint "Overall" DataCounts (from the existing sprint computation) per project. */
-	private List<DataCount> buildSprintEscapeRateOutput(List<DataCount> sprintTrendValueList) {
-		Map<String, List<DataCount>> perProject = new LinkedHashMap<>();
-		for (DataCount dc : sprintTrendValueList) {
-			if (CommonConstant.OVERALL.equalsIgnoreCase(dc.getKpiGroup())) {
-				perProject.computeIfAbsent(dc.getSProjectName(), k -> new ArrayList<>()).add(dc);
-			}
-		}
+	/**
+	 * Builds sprint-based DataCounts by querying the last {@link #SPRINT_DISPLAY_LIMIT} closed
+	 * sprints directly from the sprint repository. This mirrors the approach used by Flow Velocity
+	 * and ensures the Sprint view always shows 12 data points regardless of how many sprints are
+	 * selected in the filter UI.
+	 *
+	 * <p>The per-sprint escape rate is computed using the same sprint-story-defect linking logic as
+	 * the sprint-wise leaf node path.
+	 */
+	@SuppressWarnings("unchecked")
+	private List<DataCount> buildSprintViewFromRepository(
+			List<Node> sprintLeafNodes, KpiRequest kpiRequest) {
+
+		Map<ObjectId, String> projectIdToName = new LinkedHashMap<>();
+		sprintLeafNodes.forEach(
+				node ->
+						projectIdToName.putIfAbsent(
+								node.getProjectFilter().getBasicProjectConfigId(),
+								node.getProjectFilter().getName()));
+
 		List<DataCount> result = new ArrayList<>();
-		perProject.forEach(
-				(project, sprints) -> {
-					DataCount wrapper = new DataCount();
-					wrapper.setData(project);
-					wrapper.setValue(sprints);
-					result.add(wrapper);
-				});
+
+		for (Map.Entry<ObjectId, String> entry : projectIdToName.entrySet()) {
+			ObjectId basicProjectConfigId = entry.getKey();
+			String projectName = entry.getValue();
+
+			List<SprintDetails> closedSprints =
+					sprintRepository.findByBasicProjectConfigIdInAndStateInOrderByStartDateDesc(
+							Set.of(basicProjectConfigId), List.of(SprintDetails.SPRINT_STATE_CLOSED));
+
+			if (CollectionUtils.isEmpty(closedSprints)) continue;
+
+			List<SprintDetails> limited =
+					closedSprints.size() > SPRINT_DISPLAY_LIMIT
+							? closedSprints.subList(0, SPRINT_DISPLAY_LIMIT)
+							: new ArrayList<>(closedSprints);
+
+			List<String> sprintIds =
+					limited.stream().map(SprintDetails::getSprintID).collect(Collectors.toList());
+
+			Map<String, Object> data =
+					kpiDataProvider.fetchDefectEscapeRateSlingshotData(
+							kpiRequest, basicProjectConfigId, sprintIds);
+
+			List<SprintWiseStory> sprintWiseStoryList =
+					(List<SprintWiseStory>) data.getOrDefault(SPRINTSTORIES, new ArrayList<>());
+			List<JiraIssue> totalDefects =
+					(List<JiraIssue>) data.getOrDefault(TOTALBUGKEY, new ArrayList<>());
+			FieldMapping fieldMapping =
+					((Map<String, FieldMapping>) data.get(PROJFMAPPING)).get(basicProjectConfigId.toString());
+
+			Map<Pair<String, String>, List<SprintWiseStory>> sprintWiseMap =
+					sprintWiseStoryList.stream()
+							.collect(
+									Collectors.groupingBy(
+											sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprint()),
+											Collectors.toList()));
+
+			Map<Pair<String, String>, List<JiraIssue>> unlinkedDefect =
+					totalDefects.stream()
+							.filter(issue -> CollectionUtils.isEmpty(issue.getDefectStoryID()))
+							.collect(
+									Collectors.groupingBy(
+											sws -> Pair.of(sws.getBasicProjectConfigId(), sws.getSprintID()),
+											Collectors.toList()));
+
+			// Reverse so we display oldest sprint first
+			List<SprintDetails> oldestFirst = new ArrayList<>(limited);
+			Collections.reverse(oldestFirst);
+
+			List<DataCount> sprintDcs = new ArrayList<>();
+			for (SprintDetails sprint : oldestFirst) {
+				String sprintId = sprint.getSprintID();
+				Pair<String, String> sprintKey = Pair.of(basicProjectConfigId.toString(), sprintId);
+
+				List<SprintWiseStory> sprintStories =
+						sprintWiseMap.getOrDefault(sprintKey, new ArrayList<>());
+				List<String> storyIds = new ArrayList<>();
+				sprintStories.stream().map(SprintWiseStory::getStoryList).forEach(storyIds::addAll);
+
+				List<JiraIssue> sprintDefects =
+						totalDefects.stream()
+								.filter(f -> CollectionUtils.containsAny(f.getDefectStoryID(), storyIds))
+								.collect(Collectors.toList());
+
+				if (fieldMapping != null && !fieldMapping.isExcludeUnlinkedDefects()) {
+					sprintDefects.addAll(unlinkedDefect.getOrDefault(sprintKey, new ArrayList<>()));
+				}
+
+				Set<String> uatLabels = new HashSet<>();
+				Map<String, List<JiraIssue>> uatDefectMap =
+						checkUATDefect(sprintDefects, fieldMapping, uatLabels);
+				int uatCount = uatDefectMap.values().stream().mapToInt(List::size).sum();
+				int totalCount = sprintDefects.size();
+				double rate = totalCount > 0 ? Math.round(100.0 * uatCount / totalCount) : 0.0;
+
+				Map<String, Object> hoverValue = new HashMap<>();
+				hoverValue.put(UAT, uatCount);
+				hoverValue.put(TOTAL, totalCount);
+
+				DataCount dc = new DataCount();
+				dc.setSProjectName(projectName);
+				dc.setSSprintID(sprint.getSprintName());
+				dc.setSSprintName(sprint.getSprintName());
+				dc.setData(String.valueOf(rate));
+				dc.setValue(rate);
+				dc.setKpiGroup(CommonConstant.OVERALL);
+				dc.setHoverValue(hoverValue);
+				sprintDcs.add(dc);
+			}
+
+			DataCount wrapper = new DataCount();
+			wrapper.setData(projectName);
+			wrapper.setValue(sprintDcs);
+			result.add(wrapper);
+		}
+
 		return result;
 	}
 
@@ -607,9 +717,10 @@ public class DefectEscapeRateSlingshotServiceImpl
 	}
 
 	/**
-	 * Calendar-first: fetches all sprints for each project within the last MONTHLY_INPUT_WEEKS window
-	 * and builds the perProjectWeeklyDc map used for Weekly/Bi-Weekly/Monthly granularities. Sprint
-	 * view is unaffected (computed separately in sprintWiseLeafNodeValue).
+	 * Builds per-project weekly DataCounts for the Weekly/Bi-Weekly/Monthly granularities. Fetches
+	 * ALL project defects via the date-range provider (which applies all field-mapping filters:
+	 * priority exclusion, RCA, dropped defects) and buckets them by {@code createdDate} relative to
+	 * today. This keeps calendar periods anchored to today, independent of sprint boundaries.
 	 */
 	@SuppressWarnings("unchecked")
 	private void buildCalendarGranularityData(
@@ -659,58 +770,50 @@ public class DefectEscapeRateSlingshotServiceImpl
 	}
 
 	/**
-	 * Buckets defects by creation date into 7-day calendar windows and computes escape rate (UAT
-	 * defects / total defects) per bucket. Returns most-recent-first.
+	 * Buckets {@code allDefects} by {@code createdDate} into 7-day windows relative to today and
+	 * computes the escape rate for each window using the field-mapping's UAT identification config.
+	 * Returns a most-recent-first list covering the last {@link #MONTHLY_INPUT_WEEKS} calendar weeks.
 	 */
-	@SuppressWarnings("unchecked")
 	private List<DataCount> buildDefectCreationDateEscapeRateCounts(
 			List<JiraIssue> allDefects, FieldMapping fieldMapping, String projectName) {
 
 		LocalDate anchor = LocalDate.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
-		// Group defects by weekly bucket index (0 = most recent week ending on anchor)
-		Map<Integer, List<JiraIssue>> defectsByBucket = new HashMap<>();
+		// Bucket defects by creation date
+		TreeMap<Integer, List<JiraIssue>> defectsByBucket = new TreeMap<>();
 		for (JiraIssue defect : allDefects) {
-			String createdStr = defect.getCreatedDate();
-			if (createdStr == null || createdStr.length() < 10) continue;
+			String createdDateStr = defect.getCreatedDate();
+			if (createdDateStr == null || createdDateStr.length() < 10) continue;
 			try {
-				LocalDate createdDate = LocalDate.parse(createdStr.substring(0, 10));
+				LocalDate createdDate = LocalDate.parse(createdDateStr.substring(0, 10));
 				long daysFromAnchor = anchor.toEpochDay() - createdDate.toEpochDay();
-				if (daysFromAnchor < 0 || daysFromAnchor >= (long) MONTHLY_INPUT_WEEKS * 7) continue;
+				if (daysFromAnchor < 0) continue;
 				int bucketIdx = (int) (daysFromAnchor / 7);
+				if (bucketIdx >= MONTHLY_INPUT_WEEKS) continue;
 				defectsByBucket.computeIfAbsent(bucketIdx, k -> new ArrayList<>()).add(defect);
 			} catch (Exception e) {
-				// skip defects with unparseable creation dates
+				// skip defects with unparseable dates
 			}
 		}
 
-		// Compute UAT vs total per bucket using the same UAT-detection logic as the
-		// sprint path
-		TreeMap<Integer, int[]> weekBuckets = new TreeMap<>();
-		defectsByBucket.forEach(
-				(bucketIdx, defects) -> {
-					Set<String> uatLabels = new HashSet<>();
-					Map<String, List<JiraIssue>> uatDefectMap =
-							checkUATDefect(defects, fieldMapping, uatLabels);
-					int uatCount = uatDefectMap.values().stream().mapToInt(List::size).sum();
-					weekBuckets.put(bucketIdx, new int[] {uatCount, defects.size()});
-				});
-
-		if (weekBuckets.isEmpty()) return Collections.emptyList();
-
-		// Pad with zeros so bi-weekly/monthly aggregation has a full continuous range
-		int padTo = Math.max(weekBuckets.lastKey(), MONTHLY_INPUT_WEEKS - 1);
-		for (int i = 0; i <= padTo; i++) {
-			weekBuckets.putIfAbsent(i, new int[] {0, 0});
+		// Ensure all 55 buckets exist so bi-weekly/monthly aggregation has a continuous
+		// series
+		for (int i = 0; i < MONTHLY_INPUT_WEEKS; i++) {
+			defectsByBucket.putIfAbsent(i, new ArrayList<>());
 		}
 
-		// Convert to DataCount list (most-recent-first = lowest bucket index first)
-		List<DataCount> result = new ArrayList<>();
-		for (Map.Entry<Integer, int[]> bucketEntry : weekBuckets.entrySet()) {
-			int bucketIdx = bucketEntry.getKey();
-			int[] counts = bucketEntry.getValue();
-			int uatCount = counts[0];
-			int totalCount = counts[1];
+		// Build most-recent-first DataCount list (TreeMap iterates ascending =
+		// most-recent-first)
+		List<DataCount> weeklyDcs = new ArrayList<>();
+		for (Map.Entry<Integer, List<JiraIssue>> entry : defectsByBucket.entrySet()) {
+			int bucketIdx = entry.getKey();
+			List<JiraIssue> bucketDefects = entry.getValue();
+
+			Set<String> uatLabels = new HashSet<>();
+			Map<String, List<JiraIssue>> uatDefectMap =
+					checkUATDefect(bucketDefects, fieldMapping, uatLabels);
+			int uatCount = uatDefectMap.values().stream().mapToInt(List::size).sum();
+			int totalCount = bucketDefects.size();
 			double rate = totalCount > 0 ? Math.round(100.0 * uatCount / totalCount) : 0.0;
 
 			LocalDate weekEnd = anchor.minusDays(7L * bucketIdx);
@@ -729,9 +832,10 @@ public class DefectEscapeRateSlingshotServiceImpl
 			dc.setData(String.valueOf(rate));
 			dc.setValue(rate);
 			dc.setHoverValue(hoverValue);
-			result.add(dc);
+			weeklyDcs.add(dc);
 		}
-		return result;
+
+		return weeklyDcs;
 	}
 
 	private String buildWeekLabel(String sprintEndDateStr) {
