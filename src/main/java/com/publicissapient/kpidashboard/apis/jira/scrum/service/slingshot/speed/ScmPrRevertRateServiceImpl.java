@@ -63,9 +63,9 @@ public class ScmPrRevertRateServiceImpl
 
 	private static final String ASSIGNEE_LIST = "assigneeList";
 	private static final String MRS_LIST = "mrsList";
-	private static final String TOTAL_MERGED = "totalMerged";
-	private static final String REVERTED = "reverted";
-	private static final String REVERT_RATE = "revertRate";
+	private static final String TOTAL_MERGED = "Merged PR";
+	private static final String REVERTED = "Revert PR";
+	private static final String REVERT_RATE = "Revert Rate";
 
 	private final ConfigHelperService configHelperService;
 	private final KpiHelperService kpiHelperService;

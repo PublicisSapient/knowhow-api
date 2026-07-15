@@ -1273,7 +1273,7 @@ public enum KPIExcelColumn {
 					"Job/Pipeline Name",
 					"Deployed Environment",
 					"First Commit Date (UTC)",
-					"Deployment Date (UTC)",
+					"Deployment / Merged Date (UTC)",
 					"Lead Time (Hrs)")),
 	SCM_PR_REVERT_RATE(
 			"kpi215",

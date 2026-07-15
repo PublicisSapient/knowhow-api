@@ -85,7 +85,6 @@ public class KpiDataProvider {
 	private static final String SPRINT_WISE_SUB_TASK_BUGS = "sprintWiseSubTaskBugs";
 	private static final String SUB_TASK_BUGS_HISTORY = "SubTaskBugsHistory";
 	private static final String STORY_LIST = "storyList";
-	public static final String CALENDAR_STORIES = "calendarStories";
 	private static final String REJECTED_DEFECT_DATA = "rejectedBugKey";
 	private static final String TOTAL_DEFECT_LIST = "totalDefectList";
 	private static final String TOTAL_SPRINT_SUBTASK_DEFECTS = "totalSprintSubtaskDefects";
@@ -1451,8 +1450,6 @@ public class KpiDataProvider {
 			KpiRequest kpiRequest, ObjectId basicProjectConfigId) {
 
 		Map<String, Object> resultListMap = new HashMap<>();
-		Map<String, Map<String, Object>> uniqueProjectMap = new HashMap<>();
-		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		Map<String, FieldMapping> projFieldMapping = new HashMap<>();
 		Map<String, Map<String, List<String>>> droppedDefects = new HashMap<>();
 		Map<String, List<String>> projectWisePriority = new HashMap<>();
@@ -1460,7 +1457,6 @@ public class KpiDataProvider {
 
 		List<String> basicProjectConfigIds = List.of(basicProjectConfigId.toString());
 
-		Map<String, Object> mapOfProjectFilters = new LinkedHashMap<>();
 		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 		projFieldMapping.put(basicProjectConfigId.toString(), fieldMapping);
 
@@ -1473,29 +1469,11 @@ public class KpiDataProvider {
 				fieldMapping.getDefectPriorityKPI216());
 		KpiHelperService.addRCAProjectWise(
 				projectWiseRCA, basicProjectConfigId.toString(), fieldMapping.getIncludeRCAForKPI216());
-
-		mapOfProjectFilters.put(
-				JiraFeature.ISSUE_TYPE.getFieldValueInFeature(),
-				CommonUtils.convertToPatternList(fieldMapping.getJiraIssueTypeKPI216()));
-		uniqueProjectMap.put(basicProjectConfigId.toString(), mapOfProjectFilters);
 		KpiHelperService.getDroppedDefectsFilters(
 				droppedDefects,
 				basicProjectConfigId,
 				fieldMapping.getResolutionTypeForRejectionKPI216(),
 				fieldMapping.getJiraDefectRejectionStatusKPI216());
-
-		KpiDataHelper.createAdditionalFilterMap(
-				kpiRequest, mapOfFilters, Constant.SCRUM, filterHelperService);
-		// No sprint ID filter — fetch all sprints for the project; service filters by
-		// date range
-		mapOfFilters.put(
-				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-				basicProjectConfigIds.stream().distinct().collect(Collectors.toList()));
-
-		List<JiraIssue> allStoriesForProject =
-				jiraIssueRepository.findIssuesBySprintAndType(mapOfFilters, uniqueProjectMap);
-		List<JiraIssue> storyListWoDrop = new ArrayList<>();
-		KpiHelperService.getDefectsWithoutDrop(droppedDefects, allStoriesForProject, storyListWoDrop);
 
 		Map<String, List<String>> defectFilters = new LinkedHashMap<>();
 		defectFilters.put(
@@ -1512,7 +1490,6 @@ public class KpiDataProvider {
 		exludePriorityDefect(
 				projectWisePriority, projectWiseRCA, new HashSet<>(defectListWoDrop), remainingDefect);
 
-		resultListMap.put(CALENDAR_STORIES, storyListWoDrop);
 		resultListMap.put(TOTALBUGKEY, remainingDefect);
 		resultListMap.put(PROJFMAPPING, projFieldMapping);
 		return resultListMap;
