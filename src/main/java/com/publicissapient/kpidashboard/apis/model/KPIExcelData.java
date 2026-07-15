@@ -503,7 +503,7 @@ public class KPIExcelData {
 	@JsonProperty("Defect PR")
 	private Long defectPRs;
 
-	@JsonProperty("Revert PR")
+	@JsonProperty("No of Revert PR")
 	private Long revertPrs;
 
 	@JsonProperty("Declined PR")

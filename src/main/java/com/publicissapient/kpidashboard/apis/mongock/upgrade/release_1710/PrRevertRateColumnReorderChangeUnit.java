@@ -49,7 +49,7 @@ public class PrRevertRateColumnReorderChangeUnit {
 										columnDetail("Developer", 5),
 										optionalColumnDetail("Email/Username", 6),
 										columnDetail("No of Merge", 7),
-										columnDetail("Revert PR", 8),
+										columnDetail("No of Revert PR", 8),
 										columnDetail("Revert Rate", 9)));
 
 		mongoTemplate

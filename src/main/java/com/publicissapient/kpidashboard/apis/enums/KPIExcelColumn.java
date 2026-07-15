@@ -1284,8 +1284,8 @@ public enum KPIExcelColumn {
 					"Branch",
 					"Developer",
 					"Email/Username",
-					"Revert PR",
 					"No of Merge",
+					"No of Revert PR",
 					"Revert Rate")),
 	DEFECT_ESCAPE_RATE_SLINGSHOT(
 			"kpi216",
