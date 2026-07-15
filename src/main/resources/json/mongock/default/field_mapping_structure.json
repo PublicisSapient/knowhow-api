@@ -5304,6 +5304,26 @@
     "mandatory" : false,
     "nodeSpecific" : false
   },
+
+  {
+    "fieldName" : "calculationStrategyKPI214",
+    "fieldLabel" : "Calculation Strategy",
+    "fieldType" : "radiobutton",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Choose how Lead Time is calculated. <br><b>Deployment</b>: uses CI/CD deployment records (requires Jenkins/ArgoCD integration). <br><b>Commit</b>: uses pull-request merge date on the production branch as a proxy for deployment (no CI/CD tool required). <hr>"
+    },
+    "options" : [
+      { "label" : "Deployment", "value" : "DEPLOYMENT" },
+      { "label" : "Commit",     "value" : "COMMIT"     }
+    ],
+    "fieldDisplayOrder" : 3,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+
   {
     "fieldName": "jiraIssueTypeKPI216",
     "fieldLabel": "Issue types with defect linkages",

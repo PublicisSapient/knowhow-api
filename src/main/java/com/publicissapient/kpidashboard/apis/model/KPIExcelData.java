@@ -503,7 +503,7 @@ public class KPIExcelData {
 	@JsonProperty("Defect PR")
 	private Long defectPRs;
 
-	@JsonProperty("Revert PR")
+	@JsonProperty("No of Revert PR")
 	private Long revertPrs;
 
 	@JsonProperty("Declined PR")
@@ -572,6 +572,9 @@ public class KPIExcelData {
 	@JsonProperty("Deployment Date (UTC)")
 	private String deploymentDate;
 
+	@JsonProperty("Deployment / Merged Date (UTC)")
+	private String deploymentOrMergedDate;
+
 	@JsonProperty("Lead Time (Hrs)")
 	private String leadTimeForChangeHrs;
 
@@ -580,6 +583,9 @@ public class KPIExcelData {
 
 	@JsonProperty("Source Branch")
 	private String sourceBranch;
+
+	@JsonProperty("PR Trail")
+	private String prTrail;
 
 	@JsonProperty("Final Pull Request")
 	private Map<String, String> finalPullRequest;

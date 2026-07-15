@@ -260,7 +260,6 @@ public class DefectEscapeRateSlingshotServiceImplTest {
 		resultListMap.put(STORY_LIST_WO_DROP, new ArrayList<>());
 
 		Map<String, Object> calendarResultMap = new HashMap<>();
-		calendarResultMap.put(KpiDataProvider.CALENDAR_STORIES, new ArrayList<>());
 		calendarResultMap.put(TOTALBUGKEY, new ArrayList<>());
 		calendarResultMap.put(PROJFMAPPING, projFieldMapping);
 
@@ -318,7 +317,6 @@ public class DefectEscapeRateSlingshotServiceImplTest {
 		resultListMap.put(STORY_LIST_WO_DROP, new ArrayList<>());
 
 		Map<String, Object> calendarResultMap = new HashMap<>();
-		calendarResultMap.put(KpiDataProvider.CALENDAR_STORIES, new ArrayList<>());
 		calendarResultMap.put(TOTALBUGKEY, new ArrayList<>());
 		calendarResultMap.put(PROJFMAPPING, projFieldMapping);
 
@@ -370,7 +368,6 @@ public class DefectEscapeRateSlingshotServiceImplTest {
 		resultListMap.put(STORY_LIST_WO_DROP, new ArrayList<>());
 
 		Map<String, Object> calendarResultMap = new HashMap<>();
-		calendarResultMap.put(KpiDataProvider.CALENDAR_STORIES, new ArrayList<>());
 		calendarResultMap.put(TOTALBUGKEY, new ArrayList<>());
 		calendarResultMap.put(PROJFMAPPING, projFieldMapping);
 

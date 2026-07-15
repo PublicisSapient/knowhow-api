@@ -111,12 +111,12 @@ public class PrRevertRateKpiChangeUnit {
 												.append(IS_SHOWN, false)
 												.append(IS_DEFAULT, false),
 										new Document()
-												.append(COLUMN_NAME, "Revert PR")
+												.append(COLUMN_NAME, "No of Merge")
 												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "No of Merge")
+												.append(COLUMN_NAME, "No of Revert PR")
 												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

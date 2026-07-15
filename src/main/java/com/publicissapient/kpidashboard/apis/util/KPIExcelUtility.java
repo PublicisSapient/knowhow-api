@@ -1838,7 +1838,8 @@ public class KPIExcelUtility {
 						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
 						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
-						excelData.setRevertRate(repoToolValidationData.getRevertRate());
+						excelData.setRevertRate(
+								Math.round(repoToolValidationData.getRevertRate() * 100.0) / 100.0);
 						kpiExcelData.add(excelData);
 					});
 		}
