@@ -904,7 +904,10 @@ public enum FieldMappingEnum {
 	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211")),
 	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212")),
 	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213")),
-	KPI215("Project Hygiene", KPISource.JIRA.name(), List.of("jiraFieldsSelectionKPI215", "thresholdValueKPI215"));
+	KPI217(
+			"Project Hygiene",
+			KPISource.JIRA.name(),
+			List.of("jiraFieldsSelectionKPI217", "thresholdValueKPI217"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

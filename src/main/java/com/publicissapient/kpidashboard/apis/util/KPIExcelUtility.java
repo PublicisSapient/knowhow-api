@@ -3395,10 +3395,10 @@ public class KPIExcelUtility {
 	}
 
 	/**
-	 * Populates excel data for the Project Hygiene (Speed) KPI (kpi215).
+	 * Populates excel data for the Project Hygiene (Speed) KPI (kpi217).
 	 *
-	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the
-	 * LLM. Columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#PROJECT_HYGIENE}.
+	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the LLM. Columns
+	 * mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#PROJECT_HYGIENE}.
 	 *
 	 * @param kpiExcelData the mutable list to append rows to
 	 * @param sprintId the sprint the batch was evaluated for

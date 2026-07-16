@@ -5407,7 +5407,7 @@
   },
 
   {
-    "fieldName" : "thresholdValueKPI215",
+    "fieldName" : "thresholdValueKPI217",
     "fieldLabel" : "Target KPI Value",
     "fieldType" : "number",
     "section" : "Project Level Threshold",
@@ -5422,7 +5422,7 @@
   },
 
   {
-    "fieldName" : "jiraFieldsSelectionKPI215",
+    "fieldName" : "jiraFieldsSelectionKPI217",
     "fieldLabel" : "fields to write prompts",
     "placeHolderText" : "fields to write prompts",
     "fieldType" : "text",

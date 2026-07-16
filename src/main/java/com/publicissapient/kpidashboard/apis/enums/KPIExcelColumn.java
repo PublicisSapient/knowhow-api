@@ -1303,7 +1303,7 @@ public enum KPIExcelColumn {
 					"Squad",
 					"Time Spent (in hours)")),
 	PROJECT_HYGIENE(
-			"kpi215",
+			"kpi217",
 			Arrays.asList(
 					"Sprint Name",
 					"Issue Key",
