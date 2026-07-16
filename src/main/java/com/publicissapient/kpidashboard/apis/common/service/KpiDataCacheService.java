@@ -241,4 +241,10 @@ public interface KpiDataCacheService {
 	 */
 	Map<String, Object> fetchDSRData(
 			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
+
+	Map<String, Object> fetchDefectEscapeRateSlingshotData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId);
+
+	Map<String, Object> fetchDefectEscapeRateSlingshotDataByDateRange(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, String kpiId);
 }

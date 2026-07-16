@@ -347,4 +347,29 @@ public class KpiDataCacheServiceImpl implements KpiDataCacheService {
 				"Fetching DSR KPI Data for Project {} and KPI {}", basicProjectConfigId.toString(), kpiId);
 		return kpiDataProvider.fetchDSRData(kpiRequest, basicProjectConfigId, sprintList);
 	}
+
+	@Cacheable(
+			value = Constant.CACHE_PROJECT_KPI_DATA,
+			key = "#basicProjectConfigId.toString().concat('_').concat(#kpiId)")
+	@Override
+	public Map<String, Object> fetchDefectEscapeRateSlingshotData(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, List<String> sprintList, String kpiId) {
+		log.info(
+				"Fetching Defect Escape Rate Slingshot KPI Data for Project {} and KPI {}",
+				basicProjectConfigId.toString(),
+				kpiId);
+		return kpiDataProvider.fetchDefectEscapeRateSlingshotData(
+				kpiRequest, basicProjectConfigId, sprintList);
+	}
+
+	@Override
+	public Map<String, Object> fetchDefectEscapeRateSlingshotDataByDateRange(
+			KpiRequest kpiRequest, ObjectId basicProjectConfigId, String kpiId) {
+		log.info(
+				"Fetching Defect Escape Rate Slingshot date-range data for Project {} and KPI {}",
+				basicProjectConfigId.toString(),
+				kpiId);
+		return kpiDataProvider.fetchDefectEscapeRateSlingshotDataByDateRange(
+				kpiRequest, basicProjectConfigId);
+	}
 }

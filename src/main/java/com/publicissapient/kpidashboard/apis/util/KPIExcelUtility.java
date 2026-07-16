@@ -377,6 +377,51 @@ public class KPIExcelUtility {
 				});
 	}
 
+	public static void populateDefectEscapeRateSlingshotExcelData(
+			String sprint,
+			Map<String, JiraIssue> totalBugList,
+			List<DSRValidationData> dsrValidationDataList,
+			List<KPIExcelData> excelDataList,
+			FieldMapping fieldMapping,
+			List<JiraIssue> totalStoryWoDrop,
+			String daysWeeks) {
+
+		Map<String, String> labelWiseValidationData =
+				dsrValidationDataList.stream()
+						.collect(
+								Collectors.toMap(
+										DSRValidationData::getIssueNumber,
+										DSRValidationData::getLabel,
+										(x, y) -> x + CommonConstant.COMMA + y));
+		totalBugList.forEach(
+				(defectId, jiraIssue) -> {
+					String label = Constant.EMPTY_STRING;
+					String present = Constant.EMPTY_STRING;
+					if (labelWiseValidationData.containsKey(defectId)) {
+						present = Constant.EXCEL_YES;
+						label = StringUtils.capitalize(labelWiseValidationData.get(defectId));
+					}
+					KPIExcelData excelData = new KPIExcelData();
+					excelData.setDaysWeeks(daysWeeks);
+					excelData.setSprintName(sprint);
+					excelData.setDescription(checkEmptyName(jiraIssue));
+					Map<String, String> defectIdDetails = new HashMap<>();
+					defectIdDetails.put(defectId, checkEmptyURL(jiraIssue));
+					setSquads(excelData, jiraIssue);
+					excelData.setDefectId(defectIdDetails);
+					excelData.setEscapedDefect(present);
+					excelData.setEscapedIdentifier(label);
+					excelData.setDefectPriority(setPriority(fieldMapping, jiraIssue));
+					excelData.setRootCause(jiraIssue.getRootCauseList());
+					excelData.setDefectStatus(jiraIssue.getStatus());
+					Integer totalTimeSpentInMinutes =
+							Objects.requireNonNullElse(jiraIssue.getTimeSpentInMinutes(), 0);
+					setStoryExcelData(
+							totalStoryWoDrop, jiraIssue, excelData, totalTimeSpentInMinutes, fieldMapping);
+					excelDataList.add(excelData);
+				});
+	}
+
 	private static int setStoryExcelData(
 			List<JiraIssue> totalStoryWoDrop,
 			JiraIssue jiraIssue,
@@ -1568,15 +1613,21 @@ public class KPIExcelUtility {
 				KPIExcelData excelData = new KPIExcelData();
 				excelData.setProject(projectName);
 				excelData.setDaysWeeks(deploymentFrequencySlingshotInfo.getWeeksList().get(i));
+				excelData.setRepositoryName(deploymentFrequencySlingshotInfo.getRepoNameList().get(i));
 				String jobName = deploymentFrequencySlingshotInfo.getJobNameList().get(i);
 				if (StringUtils.isNotEmpty(deploymentMapPipelineNameWise.get(jobName))) {
-					excelData.setJobName(deploymentMapPipelineNameWise.get(jobName));
+					excelData.setJobPipelineName(deploymentMapPipelineNameWise.get(jobName));
 				} else {
-					excelData.setJobName(jobName);
+					excelData.setJobPipelineName(jobName);
 				}
-				excelData.setDeploymentEnvironment(
+				excelData.setDeployedEnvironment(
 						deploymentFrequencySlingshotInfo.getEnvironmentList().get(i));
-				excelData.setStartDate(deploymentFrequencySlingshotInfo.getDeploymentDateList().get(i));
+				excelData.setDeploymentStatus(
+						deploymentFrequencySlingshotInfo.getDeploymentStatusList().get(i));
+				excelData.setDeploymentDate(
+						deploymentFrequencySlingshotInfo.getDeploymentDateList().get(i));
+				excelData.setDeploymentEndDate(
+						deploymentFrequencySlingshotInfo.getDeploymentEndDateList().get(i));
 				kpiExcelData.add(excelData);
 			}
 		}
@@ -1768,6 +1819,32 @@ public class KPIExcelUtility {
 						excelData.setNumberOfCommit(String.valueOf(repoToolValidationData.getCommitCount()));
 						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
 						excelData.setPrStatus(repoToolValidationData.getPrStatus());
+						kpiExcelData.add(excelData);
+					});
+		}
+	}
+
+	public static void populatePrRevertRateExcelData(
+			List<RepoToolValidationData> repoToolValidationDataList, List<KPIExcelData> kpiExcelData) {
+		if (CollectionUtils.isNotEmpty(repoToolValidationDataList)) {
+			repoToolValidationDataList.forEach(
+					repoToolValidationData -> {
+						KPIExcelData excelData = new KPIExcelData();
+						excelData.setDaysWeeks(repoToolValidationData.getDate());
+						excelData.setProject(repoToolValidationData.getProjectName());
+						excelData.setRepo(repoToolValidationData.getRepoUrl());
+						excelData.setBranch(repoToolValidationData.getBranchName());
+						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
+						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
+						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
+						if (CollectionUtils.isNotEmpty(repoToolValidationData.getMergeRequestUrls())) {
+							Map<String, String> mergeUrls = new HashMap<>();
+							repoToolValidationData.getMergeRequestUrls().forEach(url -> mergeUrls.put(url, url));
+							excelData.setMergeRequestUrl(mergeUrls);
+						}
+						excelData.setRevertRate(
+								Math.round(repoToolValidationData.getRevertRate() * 100.0) / 100.0);
 						kpiExcelData.add(excelData);
 					});
 		}

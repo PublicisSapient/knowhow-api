@@ -140,6 +140,9 @@ public class KPIExcelData {
 	@JsonProperty("Defect Description")
 	private String defectDesc;
 
+	@JsonProperty("Description")
+	private String description;
+
 	@JsonProperty("Defect Priority")
 	private String defectPriority;
 
@@ -500,7 +503,7 @@ public class KPIExcelData {
 	@JsonProperty("Defect PR")
 	private Long defectPRs;
 
-	@JsonProperty("Revert PR")
+	@JsonProperty("No of Revert PR")
 	private Long revertPrs;
 
 	@JsonProperty("Declined PR")
@@ -569,8 +572,35 @@ public class KPIExcelData {
 	@JsonProperty("Deployment Date (UTC)")
 	private String deploymentDate;
 
+	@JsonProperty("Deployment / Merged Date (UTC)")
+	private String deploymentOrMergedDate;
+
 	@JsonProperty("Lead Time (Hrs)")
 	private String leadTimeForChangeHrs;
+
+	@JsonProperty("Repository Name")
+	private String repositoryName;
+
+	@JsonProperty("Source Branch")
+	private String sourceBranch;
+
+	@JsonProperty("PR Trail")
+	private String prTrail;
+
+	@JsonProperty("Final Pull Request")
+	private Map<String, String> finalPullRequest;
+
+	@JsonProperty("Job/Pipeline Name")
+	private String jobPipelineName;
+
+	@JsonProperty("Deployed Environment")
+	private String deployedEnvironment;
+
+	@JsonProperty("Deployment Status")
+	private String deploymentStatus;
+
+	@JsonProperty("Deployment End Date (UTC)")
+	private String deploymentEndDate;
 
 	// ---- Project Hygiene KPI (kpi215) fields ----
 	@JsonProperty("Issue Key")

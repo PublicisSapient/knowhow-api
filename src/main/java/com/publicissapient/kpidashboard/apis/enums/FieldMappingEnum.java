@@ -1,5 +1,5 @@
 /*******************************************************************************
-  * Copyright 2014 CapitalOne, LLC.
+ * Copyright 2014 CapitalOne, LLC.
  * Further development Copyright 2022 Sapient Corporation.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -284,6 +284,21 @@ public enum FieldMappingEnum {
 					"jiraBugRaisedByValue",
 					"jiraBugRaisedByIdentification")),
 
+	KPI216(
+			"Defect Escape Rate",
+			KPISource.JIRA.name(),
+			Arrays.asList(
+					"jiraIssueTypeKPI216",
+					"resolutionTypeForRejectionKPI216",
+					"jiraDefectRejectionStatusKPI216",
+					"thresholdValueKPI216",
+					"defectPriorityKPI216",
+					"includeRCAForKPI216",
+					"excludeUnlinkedDefects",
+					"jiraBugRaisedByCustomField",
+					"jiraBugRaisedByValue",
+					"jiraBugRaisedByIdentification")),
+
 	KPI133(
 			"Quality Status",
 			KPISource.JIRA.name(),
@@ -532,7 +547,11 @@ public enum FieldMappingEnum {
 	KPI214(
 			"Lead Time For Change (SCM + Deployment)",
 			KPISource.JENKINS.name(),
-			Arrays.asList("productionBranchKPI214", "thresholdValueKPI214")),
+			Arrays.asList(
+					"productionBranchKPI214",
+					"productionJobNameKPI214",
+					"calculationStrategyKPI214",
+					"thresholdValueKPI214")),
 
 	KPI163(
 			"Defect by Testing Phase",

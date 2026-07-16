@@ -5331,7 +5331,7 @@
     "combinedKpiSource": "Jira/Azure/Rally",
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Flow",
-    "groupId": 45,
+    "groupId": 50,
     "thresholdValue": "",
     "kanban": false,
     "chartType": "stacked-bar-chart",
@@ -5367,7 +5367,7 @@
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Flow",
     "kpiSource": "Jira",
-    "groupId": 45,
+    "groupId": 51,
     "thresholdValue": "",
     "kanban": false,
     "chartType": "line",
@@ -5400,7 +5400,7 @@
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Flow",
     "kpiSource": "Jira",
-    "groupId": 34,
+    "groupId": 50,
     "thresholdValue": "",
     "kanban": false,
     "chartType": "line",
@@ -5447,7 +5447,7 @@
     "maxValue": "300",
     "thresholdValue": "40",
     "kanban": false,
-    "groupId": 45,
+    "groupId": 52,
     "kpiInfo": {
       "definition": "Number of flow items completed per unit time, segmented by flow item type. Count of issues where status transitioned to Done within the period, grouped by Flow Item Type custom field."
     },
@@ -5473,7 +5473,7 @@
     "hideOverallFilter": false,
     "kpiSource": "Jira",
     "kanban": false,
-    "groupId": 46,
+    "groupId": 53,
     "kpiInfo": {
       "definition": "Number of flow items currently in progress in the value stream (WIP). Too high = thrashing; too low = underutilisation. Count of issues NOT in Backlog/To Do AND NOT in Done at point in time.",
       "details": [
@@ -5501,7 +5501,7 @@
     "kpiSubCategory": "Flow",
     "kpiSource": "Jira",
     "combinedKpiSource": "Jira/Azure",
-    "groupId": 46,
+    "groupId": 54,
     "thresholdValue": "",
     "kanban": false,
     "chartType": "stacked-area",
@@ -5545,7 +5545,7 @@
     "maxValue" : 15,
     "thresholdValue" : 55.0,
     "kanban" : false,
-    "groupId" : 6,
+    "groupId" : 60,
     "kpiInfo" : {
       "definition" : "Merged pull requests per engineer per week, at team / org level only. "
     },
@@ -5574,7 +5574,7 @@
     "kpiSource" : "BitBucket",
     "thresholdValue" : 50,
     "kanban" : false,
-    "groupId" : 7,
+    "groupId" : 61,
     "kpiInfo" : {
       "definition" : "Time from PR opened to merged."
     },
@@ -5604,7 +5604,7 @@
     "maxValue" : 15,
     "thresholdValue" : 55.0,
     "kanban" : false,
-    "groupId" : 6,
+    "groupId" : 62,
     "kpiInfo" : {
       "definition" : "Time from PR ready-for-review to first reviewer comment or approval."
     },
@@ -5634,7 +5634,7 @@
     "kpiSource" : "BitBucket",
     "thresholdValue" : 10,
     "kanban" : false,
-    "groupId" : 6,
+    "groupId" : 63,
     "kpiInfo" : {
       "definition" : "Distribution of merged PR sizes (lines changed)."
     },
@@ -5664,7 +5664,7 @@
     "maxValue" : 15,
     "thresholdValue" : 55,
     "kanban" : false,
-    "groupId" : 8,
+    "groupId" : 64,
     "kpiInfo" : {
       "definition" : "% of CI builds that pass on the main / master branch. "
     },
@@ -5693,7 +5693,7 @@
     "maxValue" : 15,
     "thresholdValue" : 55,
     "kanban" : false,
-    "groupId" : 47,
+    "groupId" : 65,
     "kpiInfo" : {
       "definition" : "How often code is successfully\ndeployed to production."
     },
@@ -5708,7 +5708,7 @@
     "kpiId" : "kpi214",
     "kpiName" : "Lead Time For Change",
     "isDeleted" : "False",
-    "defaultOrder" : 6,
+    "defaultOrder" : 7,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Speed",
     "kpiUnit" : "Hours",
@@ -5723,7 +5723,7 @@
     "maxValue" : 15,
     "thresholdValue" : 24,
     "kanban" : false,
-    "groupId" : 9,
+    "groupId" : 66,
     "kpiInfo" : {
       "definition" : "Time from first commit on a PR branch to the change running in production. Lead Time = ts(deploy to prod) - ts(first commit on PR branch)."
     },
@@ -5733,6 +5733,68 @@
     "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD",
     "kpiFilter" : "dropDown",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi215",
+    "kpiName" : "PR Revert Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 1,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "5-", "3-5", "2-3", "1-2", "-1" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "BitBucket",
+    "kanban" : false,
+    "groupId" : 67,
+    "kpiInfo" : {
+      "definition" : "% of merged PRs that are subsequently reverted. Strong proxy for code-review effectiveness."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isAdditionalFilterSupport" : false,
+    "isRepoToolKpi" : true,
+    "combinedKpiSource" : "Bitbucket/AzureRepository/GitHub/GitLab",
+    "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi216",
+    "kpiName" : "Defect Escape Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 2,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "30-", "25-30", "20-25", "15-20", "-15" ],
+    "hideOverallFilter" : false,
+    "kpiSource" : "Jira",
+    "maxValue" : 100,
+    "thresholdValue" : 10,
+    "kanban" : false,
+    "groupId" : 68,
+    "kpiInfo" : {
+      "definition" : "% of defects discovered in production vs. discovered preproduction."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : true,
+    "combinedKpiSource" : "Jira/Azure/Rally",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "forecastModel" : "exponentialSmoothing"
   },
   {
     "kpiId" : "kpi215",

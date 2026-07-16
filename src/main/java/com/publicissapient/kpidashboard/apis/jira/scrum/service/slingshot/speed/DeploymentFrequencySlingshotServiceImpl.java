@@ -180,15 +180,28 @@ public class DeploymentFrequencySlingshotServiceImpl
 								requestTrackerId));
 		DateTimeFormatter displayFmt =
 				DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_FORMAT, Locale.ENGLISH);
+		DateTimeFormatter displayDateTimeFmt =
+				DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT, Locale.ENGLISH);
 		excelData.sort(
 				Comparator.comparing(
-						(KPIExcelData d) -> {
-							try {
-								return LocalDate.parse(d.getStartDate(), displayFmt);
-							} catch (Exception e) {
-								return LocalDate.MIN;
-							}
-						}));
+								(KPIExcelData d) -> {
+									try {
+										String raw = d.getDaysWeeks();
+										String weekStart =
+												raw != null && raw.contains(" to ") ? raw.split(" to ")[0].trim() : "";
+										return LocalDate.parse(weekStart, displayFmt);
+									} catch (Exception e) {
+										return LocalDate.MIN;
+									}
+								})
+						.thenComparing(
+								d -> {
+									try {
+										return LocalDateTime.parse(d.getDeploymentDate(), displayDateTimeFmt);
+									} catch (Exception e) {
+										return LocalDateTime.MIN;
+									}
+								}));
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.DEPLOYMENT_FREQUENCY_SLINGSHOT.getColumns());
 	}
@@ -395,6 +408,9 @@ public class DeploymentFrequencySlingshotServiceImpl
 			List<Deployment> deploymentListCurrentTime) {
 		if (deploymentFrequencySlingshotInfo != null
 				&& CollectionUtils.isNotEmpty(deploymentListCurrentTime)) {
+			DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
+			DateTimeFormatter displayFormatter =
+					DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT);
 			deploymentListCurrentTime.forEach(
 					deployment -> {
 						deploymentFrequencySlingshotInfo.addEnvironment(deployment.getEnvName());
@@ -403,13 +419,30 @@ public class DeploymentFrequencySlingshotServiceImpl
 						} else {
 							deploymentFrequencySlingshotInfo.addJobName(deployment.getJobName());
 						}
-						DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern(DateUtil.TIME_FORMAT);
 						LocalDateTime deploymentDateTime =
 								LocalDateTime.parse(deployment.getStartTime(), inputFormatter);
 						deploymentFrequencySlingshotInfo.addDeploymentDate(
-								deploymentDateTime.format(
-												DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_TIME_FORMAT))
-										+ " UTC");
+								deploymentDateTime.format(displayFormatter));
+						String endDateFormatted = "";
+						if (StringUtils.isNotEmpty(deployment.getEndTime())) {
+							try {
+								endDateFormatted =
+										LocalDateTime.parse(deployment.getEndTime(), inputFormatter)
+												.format(displayFormatter);
+							} catch (Exception ignored) {
+							}
+						}
+						deploymentFrequencySlingshotInfo.addDeploymentEndDate(endDateFormatted);
+						String repoUrl = deployment.getRepoUrl();
+						String repoName =
+								repoUrl != null && !repoUrl.isEmpty()
+										? repoUrl.substring(repoUrl.lastIndexOf('/') + 1).replace(".git", "")
+										: "";
+						deploymentFrequencySlingshotInfo.addRepoName(repoName);
+						deploymentFrequencySlingshotInfo.addDeploymentStatus(
+								deployment.getDeploymentStatus() != null
+										? deployment.getDeploymentStatus().name()
+										: "");
 						deploymentFrequencySlingshotInfo.addWeeks(
 								KpiHelperService.getDateRange(
 										KpiDataHelper.getStartAndEndDateTimeForDataFiltering(
