@@ -150,6 +150,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append("fieldLabel", "fields to write prompts")
 						.append("placeHolderText", "fields to write prompts")
 						.append("fieldType", "chips")
+						.append("section", "Custom Fields Mapping")
 						.append("fieldCategory", "fields")
 						.append("processorCommon", false)
 						.append("tooltip", new Document().append(DEFINITION, "fields to write prompts"))
