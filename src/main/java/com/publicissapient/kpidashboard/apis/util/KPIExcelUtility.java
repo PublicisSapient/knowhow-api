@@ -3316,4 +3316,38 @@ public class KPIExcelUtility {
 			return 0.0;
 		}
 	}
+
+	/**
+	 * Populates excel data for the Project Hygiene (Speed) KPI (kpi215).
+	 *
+	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the
+	 * LLM. Columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#PROJECT_HYGIENE}.
+	 *
+	 * @param kpiExcelData the mutable list to append rows to
+	 * @param sprintId the sprint the batch was evaluated for
+	 * @param hygieneKpiResponseDTOList per-issue hygiene results parsed from the LLM
+	 */
+	public static void populateProjectHygieneExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String sprintId,
+			List<com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO>
+					hygieneKpiResponseDTOList) {
+		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
+			return;
+		}
+		hygieneKpiResponseDTOList.forEach(
+				hygieneKpiResponseDTO -> {
+					KPIExcelData excelData = new KPIExcelData();
+					// Sprint id is stored in the sprintName column (matches the sSprintName
+					// convention used by the KPI's DataCount rows).
+					excelData.setSprintName(sprintId);
+					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
+					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
+					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
+					excelData.setHygieneScore(hygieneKpiResponseDTO.getHygieneScore());
+					excelData.setOverallStatus(hygieneKpiResponseDTO.getOverallStatus());
+					excelData.setRecommendations(hygieneKpiResponseDTO.getRecommendations());
+					kpiExcelData.add(excelData);
+				});
+	}
 }

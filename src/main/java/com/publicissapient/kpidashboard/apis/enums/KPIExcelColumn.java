@@ -1270,6 +1270,16 @@ public enum KPIExcelColumn {
 					"First Commit Date (UTC)",
 					"Deployment Date (UTC)",
 					"Lead Time (Hrs)")),
+	PROJECT_HYGIENE(
+			"kpi215",
+			Arrays.asList(
+					"Sprint Name",
+					"Issue Key",
+					"Issue Type",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
 	;
 
 	// @formatter:on

@@ -572,6 +572,19 @@ public class KPIExcelData {
 	@JsonProperty("Lead Time (Hrs)")
 	private String leadTimeForChangeHrs;
 
+	// ---- Project Hygiene KPI (kpi215) fields ----
+	@JsonProperty("Issue Key")
+	private String issueKey;
+
+	@JsonProperty("Hygiene Score")
+	private Integer hygieneScore;
+
+	@JsonProperty("Overall Status")
+	private String overallStatus;
+
+	@JsonProperty("Recommendations")
+	private String recommendations;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

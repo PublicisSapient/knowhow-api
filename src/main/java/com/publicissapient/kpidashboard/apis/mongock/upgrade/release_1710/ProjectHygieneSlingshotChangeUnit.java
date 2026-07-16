@@ -48,7 +48,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append("defaultOrder", 7)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Sandbox")
-						.append("kpiUnit", "Percentage")
+						.append("kpiUnit", "%")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Sprints")
 						.append("yAxisLabel", "Percentage")
@@ -113,11 +113,6 @@ public class ProjectHygieneSlingshotChangeUnit {
 										new Document()
 												.append(COLUMN_NAME, "Overall Status")
 												.append(ORDER, 6)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Top Failures")
-												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
