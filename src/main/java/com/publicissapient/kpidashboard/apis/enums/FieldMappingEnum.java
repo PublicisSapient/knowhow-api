@@ -284,6 +284,21 @@ public enum FieldMappingEnum {
 					"jiraBugRaisedByValue",
 					"jiraBugRaisedByIdentification")),
 
+	KPI216(
+			"Defect Escape Rate",
+			KPISource.JIRA.name(),
+			Arrays.asList(
+					"jiraIssueTypeKPI216",
+					"resolutionTypeForRejectionKPI216",
+					"jiraDefectRejectionStatusKPI216",
+					"thresholdValueKPI216",
+					"defectPriorityKPI216",
+					"includeRCAForKPI216",
+					"excludeUnlinkedDefects",
+					"jiraBugRaisedByCustomField",
+					"jiraBugRaisedByValue",
+					"jiraBugRaisedByIdentification")),
+
 	KPI133(
 			"Quality Status",
 			KPISource.JIRA.name(),
@@ -532,7 +547,11 @@ public enum FieldMappingEnum {
 	KPI214(
 			"Lead Time For Change (SCM + Deployment)",
 			KPISource.JENKINS.name(),
-			Arrays.asList("productionBranchKPI214", "productionJobNameKPI214", "thresholdValueKPI214")),
+			Arrays.asList(
+					"productionBranchKPI214",
+					"productionJobNameKPI214",
+					"calculationStrategyKPI214",
+					"thresholdValueKPI214")),
 
 	KPI163(
 			"Defect by Testing Phase",
@@ -884,7 +903,8 @@ public enum FieldMappingEnum {
 	KPI210("Time To First Review", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI210")),
 	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211")),
 	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212")),
-	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213"));
+	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213")),
+	KPI215("PR Revert Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI215"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

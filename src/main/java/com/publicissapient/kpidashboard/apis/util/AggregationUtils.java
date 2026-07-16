@@ -133,15 +133,15 @@ public final class AggregationUtils {
 	 * @return average of input.
 	 */
 	public static Long averageLong(List<Long> numbers) {
-		Long sum = 0l;
+		long sum = 0L;
 		Long average = null;
 		if (CollectionUtils.isNotEmpty(numbers)) {
-			for (Long element : numbers) {
-				sum += element;
+			for (Object element : (List<?>) numbers) {
+				sum += ((Number) element).longValue();
 			}
-			average = (sum / numbers.size());
+			average = sum / numbers.size();
 		}
-		return average == null ? null : average;
+		return average;
 	}
 
 	/**

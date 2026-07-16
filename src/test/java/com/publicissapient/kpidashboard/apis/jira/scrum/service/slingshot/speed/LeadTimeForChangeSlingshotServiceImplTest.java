@@ -1176,6 +1176,186 @@ public class LeadTimeForChangeSlingshotServiceImplTest {
 		assertNotNull(service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail));
 	}
 
+	// ---------------------------------------------------------------------
+	// resolveCalculationStrategy tests
+	// ---------------------------------------------------------------------
+
+	@Test
+	public void testResolveCalculationStrategy_defaultWhenNoFieldMapping() {
+		when(configHelperService.getFieldMappingMap()).thenReturn(new HashMap<>());
+		assertEquals("DEPLOYMENT", service.resolveCalculationStrategy(projectConfigId));
+	}
+
+	@Test
+	public void testResolveCalculationStrategy_defaultWhenNullId() {
+		assertEquals("DEPLOYMENT", service.resolveCalculationStrategy(null));
+	}
+
+	@Test
+	public void testResolveCalculationStrategy_commitWhenConfigured() {
+		FieldMapping fm = new FieldMapping();
+		fm.setCalculationStrategyKPI214("COMMIT");
+		Map<ObjectId, FieldMapping> map = new HashMap<>();
+		map.put(projectConfigId, fm);
+		when(configHelperService.getFieldMappingMap()).thenReturn(map);
+		assertEquals("COMMIT", service.resolveCalculationStrategy(projectConfigId));
+	}
+
+	@Test
+	public void testResolveCalculationStrategy_caseInsensitiveCommit() {
+		FieldMapping fm = new FieldMapping();
+		fm.setCalculationStrategyKPI214("commit");
+		Map<ObjectId, FieldMapping> map = new HashMap<>();
+		map.put(projectConfigId, fm);
+		when(configHelperService.getFieldMappingMap()).thenReturn(map);
+		assertEquals("COMMIT", service.resolveCalculationStrategy(projectConfigId));
+	}
+
+	@Test
+	public void testResolveCalculationStrategy_deploymentExplicit() {
+		FieldMapping fm = new FieldMapping();
+		fm.setCalculationStrategyKPI214("DEPLOYMENT");
+		Map<ObjectId, FieldMapping> map = new HashMap<>();
+		map.put(projectConfigId, fm);
+		when(configHelperService.getFieldMappingMap()).thenReturn(map);
+		assertEquals("DEPLOYMENT", service.resolveCalculationStrategy(projectConfigId));
+	}
+
+	// ---------------------------------------------------------------------
+	// COMMIT strategy end-to-end tests
+	// ---------------------------------------------------------------------
+
+	private void mockCommitStrategyFieldMapping() {
+		FieldMapping fm = new FieldMapping();
+		fm.setProductionBranchKPI214("master");
+		fm.setCalculationStrategyKPI214("COMMIT");
+		fm.setThresholdValueKPI214("24");
+		Map<ObjectId, FieldMapping> map = new HashMap<>();
+		map.put(projectConfigId, fm);
+		when(configHelperService.getFieldMappingMap()).thenReturn(map);
+	}
+
+	/**
+	 * COMMIT strategy happy path: one PR with a matching commit in the list — lead time is mergedAt −
+	 * commitTimestamp; no deployment fetch is triggered.
+	 */
+	@Test
+	public void testGetKpiData_commitStrategy_producesRecordFromPr() throws Exception {
+		mockCommitStrategyFieldMapping();
+
+		LocalDateTime commitTime = LocalDateTime.now().minusDays(3);
+		LocalDateTime mergedAt = LocalDateTime.now().minusDays(1);
+
+		ScmMergeRequests pr =
+				createMergedPr("PR-CS1", "master", commitTime, mergedAt, Arrays.asList("sha-cs1"));
+
+		when(scmKpiHelperService.getMergedRequests(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(pr));
+		when(scmKpiHelperService.getCommitDetails(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(createCommit("sha-cs1", commitTime, "repoA")));
+
+		TreeAggregatorDetail detail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		KpiElement kpiElement = service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail);
+		assertNotNull(kpiElement);
+		assertNotNull(kpiElement.getTrendValueList());
+	}
+
+	/** COMMIT strategy with EXCEL tracker: excel rows are populated without deployment data. */
+	@Test
+	public void testGetKpiData_commitStrategy_excelExport() throws Exception {
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JENKINS.name()))
+				.thenReturn("Excel-trackerid");
+		mockCommitStrategyFieldMapping();
+
+		LocalDateTime commitTime = LocalDateTime.now().minusDays(3);
+		LocalDateTime mergedAt = LocalDateTime.now().minusDays(1);
+
+		ScmMergeRequests pr =
+				createMergedPr("PR-CS2", "master", commitTime, mergedAt, Arrays.asList("sha-cs2"));
+		pr.setMergeRequestUrl("https://scm/pr/2");
+
+		when(scmKpiHelperService.getMergedRequests(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(pr));
+		when(scmKpiHelperService.getCommitDetails(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(createCommit("sha-cs2", commitTime, "repoA")));
+
+		TreeAggregatorDetail detail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		KpiElement kpiElement = service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail);
+		assertNotNull(kpiElement.getExcelData());
+		assertFalse(kpiElement.getExcelData().isEmpty());
+	}
+
+	/** COMMIT strategy: PR with null mergedAt is skipped. */
+	@Test
+	public void testGetKpiData_commitStrategy_prWithoutMergedAt_isSkipped() throws Exception {
+		mockCommitStrategyFieldMapping();
+
+		ScmMergeRequests pr =
+				createMergedPr(
+						"PR-CS3", "master", LocalDateTime.now().minusDays(2), null, Arrays.asList("sha-cs3"));
+
+		when(scmKpiHelperService.getMergedRequests(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(pr));
+		when(scmKpiHelperService.getCommitDetails(eq(projectConfigId), any()))
+				.thenReturn(
+						Collections.singletonList(
+								createCommit("sha-cs3", LocalDateTime.now().minusDays(2), "repoA")));
+
+		TreeAggregatorDetail detail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		assertNotNull(service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail));
+	}
+
+	/**
+	 * COMMIT strategy: when no commit SHA from the PR matches the commit list, fall back to {@code
+	 * firstCommitDate} on the PR itself.
+	 */
+	@Test
+	public void testGetKpiData_commitStrategy_noShaMatch_fallsBackToFirstCommitDate()
+			throws Exception {
+		mockCommitStrategyFieldMapping();
+
+		LocalDateTime firstCommit = LocalDateTime.now().minusDays(4);
+		LocalDateTime mergedAt = LocalDateTime.now().minusDays(1);
+
+		ScmMergeRequests pr =
+				createMergedPr("PR-CS4", "master", firstCommit, mergedAt, Arrays.asList("unmatched-sha"));
+
+		when(scmKpiHelperService.getMergedRequests(eq(projectConfigId), any()))
+				.thenReturn(Collections.singletonList(pr));
+		// No matching SHA in commits
+		when(scmKpiHelperService.getCommitDetails(eq(projectConfigId), any()))
+				.thenReturn(Collections.emptyList());
+
+		TreeAggregatorDetail detail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		KpiElement kpiElement = service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail);
+		assertNotNull(kpiElement);
+	}
+
+	/** COMMIT strategy: empty PR list returns an empty value map (no NPE). */
+	@Test
+	public void testGetKpiData_commitStrategy_emptyPrs_setsEmptyValue() throws Exception {
+		mockCommitStrategyFieldMapping();
+
+		when(scmKpiHelperService.getMergedRequests(eq(projectConfigId), any()))
+				.thenReturn(Collections.emptyList());
+		when(scmKpiHelperService.getCommitDetails(eq(projectConfigId), any()))
+				.thenReturn(Collections.emptyList());
+
+		TreeAggregatorDetail detail =
+				KPIHelperUtil.getTreeLeafNodesGroupedByFilter(
+						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
+		assertNotNull(service.getKpiData(kpiRequest, kpiRequest.getKpiList().get(0), detail));
+	}
+
 	/** Empty commits list: {@code computeLeadTimeRecords} short-circuits. */
 	@Test
 	public void testGetKpiData_emptyCommits_producesNoRecords() throws Exception {
