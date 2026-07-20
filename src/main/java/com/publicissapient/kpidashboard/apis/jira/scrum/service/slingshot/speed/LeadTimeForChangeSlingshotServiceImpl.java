@@ -469,8 +469,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				(List<Deployment>) scmDataMap.getOrDefault(DEPLOYMENTS, Collections.emptyList());
 		List<ScmCommits> commits =
 				(List<ScmCommits>) scmDataMap.getOrDefault(COMMITS, Collections.emptyList());
-		String calculationStrategy =
-				(String) scmDataMap.getOrDefault(CALCULATION_STRATEGY, DEPLOYMENT);
+		String calculationStrategy = (String) scmDataMap.getOrDefault(CALCULATION_STRATEGY, DEPLOYMENT);
 
 		boolean isCommitStrategy = STRATEGY_COMMIT.equals(calculationStrategy);
 
