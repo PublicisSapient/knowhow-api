@@ -30,6 +30,7 @@ import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
@@ -56,6 +57,99 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
+	private static final String FINAL_HYGIENE_PROMPT =
+			"""
+            You are an Expert Project Hygiene Analyzer Agent.
+            Your job is to evaluate Jira issues against a Definition-of-Ready (DoR)
+            style hygiene checklist and produce a strict, evidence-based verdict
+            for each issue.
+
+            === Non-Negotiable Principles ===
+            - Rely STRICTLY on the fields provided in the Jira Issue JSON below.
+            - NEVER assume, infer, or fabricate a value that is not present.
+            - If evidence is missing, mark the rule as "Failed" (never "Passed").
+            - Differentiate REQUESTS from CONFIRMATIONS —
+                a request for sign-off is NOT approval.
+            - Every verdict MUST cite the exact field name and observed value.
+
+            === Hygiene Rules ===
+            Each map entry is {ruleName -> evaluation criteria}. Apply every rule
+            independently, in the order given, using ONLY the fields named in the rule.
+            %1$s
+
+            === Jira Issues (JSON array) ===
+            %2$s
+
+            === Per-Rule Verdict Vocabulary ===
+            - "Passed"  → rule is fully satisfied by explicit evidence
+                                        in the listed fields
+            - "Failed"  → rule is not met OR required evidence is missing
+            - "Partial" → rule is partially met — present but
+                                        incomplete / unclear / unconfirmed
+            - "N/A"     → rule does not apply to this issue type/status
+                                        per its own criteria
+
+            === Overall Status Rules ===
+            - "READY"     → every applicable rule (i.e. excluding "N/A")
+                                            has status "Passed"
+            - "NOT READY" → any applicable rule is "Failed" or "Partial"
+
+            === Hygiene Score ===
+            - totalApplicableRules = count of rules whose status is not "N/A"
+            - passedRules          = count of rules whose status is "Passed"
+            - hygieneScore         = passedRules * 100 / totalApplicableRules
+                                                            (if totalApplicableRules == 0 → 100)
+            - hygieneGrade         = "GOOD"    when hygieneScore >= 80
+                                                            "AVERAGE" when 50 <= hygieneScore < 80
+                                                            "POOR"    when hygieneScore < 50
+
+            === Improvement Recommendations ===
+            - Provide 3 to 5 short, actionable suggestions that would raise the
+                hygiene score for this issue.
+            - Each suggestion must reference a specific field or missing evidence.
+            - Return them as ONE string with items joined by " | ".
+
+            === Output Contract ===
+            Return a JSON ARRAY — one element per input Jira issue, in the same
+            order as the input. No markdown, no prose, no code fences, no trailing
+            commentary. Schema per element:
+            [
+                {
+                    "issueKey":             "<jiraIssue.number>",
+                    "issueType":            "<jiraIssue.typeName>",
+                    "sprintId":             "<jiraIssue.sprintID>",
+                    "assignee":             "<jiraIssue.assigneeName or 'Unassigned'>",
+                    "results": [
+                        {
+                            "rule":     "<ruleName from map key>",
+                            "field":    "<jiraIssue field(s) evaluated>",
+                            "observed": "<actual field value or 'null'>",
+                            "status":   "Passed | Failed | Partial | N/A",
+                            "reason":   "<one-line justification citing the observed value>"
+                        }
+                    ],
+                    "totalApplicableRules": <int>,
+                    "passedRules":          <int>,
+                    "failedRules":          <int>,
+                    "partialRules":         <int>,
+                    "hygieneScore":         <int 0-100>,
+                    "hygieneGrade":         "GOOD | AVERAGE | POOR",
+                    "overallStatus":        "READY | NOT READY",
+                    "topFailures":          ["<up to 3 ruleNames of most impactful non-Passed rules>"],
+                    "recommendations":      "<3-5 fixes joined by ' | '>"
+                }
+            ]
+
+            === Hard Constraints ===
+            - Evaluate EVERY rule in the map for EVERY issue; never skip a rule
+                and never skip an issue.
+            - status MUST be exactly one of "Passed", "Failed", "Partial", "N/A"
+                (case sensitive, spelled exactly).
+            - overallStatus MUST be exactly "READY" or "NOT READY".
+            - reason MUST cite the exact field name and value observed.
+            - Never invent field values that are not present in the input JSON.
+            - Return the JSON array and nothing else.
+            """;
 
 	@Autowired private HygieneKpiParser hygieneKpiParser;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
@@ -91,7 +185,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 						.toList();
 		Node project =
 				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT).get(0);
-		Map<String, Node> mapTmp = treeAggregatorDetail.getMapTmp();
 
 		// in case if only projects or sprint filters are applied
 		projectWiseLeafNodeValue(kpiElement, project, kpiRequest);
@@ -167,99 +260,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		// At call-time substitute:
 		// %1$s → JSON of fieldMappingPrompts (rule name → criteria)
 		// %2$s → JSON of the JiraIssue list under evaluation
-		String finalHygienePrompt =
-				"""
-				You are an Expert Project Hygiene Analyzer Agent.
-				Your job is to evaluate Jira issues against a Definition-of-Ready (DoR)
-				style hygiene checklist and produce a strict, evidence-based verdict
-				for each issue.
-
-				=== Non-Negotiable Principles ===
-				- Rely STRICTLY on the fields provided in the Jira Issue JSON below.
-				- NEVER assume, infer, or fabricate a value that is not present.
-				- If evidence is missing, mark the rule as "Failed" (never "Passed").
-				- Differentiate REQUESTS from CONFIRMATIONS —
-					a request for sign-off is NOT approval.
-				- Every verdict MUST cite the exact field name and observed value.
-
-				=== Hygiene Rules ===
-				Each map entry is {ruleName -> evaluation criteria}. Apply every rule
-				independently, in the order given, using ONLY the fields named in the rule.
-				%1$s
-
-				=== Jira Issues (JSON array) ===
-				%2$s
-
-				=== Per-Rule Verdict Vocabulary ===
-				- "Passed"  → rule is fully satisfied by explicit evidence
-											in the listed fields
-				- "Failed"  → rule is not met OR required evidence is missing
-				- "Partial" → rule is partially met — present but
-											incomplete / unclear / unconfirmed
-				- "N/A"     → rule does not apply to this issue type/status
-											per its own criteria
-
-				=== Overall Status Rules ===
-				- "READY"     → every applicable rule (i.e. excluding "N/A")
-												has status "Passed"
-				- "NOT READY" → any applicable rule is "Failed" or "Partial"
-
-				=== Hygiene Score ===
-				- totalApplicableRules = count of rules whose status is not "N/A"
-				- passedRules          = count of rules whose status is "Passed"
-				- hygieneScore         = passedRules * 100 / totalApplicableRules
-																(if totalApplicableRules == 0 → 100)
-				- hygieneGrade         = "GOOD"    when hygieneScore >= 80
-																"AVERAGE" when 50 <= hygieneScore < 80
-																"POOR"    when hygieneScore < 50
-
-				=== Improvement Recommendations ===
-				- Provide 3 to 5 short, actionable suggestions that would raise the
-					hygiene score for this issue.
-				- Each suggestion must reference a specific field or missing evidence.
-				- Return them as ONE string with items joined by " | ".
-
-				=== Output Contract ===
-				Return a JSON ARRAY — one element per input Jira issue, in the same
-				order as the input. No markdown, no prose, no code fences, no trailing
-				commentary. Schema per element:
-				[
-					{
-						"issueKey":             "<jiraIssue.number>",
-						"issueType":            "<jiraIssue.typeName>",
-						"sprintId":             "<jiraIssue.sprintID>",
-						"assignee":             "<jiraIssue.assigneeName or 'Unassigned'>",
-						"results": [
-							{
-								"rule":     "<ruleName from map key>",
-								"field":    "<jiraIssue field(s) evaluated>",
-								"observed": "<actual field value or 'null'>",
-								"status":   "Passed | Failed | Partial | N/A",
-								"reason":   "<one-line justification citing the observed value>"
-							}
-						],
-						"totalApplicableRules": <int>,
-						"passedRules":          <int>,
-						"failedRules":          <int>,
-						"partialRules":         <int>,
-						"hygieneScore":         <int 0-100>,
-						"hygieneGrade":         "GOOD | AVERAGE | POOR",
-						"overallStatus":        "READY | NOT READY",
-						"topFailures":          ["<up to 3 ruleNames of most impactful non-Passed rules>"],
-						"recommendations":      "<3-5 fixes joined by ' | '>"
-					}
-				]
-
-				=== Hard Constraints ===
-				- Evaluate EVERY rule in the map for EVERY issue; never skip a rule
-					and never skip an issue.
-				- status MUST be exactly one of "Passed", "Failed", "Partial", "N/A"
-					(case sensitive, spelled exactly).
-				- overallStatus MUST be exactly "READY" or "NOT READY".
-				- reason MUST cite the exact field name and value observed.
-				- Never invent field values that are not present in the input JSON.
-				- Return the JSON array and nothing else.
-				""";
 
 		long time = System.currentTimeMillis();
 		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(node), null, null, kpiRequest);
@@ -271,11 +271,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		Map<String, List<JiraIssue>> jiraIssuesBySprint =
 				jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getSprintID));
 
-		// Drive the futures loop from the already-sorted sprintDetailsList
-		// (sorted by startDate in fetchKPIDataFromDb). This guarantees the
-		// resulting dataCountList is in chronological order — no post-sort
-		// needed — so the trend line renders left-to-right by sprint date.
-		// Sprints with zero issues are skipped to avoid wasted LLM calls.
 		List<CompletableFuture<SprintHygieneOutcome>> futures =
 				sprintDetailsList.stream()
 						.filter(sd -> !jiraIssuesBySprint.getOrDefault(sd.getSprintID(), List.of()).isEmpty())
@@ -286,7 +281,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 									List<JiraIssue> jiraIssues = jiraIssuesBySprint.get(sprintId);
 									List<JiraIssue> jiraIssueSubset =
 											jiraIssues.size() < 10 ? jiraIssues : jiraIssues.subList(0, 10);
-									String prompt = String.format(finalHygienePrompt, prompts, jiraIssueSubset);
+									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, jiraIssueSubset);
 									return CompletableFuture.supplyAsync(
 													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt),
 													hygieneAiExecutor)
@@ -311,8 +306,11 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 		List<DataCount> dataCountList = outcomes.stream().map(SprintHygieneOutcome::dataCount).toList();
 
-		List<KPIExcelData> excelData = outcomes.stream().flatMap(o -> o.excelRows().stream()).toList();
-		kpiElement.setExcelData(excelData);
+		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
+			List<KPIExcelData> excelData =
+					outcomes.stream().flatMap(o -> o.excelRows().stream()).toList();
+			kpiElement.setExcelData(excelData);
+		}
 		kpiElement.setExcelColumns(KPIExcelColumn.PROJECT_HYGIENE.getColumns());
 
 		node.setValue(dataCountList);
