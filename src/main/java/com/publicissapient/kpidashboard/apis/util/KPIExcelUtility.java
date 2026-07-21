@@ -1836,12 +1836,12 @@ public class KPIExcelUtility {
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
-						excelData.setNumberOfMerge(String.valueOf(repoToolValidationData.getMrCount()));
-						excelData.setRevertPrs(repoToolValidationData.getKpiPRs());
+						excelData.setNumberOfPr(String.valueOf(repoToolValidationData.getMrCount()));
+						excelData.setRevertPrCount(repoToolValidationData.getKpiPRs());
 						if (CollectionUtils.isNotEmpty(repoToolValidationData.getMergeRequestUrls())) {
-							Map<String, String> mergeUrls = new HashMap<>();
-							repoToolValidationData.getMergeRequestUrls().forEach(url -> mergeUrls.put(url, url));
-							excelData.setMergeRequestUrl(mergeUrls);
+							Map<String, String> revertUrls = new HashMap<>();
+							repoToolValidationData.getMergeRequestUrls().forEach(url -> revertUrls.put(url, url));
+							excelData.setRevertPrUrl(revertUrls);
 						}
 						excelData.setRevertRate(
 								Math.round(repoToolValidationData.getRevertRate() * 100.0) / 100.0);
@@ -2987,6 +2987,36 @@ public class KPIExcelUtility {
 	 * @param meanTimeRecoverMapTimeWise Map<String, List<MeanTimeRecoverData>>
 	 * @param kpiExcelData List<KPIExcelData>
 	 */
+	public static void populateMeanTimeToRecoverSlingshotExcelData(
+			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
+			List<KPIExcelData> kpiExcelData) {
+		if (MapUtils.isNotEmpty(meanTimeRecoverMapTimeWise)) {
+			meanTimeRecoverMapTimeWise.forEach(
+					(weekOrMonthName, meanRecoverListCurrentTime) ->
+							meanRecoverListCurrentTime.forEach(
+									meanTimeRecoverData -> {
+										KPIExcelData excelData = new KPIExcelData();
+										excelData.setDaysWeeks(meanTimeRecoverData.getDate());
+										Map<String, String> issueDetails = new HashMap<>();
+										issueDetails.put(
+												meanTimeRecoverData.getStoryID(),
+												StringUtils.isEmpty(meanTimeRecoverData.getUrl())
+														? Constant.EMPTY_STRING
+														: meanTimeRecoverData.getUrl());
+										excelData.setIssueID(issueDetails);
+										excelData.setIssueType(meanTimeRecoverData.getIssueType());
+										excelData.setIssueDesc(meanTimeRecoverData.getDesc());
+										excelData.setCreatedDateTime(meanTimeRecoverData.getCreatedDate());
+										excelData.setClosedDate(
+												!StringUtils.isEmpty(meanTimeRecoverData.getClosedDate())
+														? meanTimeRecoverData.getClosedDate()
+														: Constant.BLANK);
+										excelData.setTimeToRecover(meanTimeRecoverData.getTimeToRecover());
+										kpiExcelData.add(excelData);
+									}));
+		}
+	}
+
 	public static void populateMeanTimeToRecoverExcelData(
 			String projectName,
 			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
