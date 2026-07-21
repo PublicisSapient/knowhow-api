@@ -1284,9 +1284,9 @@ public enum KPIExcelColumn {
 					"Branch",
 					"Developer",
 					"Email/Username",
-					"No of Merge",
-					"No of Revert PR",
-					"Merge Request Url",
+					"No. of PR",
+					"No. of Revert PR",
+					"Revert PR URL",
 					"Revert Rate")),
 	DEFECT_ESCAPE_RATE_SLINGSHOT(
 			"kpi216",
@@ -1302,6 +1302,16 @@ public enum KPIExcelColumn {
 					"Story ID",
 					"Squad",
 					"Time Spent (in hours)")),
+	MEAN_TIME_TO_RECOVER_SLINGSHOT(
+			"kpi217",
+			Arrays.asList(
+					"Days/Weeks",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Created Time",
+					"Closed Time",
+					"Time to Recover (In Hours)")),
 	;
 
 	// @formatter:on
