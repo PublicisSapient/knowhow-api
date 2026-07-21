@@ -158,6 +158,8 @@ public class MeanTimeToRecoverSlingshotServiceImplTest {
 						kpiRequest, accountHierarchyDataList, new ArrayList<>(), "hierarchyLevelOne", 5);
 		List<Node> leafNodeList = new ArrayList<>();
 		leafNodeList = KPIHelperUtil.getLeafNodes(treeAggregatorDetail.getRoot(), leafNodeList, false);
+		when(jiraIssueRepository.findIssuesByDateAndFilters(any(), any(), any()))
+				.thenReturn(jiraIssueList);
 		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
 						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
@@ -188,6 +190,8 @@ public class MeanTimeToRecoverSlingshotServiceImplTest {
 
 		issueCustomHistoryList.stream()
 				.forEach(issue -> issue.setCreatedDate(new DateTime().minusWeeks(3)));
+		when(jiraIssueRepository.findIssuesByDateAndFilters(any(), any(), any()))
+				.thenReturn(jiraIssueList);
 		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
 						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);
@@ -242,6 +246,8 @@ public class MeanTimeToRecoverSlingshotServiceImplTest {
 		when(cacheService.getFromApplicationCache(
 						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
 				.thenReturn(kpiRequestTrackerId);
+		when(jiraIssueRepository.findIssuesByDateAndFilters(any(), any(), any()))
+				.thenReturn(jiraIssueList);
 		when(jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
 						any(), any(), any(), any()))
 				.thenReturn(issueCustomHistoryList);

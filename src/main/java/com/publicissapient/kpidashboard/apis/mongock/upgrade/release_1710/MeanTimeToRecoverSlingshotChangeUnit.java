@@ -50,7 +50,8 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 						.append("yAxisLabel", "Hours")
 						.append("showTrend", true)
 						.append("isPositiveTrend", false)
-						.append("calculateMaturity", false)
+						.append("calculateMaturity", true)
+						.append("maturityRange", Arrays.asList("336-", "168-336", "24-168", "1-24", "-1"))
 						.append("hideOverallFilter", false)
 						.append("kpiSource", "Jira")
 						.append("thresholdValue", 24.0)
@@ -68,7 +69,7 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
-						.append("forecastModel", "exponentialSmoothing");
+						.append("forecastModel", "thetaMethod");
 
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
 	}
@@ -181,22 +182,6 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.insertOne(
 						new Document()
-								.append(FIELD_NAME, "storyFirstStatusKPI217")
-								.append("fieldLabel", "Status from which issue progress begins")
-								.append("fieldType", "text")
-								.append("fieldCategory", "workflow")
-								.append("section", "WorkFlow Status Mapping")
-								.append(
-										"tooltip",
-										new Document()
-												.append(
-														DEFINITION,
-														"All workflow statuses used to identify the re-open cycle for production incidents.")));
-
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
-						new Document()
 								.append(FIELD_NAME, "thresholdValueKPI217")
 								.append("fieldLabel", "Target KPI Value")
 								.append("fieldType", "number")
@@ -233,7 +218,6 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 												"jiraStoryIdentificationKPI217",
 												"jiraProductionIncidentIdentificationKPI217",
 												"jiraDodKPI217",
-												"storyFirstStatusKPI217",
 												"thresholdValueKPI217"))));
 	}
 }

@@ -28,10 +28,12 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -78,7 +80,8 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 
 	private static final String JIRA_HISTORY_DATA = "jiraIssueHistoryData";
 	private static final String STORY_ID = "storyID";
-	private static final String PRODUCTION_INCIDENT = "productionIncident";
+	private static final String PRODUCTION_INCIDENT_MTTR_SLINGSHOT =
+			"productionIncidentMttrSlingshot";
 	private static final int DEFAULT_WEEK_COUNT = 12;
 	private static final DateTimeFormatter WEEK_LABEL_FORMATTER =
 			DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_FORMAT, Locale.ENGLISH);
@@ -120,68 +123,101 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 	@Override
 	public Map<String, Object> fetchKPIDataFromDb(
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
-		List<String> projectBasicConfigIdList = new ArrayList<>();
-		List<String> projectProdIncidentIdentifier = new ArrayList<>();
+		List<String> allProjectIds = new ArrayList<>();
+		List<String> labelsModeProjectIds = new ArrayList<>();
+		List<String> customFieldModeProjectIds = new ArrayList<>();
+		Set<String> allLabelValues = new LinkedHashSet<>();
+		Set<String> allIssueTypes = new LinkedHashSet<>();
+		Set<String> allDodStatuses = new LinkedHashSet<>();
 		Map<String, Object> resultListMap = new HashMap<>();
-		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		Map<String, List<String>> mapOfFiltersFH = new LinkedHashMap<>();
 		Map<String, Map<String, Object>> uniqueProjectMapFH = new HashMap<>();
 
 		leafNodeList.forEach(
 				leafNode -> {
 					ObjectId basicProjectConfigId = leafNode.getProjectFilter().getBasicProjectConfigId();
-					Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
-
 					FieldMapping fieldMapping =
 							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+					String projectId = basicProjectConfigId.toString();
 
+					allProjectIds.add(projectId);
+
+					String incidentMode =
+							ObjectUtils.defaultIfNull(
+									fieldMapping.getJiraProductionIncidentIdentificationKPI217(), "");
+					if (incidentMode.equalsIgnoreCase(CommonConstant.LABELS)
+							&& CollectionUtils.isNotEmpty(fieldMapping.getJiraProdIncidentRaisedByValue())) {
+						labelsModeProjectIds.add(projectId);
+						allLabelValues.addAll(fieldMapping.getJiraProdIncidentRaisedByValue());
+					} else if (incidentMode.equalsIgnoreCase(CommonConstant.CUSTOM_FIELD)) {
+						customFieldModeProjectIds.add(projectId);
+					}
+
+					if (CollectionUtils.isNotEmpty(fieldMapping.getJiraStoryIdentificationKPI217())) {
+						allIssueTypes.addAll(fieldMapping.getJiraStoryIdentificationKPI217());
+					}
+					if (CollectionUtils.isNotEmpty(fieldMapping.getJiraDodKPI217())) {
+						allDodStatuses.addAll(fieldMapping.getJiraDodKPI217());
+					}
+
+					Map<String, Object> mapOfProjectFiltersFH = new LinkedHashMap<>();
 					if (CollectionUtils.isNotEmpty(fieldMapping.getJiraStoryIdentificationKPI217())) {
 						mapOfProjectFiltersFH.put(
 								JiraFeatureHistory.STORY_TYPE.getFieldValueInFeature(),
 								CommonUtils.convertToPatternList(fieldMapping.getJiraStoryIdentificationKPI217()));
 					}
-					String jiraProductionIncidentIdentification =
-							ObjectUtils.defaultIfNull(
-									fieldMapping.getJiraProductionIncidentIdentificationKPI217(), "");
-					if (jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.CUSTOM_FIELD)
-							|| jiraProductionIncidentIdentification.equalsIgnoreCase(CommonConstant.LABELS)) {
-						projectProdIncidentIdentifier.add(basicProjectConfigId.toString());
-					}
-					uniqueProjectMapFH.put(basicProjectConfigId.toString(), mapOfProjectFiltersFH);
-					projectBasicConfigIdList.add(basicProjectConfigId.toString());
+					uniqueProjectMapFH.put(projectId, mapOfProjectFiltersFH);
 				});
 
-		List<String> distinctProjBasicConfig =
-				projectBasicConfigIdList.stream().distinct().collect(Collectors.toList());
-		List<String> distinctProjConfigIncidentList =
-				projectProdIncidentIdentifier.stream().distinct().collect(Collectors.toList());
+		List<String> distinctProjectIds =
+				allProjectIds.stream().distinct().collect(Collectors.toList());
+		mapOfFiltersFH.put(
+				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjectIds);
 
-		if (CollectionUtils.isNotEmpty(distinctProjConfigIncidentList)) {
-			mapOfFilters.put(
-					JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(),
-					distinctProjConfigIncidentList);
+		boolean hasAnyConfig =
+				!labelsModeProjectIds.isEmpty()
+						|| !customFieldModeProjectIds.isEmpty()
+						|| !allIssueTypes.isEmpty()
+						|| !allDodStatuses.isEmpty();
+
+		if (!hasAnyConfig) {
+			resultListMap.put(JIRA_HISTORY_DATA, new ArrayList<>());
+			return resultListMap;
 		}
 
-		mapOfFiltersFH.put(
-				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjBasicConfig);
-
-		List<JiraIssueCustomHistory> historyDataList = new ArrayList<>();
 		List<JiraIssue> jiraIssueList = new ArrayList<>();
 
-		if (MapUtils.isNotEmpty(mapOfFilters)) {
-			jiraIssueList =
-					jiraIssueRepository.findIssuesWithBoolean(
-							mapOfFilters, PRODUCTION_INCIDENT, Boolean.TRUE, startDate, endDate);
+		// Labels mode — direct query on jira_issue.labels, no processor dependency
+		if (!labelsModeProjectIds.isEmpty()) {
+			Map<String, List<String>> filters =
+					buildCommonFilters(labelsModeProjectIds, allIssueTypes, allDodStatuses);
+			filters.put(JiraFeature.LABELS.getFieldValueInFeature(), new ArrayList<>(allLabelValues));
+			jiraIssueList.addAll(
+					jiraIssueRepository.findIssuesByDateAndFilters(filters, startDate, endDate));
 		}
 
-		if (CollectionUtils.isEmpty(jiraIssueList)) {
-			historyDataList =
-					jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
-							mapOfFiltersFH, uniqueProjectMapFH, startDate, endDate);
+		// CustomField mode — processor stamps productionIncidentMttrSlingshot on
+		// matching issues
+		if (!customFieldModeProjectIds.isEmpty()) {
+			Map<String, List<String>> filters =
+					buildCommonFilters(customFieldModeProjectIds, allIssueTypes, allDodStatuses);
+			jiraIssueList.addAll(
+					jiraIssueRepository.findIssuesWithBoolean(
+							filters, PRODUCTION_INCIDENT_MTTR_SLINGSHOT, Boolean.TRUE, startDate, endDate));
 		}
+
+		// No identification mode — issue type and/or DoD status are the only filters
+		if (labelsModeProjectIds.isEmpty() && customFieldModeProjectIds.isEmpty()) {
+			Map<String, List<String>> filters =
+					buildCommonFilters(distinctProjectIds, allIssueTypes, allDodStatuses);
+			jiraIssueList.addAll(
+					jiraIssueRepository.findIssuesByDateAndFilters(filters, startDate, endDate));
+		}
+
+		List<JiraIssueCustomHistory> historyDataList = new ArrayList<>();
 		if (CollectionUtils.isNotEmpty(jiraIssueList)) {
 			List<String> issueIdList =
-					jiraIssueList.stream().map(JiraIssue::getNumber).collect(Collectors.toList());
+					jiraIssueList.stream().map(JiraIssue::getNumber).distinct().collect(Collectors.toList());
 			mapOfFiltersFH.put(STORY_ID, issueIdList);
 			historyDataList =
 					jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
@@ -189,6 +225,20 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 		}
 		resultListMap.put(JIRA_HISTORY_DATA, historyDataList);
 		return resultListMap;
+	}
+
+	private Map<String, List<String>> buildCommonFilters(
+			List<String> projectIds, Set<String> issueTypes, Set<String> dodStatuses) {
+		Map<String, List<String>> filters = new LinkedHashMap<>();
+		filters.put(JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), projectIds);
+		if (!issueTypes.isEmpty()) {
+			filters.put(JiraFeature.ISSUE_TYPE.getFieldValueInFeature(), new ArrayList<>(issueTypes));
+		}
+		if (!dodStatuses.isEmpty()) {
+			filters.put(
+					JiraFeature.JIRA_ISSUE_STATUS.getFieldValueInFeature(), new ArrayList<>(dodStatuses));
+		}
+		return filters;
 	}
 
 	@Override
@@ -328,8 +378,7 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 			FieldMapping fieldMapping) {
 		List<String> jiraDodKPI217 =
 				ObjectUtils.defaultIfNull(fieldMapping.getJiraDodKPI217(), new ArrayList<>());
-		String storyFirstStatus =
-				ObjectUtils.defaultIfNull(fieldMapping.getStoryFirstStatusKPI217(), "");
+		String storyFirstStatus = ObjectUtils.defaultIfNull(fieldMapping.getStoryFirstStatus(), "");
 		List<String> dodStatus =
 				jiraDodKPI217.stream().map(String::toLowerCase).collect(Collectors.toList());
 
@@ -370,7 +419,7 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 					if (ticketClosedDate != null && ticketCreatedDate != null) {
 						ticketClosedDate = DateUtil.localDateTimeToUTC(ticketClosedDate);
 						meanTimeToRecoverInHrs =
-								Duration.between(ticketCreatedDate, ticketClosedDate).toHours();
+								Math.max(0, Duration.between(ticketCreatedDate, ticketClosedDate).toHours());
 					}
 
 					String weekOrMonthName = formatDateLabel(weekOrMonth, ticketCreatedDate);
@@ -437,21 +486,21 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 
 	private Map<String, List<MeanTimeRecoverData>> getLastNWeek(int count) {
 		Map<String, List<MeanTimeRecoverData>> lastNWeek = new LinkedHashMap<>();
-		LocalDateTime cursor = DateUtil.getTodayTime();
+		LocalDateTime cursor = DateUtil.getTodayTime().minusWeeks(count - 1);
 		for (int i = 0; i < count; i++) {
 			String weekLabel = buildWeekLabel(cursor);
 			lastNWeek.put(weekLabel, new ArrayList<>());
-			cursor = cursor.minusWeeks(1);
+			cursor = cursor.plusWeeks(1);
 		}
 		return lastNWeek;
 	}
 
 	private Map<String, List<MeanTimeRecoverData>> getLastNMonthCount(int count) {
 		Map<String, List<MeanTimeRecoverData>> lastNMonth = new LinkedHashMap<>();
-		LocalDateTime cursor = DateUtil.getTodayTime();
+		LocalDateTime cursor = DateUtil.getTodayTime().minusMonths(count - 1);
 		for (int i = 0; i < count; i++) {
 			lastNMonth.put(cursor.getYear() + Constant.DASH + cursor.getMonthValue(), new ArrayList<>());
-			cursor = cursor.minusMonths(1);
+			cursor = cursor.plusMonths(1);
 		}
 		return lastNMonth;
 	}

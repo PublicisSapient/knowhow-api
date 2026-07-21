@@ -72,7 +72,7 @@ public class DefectEscapeRateSlingshotChangeUnit {
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
-						.append("forecastModel", "exponentialSmoothing");
+						.append("forecastModel", "thetaMethod");
 		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
 	}
 

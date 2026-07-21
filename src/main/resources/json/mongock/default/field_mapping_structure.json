@@ -5441,16 +5441,6 @@
     }
   },
   {
-    "fieldName" : "storyFirstStatusKPI217",
-    "fieldLabel" : "Status from which issue progress begins",
-    "fieldType" : "text",
-    "fieldCategory" : "workflow",
-    "section" : "WorkFlow Status Mapping",
-    "tooltip" : {
-      "definition" : "All workflow statuses used to identify the re-open cycle for production incidents."
-    }
-  },
-  {
     "fieldName" : "thresholdValueKPI217",
     "fieldLabel" : "Target KPI Value",
     "fieldType" : "number",
