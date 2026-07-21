@@ -29,7 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -188,53 +187,51 @@ public class DefectEscapeRateSlingshotServiceImpl
 		DataCountGroup weeklyGroup = new DataCountGroup();
 		weeklyGroup.setFilter(WEEKLY);
 		weeklyGroup.setValue(weeklyOutput);
-		Optional.ofNullable(forecastingManager)
-				.ifPresent(
-						fm -> fm.addForecastsToDataCount(weeklyGroup, flattenInner(weeklyOutput), kpiId));
+		addPerProjectForecasts(weeklyOutput, kpiId);
 		groups.add(weeklyGroup);
 
 		List<DataCount> biWeeklyOutput = buildBiWeeklyEscapeRateOutput(perProjectWeeklyDc);
 		DataCountGroup biWeeklyGroup = new DataCountGroup();
 		biWeeklyGroup.setFilter(BI_WEEKLY);
 		biWeeklyGroup.setValue(biWeeklyOutput);
-		Optional.ofNullable(forecastingManager)
-				.ifPresent(
-						fm -> fm.addForecastsToDataCount(biWeeklyGroup, flattenInner(biWeeklyOutput), kpiId));
+		addPerProjectForecasts(biWeeklyOutput, kpiId);
 		groups.add(biWeeklyGroup);
 
 		List<DataCount> monthlyOutput = buildMonthlyEscapeRateOutput(perProjectWeeklyDc);
 		DataCountGroup monthlyGroup = new DataCountGroup();
 		monthlyGroup.setFilter(MONTHLY);
 		monthlyGroup.setValue(monthlyOutput);
-		Optional.ofNullable(forecastingManager)
-				.ifPresent(
-						fm -> fm.addForecastsToDataCount(monthlyGroup, flattenInner(monthlyOutput), kpiId));
+		addPerProjectForecasts(monthlyOutput, kpiId);
 		groups.add(monthlyGroup);
 
 		List<DataCount> sprintOutput = buildSprintViewFromRepository(sprintLeafNodes, kpiRequest);
 		DataCountGroup sprintGroup = new DataCountGroup();
 		sprintGroup.setFilter(SPRINT);
 		sprintGroup.setValue(sprintOutput);
-		Optional.ofNullable(forecastingManager)
-				.ifPresent(
-						fm -> fm.addForecastsToDataCount(sprintGroup, flattenInner(sprintOutput), kpiId));
+		addPerProjectForecasts(sprintOutput, kpiId);
 		groups.add(sprintGroup);
 
 		return groups;
 	}
 
-	/** Extracts the inner DataCounts from project-wrapper DataCounts for use as forecasting input. */
-	private List<DataCount> flattenInner(List<DataCount> wrappers) {
-		List<DataCount> flat = new ArrayList<>();
-		for (DataCount wrapper : wrappers) {
-			if (wrapper.getValue() instanceof List<?> inner) {
-				inner.forEach(
-						item -> {
-							if (item instanceof DataCount dc) flat.add(dc);
-						});
-			}
-		}
-		return flat;
+	/**
+	 * Generates a per-project forecast and sets it on each project-wrapper DataCount so that the
+	 * frontend's {@code applyForecastData} can find it directly on the series item (rather than on
+	 * the outer {@code DataCountGroup}, which the filter logic discards).
+	 */
+	private void addPerProjectForecasts(List<DataCount> projectWrappers, String kpiId) {
+		if (forecastingManager == null || CollectionUtils.isEmpty(projectWrappers)) return;
+		projectWrappers.forEach(
+				wrapper -> {
+					if (wrapper.getValue() instanceof List<?> inner) {
+						List<DataCount> innerDcs =
+								inner.stream()
+										.filter(DataCount.class::isInstance)
+										.map(DataCount.class::cast)
+										.collect(Collectors.toList());
+						forecastingManager.addForecastsToDataCount(wrapper, innerDcs, kpiId);
+					}
+				});
 	}
 
 	/**
