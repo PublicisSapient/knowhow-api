@@ -41,6 +41,10 @@ env:
   # 🔥 Hardcoded because Prod always uses upgrade
   MONGOCK_OPERATION: com.publicissapient.kpidashboard.apis.mongock.upgrade
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -129,6 +133,12 @@ jobs:
 
       - name: Build knowhow-api (Always With Tests)
         run: mvn clean install -Ddockerfile.skip=true
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: "**/target/surefire-reports/*.xml"
 
       - name: SonarQube Analysis
         run: |
