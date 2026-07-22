@@ -336,7 +336,8 @@ public enum KPICode {
 	LEAD_TIME_FOR_CHANGE_SLINGSHOT("kpi214", KPISource.JENKINS.name()),
 	PR_REVERT_RATE_SLINGSHOT("kpi215", KPISource.BITBUCKET.name()),
 	DEFECT_ESCAPE_RATE_SLINGSHOT("kpi216", KPISource.JIRA.name()),
-	MEAN_TIME_TO_RECOVER_SLINGSHOT("kpi217", KPISource.JIRA.name());
+	MEAN_TIME_TO_RECOVER_SLINGSHOT("kpi217", KPISource.JIRA.name()),
+	PROJECT_HYGIENE("kpi218", KPISource.JIRA.name());
 
 	// @formatter:on
 

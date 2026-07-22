@@ -1312,6 +1312,16 @@ public enum KPIExcelColumn {
 					"Created Time",
 					"Closed Time",
 					"Time to Recover (In Hours)")),
+	PROJECT_HYGIENE(
+			"kpi218",
+			Arrays.asList(
+					"Sprint Name",
+					"Issue Key",
+					"Issue Type",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
 	;
 
 	// @formatter:on

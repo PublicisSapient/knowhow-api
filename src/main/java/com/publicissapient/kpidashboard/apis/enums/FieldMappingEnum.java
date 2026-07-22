@@ -914,7 +914,11 @@ public enum FieldMappingEnum {
 					"jiraProdIncidentRaisedByCustomField",
 					"jiraProdIncidentRaisedByValue",
 					"jiraDodKPI217",
-					"thresholdValueKPI217"));
+					"thresholdValueKPI217")),
+	KPI218(
+			"Project Hygiene",
+			KPISource.JIRA.name(),
+			List.of("jiraFieldsSelectionKPI218", "thresholdValueKPI218"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

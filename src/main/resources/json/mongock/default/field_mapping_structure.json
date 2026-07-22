@@ -5453,5 +5453,40 @@
     "sectionOrder" : 6,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+
+  {
+    "fieldName" : "thresholdValueKPI218",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target hygiene score (0-100) the project should maintain. If the threshold is empty, a common target KPI line will be shown."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+
+  {
+    "fieldName" : "jiraFieldsSelectionKPI218",
+    "fieldLabel" : "fields to write prompts",
+    "placeHolderText" : "fields to write prompts",
+    "fieldType" : "text",
+    "fieldCategory" : "fields",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "fields to write prompts"
+    },
+    "filterGroup" : [ "CustomField" ],
+    "nodeSpecific" : false,
+    "fieldDisplayOrder" : 3,
+    "toggleLabelLeft" : null,
+    "toggleLabelRight" : null,
+    "sectionOrder" : 3,
+    "mandatory" : false,
+    "readOnly" : null
   }
 ]

@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -3422,5 +3423,40 @@ public class KPIExcelUtility {
 			log.warn("Failed to extract value for dataType: {} - {}", dataType, e.getMessage());
 			return 0.0;
 		}
+	}
+
+	/**
+	 * Populates excel data for the Project Hygiene (Speed) KPI (kpi217).
+	 *
+	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the LLM. Columns
+	 * mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#PROJECT_HYGIENE}.
+	 *
+	 * @param kpiExcelData the mutable list to append rows to
+	 * @param sprintId the sprint the batch was evaluated for
+	 * @param hygieneKpiResponseDTOList per-issue hygiene results parsed from the LLM
+	 */
+	public static void populateProjectHygieneExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String sprintId,
+			List<HygieneKpiResponseDTO>
+					hygieneKpiResponseDTOList) {
+		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
+			return;
+		}
+		hygieneKpiResponseDTOList.forEach(
+				hygieneKpiResponseDTO -> {
+					LinkedHashMap<String, String> ruleResult = hygieneKpiResponseDTO.getResults().stream().collect(Collectors.toMap(HygieneKpiResponseDTO.RuleResult::getRule, HygieneKpiResponseDTO.RuleResult::getStatus, (first, second) -> first,
+							LinkedHashMap::new));
+					KPIExcelData excelData = new KPIExcelData();
+					excelData.setSprintName(sprintId);
+					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
+					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
+					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
+					excelData.setGroupMap(ruleResult);
+					excelData.setHygieneScore(hygieneKpiResponseDTO.getHygieneScore());
+					excelData.setOverallStatus(hygieneKpiResponseDTO.getOverallStatus());
+					excelData.setRecommendations(hygieneKpiResponseDTO.getRecommendations());
+					kpiExcelData.add(excelData);
+				});
 	}
 }

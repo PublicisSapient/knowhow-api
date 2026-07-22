@@ -132,6 +132,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	private static final String PRODUCTION_JOB_NAME = "productionJobName";
 	private static final String CALCULATION_STRATEGY = "calculationStrategy";
 	private static final String STRATEGY_COMMIT = "COMMIT";
+	private static final String DEPLOYMENT = "DEPLOYMENT";
 	private static final int DEFAULT_DATA_POINTS = 12;
 
 	private static final DateTimeFormatter DEPLOYMENT_TS_FORMATTER =
@@ -260,18 +261,18 @@ public class LeadTimeForChangeSlingshotServiceImpl
 	 */
 	String resolveCalculationStrategy(ObjectId basicProjectConfigId) {
 		if (basicProjectConfigId == null || configHelperService == null) {
-			return "DEPLOYMENT";
+			return DEPLOYMENT;
 		}
 		Map<ObjectId, FieldMapping> fieldMappingMap = configHelperService.getFieldMappingMap();
 		if (fieldMappingMap == null) {
-			return "DEPLOYMENT";
+			return DEPLOYMENT;
 		}
 		FieldMapping fieldMapping = fieldMappingMap.get(basicProjectConfigId);
 		if (fieldMapping == null) {
-			return "DEPLOYMENT";
+			return DEPLOYMENT;
 		}
 		String strategy = fieldMapping.getCalculationStrategyKPI214();
-		return STRATEGY_COMMIT.equalsIgnoreCase(strategy) ? STRATEGY_COMMIT : "DEPLOYMENT";
+		return STRATEGY_COMMIT.equalsIgnoreCase(strategy) ? STRATEGY_COMMIT : DEPLOYMENT;
 	}
 
 	/**
@@ -468,8 +469,7 @@ public class LeadTimeForChangeSlingshotServiceImpl
 				(List<Deployment>) scmDataMap.getOrDefault(DEPLOYMENTS, Collections.emptyList());
 		List<ScmCommits> commits =
 				(List<ScmCommits>) scmDataMap.getOrDefault(COMMITS, Collections.emptyList());
-		String calculationStrategy =
-				(String) scmDataMap.getOrDefault(CALCULATION_STRATEGY, "DEPLOYMENT");
+		String calculationStrategy = (String) scmDataMap.getOrDefault(CALCULATION_STRATEGY, DEPLOYMENT);
 
 		boolean isCommitStrategy = STRATEGY_COMMIT.equals(calculationStrategy);
 
