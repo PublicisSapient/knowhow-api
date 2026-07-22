@@ -5853,7 +5853,7 @@
     "aggregationCriteria" : "average",
     "isTrendCalculative" : false,
     "isAdditionalFilterSupport" : false,
-    "combinedKpiSource" : "Jenkins/Bamboo/AzurePipeline/Teamcity",
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
     "upperThresholdBG" : "white",
     "lowerThresholdBG" : "red",
     "forecastModel" : "thetaMethod"

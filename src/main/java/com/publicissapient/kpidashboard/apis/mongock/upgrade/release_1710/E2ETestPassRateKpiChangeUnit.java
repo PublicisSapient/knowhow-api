@@ -206,9 +206,24 @@ public class E2ETestPassRateKpiChangeUnit {
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(jobNameMapping);
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(branchMapping);
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(thresholdMapping);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "e2eTestJobNameKPI218"),
+						jobNameMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "e2eTestBranchKPI218"),
+						branchMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI218"),
+						thresholdMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

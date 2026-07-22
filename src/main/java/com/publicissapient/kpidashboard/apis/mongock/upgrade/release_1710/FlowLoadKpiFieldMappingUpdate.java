@@ -47,7 +47,12 @@ public class FlowLoadKpiFieldMappingUpdate {
 						.append("isRepoToolKpi", true)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection("field_mapping_structure").insertOne(workflowGroupDoc);
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.replaceOne(
+						new Document("fieldName", "jiraIssueStatusGroupByCategoryKPI206"),
+						workflowGroupDoc,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection("field_mapping_structure")

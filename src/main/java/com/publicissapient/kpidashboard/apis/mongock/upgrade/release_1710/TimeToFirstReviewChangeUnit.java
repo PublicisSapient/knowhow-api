@@ -163,7 +163,12 @@ public class TimeToFirstReviewChangeUnit {
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(fieldMapping);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document("fieldName", "thresholdValueKPI210"),
+						fieldMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

@@ -136,7 +136,12 @@ public class DeploymentFrequencySlingshotChangeUnit {
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(fieldMapping);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI213"),
+						fieldMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution
