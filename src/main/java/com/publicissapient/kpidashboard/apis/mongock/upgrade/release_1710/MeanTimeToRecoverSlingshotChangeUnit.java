@@ -134,7 +134,8 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraStoryIdentificationKPI217"),
 						new Document()
 								.append(FIELD_NAME, "jiraStoryIdentificationKPI217")
 								.append("fieldLabel", "Issue type to identify Production incidents")
@@ -146,11 +147,13 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 										new Document()
 												.append(
 														DEFINITION,
-														"All issue types that are used as/equivalent to Production incidents.")));
+														"All issue types that are used as/equivalent to Production incidents.")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraProductionIncidentIdentificationKPI217"),
 						new Document()
 								.append(FIELD_NAME, "jiraProductionIncidentIdentificationKPI217")
 								.append("fieldLabel", "Production incidents identification")
@@ -168,11 +171,13 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 												new Document()
 														.append("label", "CustomField")
 														.append("value", "CustomField"),
-												new Document().append("label", "Labels").append("value", "Labels"))));
+												new Document().append("label", "Labels").append("value", "Labels"))),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraDodKPI217"),
 						new Document()
 								.append(FIELD_NAME, "jiraDodKPI217")
 								.append("fieldLabel", "Status to identify completed issues")
@@ -186,11 +191,13 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 										new Document()
 												.append(
 														DEFINITION,
-														"All workflow statuses used to identify completed issues based on Definition of Done (DoD).")));
+														"All workflow statuses used to identify completed issues based on Definition of Done (DoD).")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI217"),
 						new Document()
 								.append(FIELD_NAME, "thresholdValueKPI217")
 								.append("fieldLabel", "Target KPI Value")
@@ -206,7 +213,8 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 								.append("fieldDisplayOrder", 1)
 								.append("sectionOrder", 6)
 								.append("mandatory", false)
-								.append("nodeSpecific", false));
+								.append("nodeSpecific", false),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

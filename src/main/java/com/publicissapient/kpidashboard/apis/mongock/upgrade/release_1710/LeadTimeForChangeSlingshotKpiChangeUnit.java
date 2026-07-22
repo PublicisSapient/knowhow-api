@@ -200,7 +200,16 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertMany(Arrays.asList(productionBranchStructure, thresholdStructure));
+				.replaceOne(
+						new Document(FIELD_NAME, PRODUCTION_BRANCH_FIELD),
+						productionBranchStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, THRESHOLD_FIELD),
+						thresholdStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

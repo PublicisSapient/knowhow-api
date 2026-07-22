@@ -5495,5 +5495,75 @@
     "sectionOrder" : 6,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "jiraIssueStatusGroupByCategoryKPI206",
+    "fieldLabel" : "Workfow groups",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "section" : "WorkFlow Status Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Workflow status/es that identify that a backlog item is ready to be taken in a sprint based on Definition of Ready (DOR)"
+    },
+    "fieldDisplayOrder" : 2,
+    "mandatory" : true,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI208",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "processorCommon" : false,
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI212",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "processorCommon" : false,
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI213",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "processorCommon" : false,
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI215",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "processorCommon" : false,
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "section" : "Project Level Threshold",
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]

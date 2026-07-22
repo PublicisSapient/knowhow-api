@@ -33,7 +33,12 @@ public class CycleTimeSlingshotThresholdChangeUnit {
 										"definition",
 										"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"));
 
-		mongoTemplate.getCollection("field_mapping_structure").insertOne(thresholdDocument);
+		mongoTemplate
+				.getCollection("field_mapping_structure")
+				.replaceOne(
+						new Document("fieldName", "thresholdValueKPI202"),
+						thresholdDocument,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

@@ -104,6 +104,9 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Merged Time",
 					"Mean Time To Merge (In Hours)")),
+	PR_THROUGHPUT_SLINGSHOT(
+			"kpi208",
+			Arrays.asList("Project", "Repo", "Branch", "Days/Weeks", "Developer", "No of Merge")),
 	PR_CYCLE_TIME_SLINGSHOT(
 			"kpi209",
 			Arrays.asList(
@@ -836,7 +839,7 @@ public enum KPIExcelColumn {
 	FLOW_DISTRIBUTION("Kpi146", Arrays.asList("Date")),
 	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", Arrays.asList("Date")),
 	FLOW_LOAD("kpi148", Arrays.asList("Date")),
-	FLOW_LOAD_SLINGSHOT("kpi148", Arrays.asList("Date")),
+	FLOW_LOAD_SLINGSHOT("kpi206", Arrays.asList("Date")),
 	RELEASE_BURNUP(
 			"kpi150",
 			Arrays.asList(

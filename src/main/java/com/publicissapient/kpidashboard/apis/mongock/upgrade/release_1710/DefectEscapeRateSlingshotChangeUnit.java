@@ -155,7 +155,8 @@ public class DefectEscapeRateSlingshotChangeUnit {
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraIssueTypeKPI216"),
 						new Document()
 								.append(FIELD_NAME, "jiraIssueTypeKPI216")
 								.append("fieldLabel", "Issue types with defect linkages")
@@ -168,11 +169,13 @@ public class DefectEscapeRateSlingshotChangeUnit {
 										"tooltip",
 										new Document()
 												.append(DEFINITION, "All issue types that can have valid defect linkages"))
-								.append("mandatory", true));
+								.append("mandatory", true),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "defectPriorityKPI216"),
 						new Document()
 								.append(FIELD_NAME, "defectPriorityKPI216")
 								.append("fieldLabel", "Priority to be excluded")
@@ -194,11 +197,13 @@ public class DefectEscapeRateSlingshotChangeUnit {
 												new Document().append("label", "p2").append("value", "p2"),
 												new Document().append("label", "p3").append("value", "p3"),
 												new Document().append("label", "p4").append("value", "p4"),
-												new Document().append("label", "p5").append("value", "p5"))));
+												new Document().append("label", "p5").append("value", "p5"))),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "includeRCAForKPI216"),
 						new Document()
 								.append(FIELD_NAME, "includeRCAForKPI216")
 								.append("fieldLabel", "Root cause values to be included")
@@ -212,11 +217,13 @@ public class DefectEscapeRateSlingshotChangeUnit {
 										new Document()
 												.append(
 														DEFINITION,
-														"Root cause reasons for defects to be included In Defect Escape Rate calculation")));
+														"Root cause reasons for defects to be included In Defect Escape Rate calculation")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "resolutionTypeForRejectionKPI216"),
 						new Document()
 								.append(FIELD_NAME, "resolutionTypeForRejectionKPI216")
 								.append("fieldLabel", "Resolution type to be excluded")
@@ -229,11 +236,13 @@ public class DefectEscapeRateSlingshotChangeUnit {
 										new Document()
 												.append(
 														DEFINITION,
-														"Resolution types for defects that can be excluded from Defect Escape Rate calculation.")));
+														"Resolution types for defects that can be excluded from Defect Escape Rate calculation.")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraDefectRejectionStatusKPI216"),
 						new Document()
 								.append(FIELD_NAME, "jiraDefectRejectionStatusKPI216")
 								.append("fieldLabel", "Status to identify rejected defects")
@@ -245,11 +254,13 @@ public class DefectEscapeRateSlingshotChangeUnit {
 								.append(
 										"tooltip",
 										new Document()
-												.append(DEFINITION, "All workflow statuses used to reject defects")));
+												.append(DEFINITION, "All workflow statuses used to reject defects")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertOne(
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI216"),
 						new Document()
 								.append(FIELD_NAME, "thresholdValueKPI216")
 								.append("fieldLabel", "Target KPI Value")
@@ -265,7 +276,8 @@ public class DefectEscapeRateSlingshotChangeUnit {
 								.append("fieldDisplayOrder", 1)
 								.append("sectionOrder", 6)
 								.append("mandatory", false)
-								.append("nodeSpecific", false));
+								.append("nodeSpecific", false),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution
