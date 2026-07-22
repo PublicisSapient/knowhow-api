@@ -1279,7 +1279,6 @@ public enum KPIExcelColumn {
 			"kpi215",
 			Arrays.asList(
 					"Days/Weeks",
-					"Project",
 					"Repo",
 					"Branch",
 					"Developer",
@@ -1314,8 +1313,7 @@ public enum KPIExcelColumn {
 					"Time to Recover (In Hours)")),
 	E2E_TEST_PASS_RATE(
 			"kpi218",
-			Arrays.asList(
-					"Weeks", "Project", "Suite Name", "Total Tests", "Passed", "Failed", "Pass Rate %")),
+			Arrays.asList("Days/Weeks", "Suite Name", "Total Tests", "Passed", "Failed", "Pass Rate %")),
 	;
 
 	// @formatter:on
