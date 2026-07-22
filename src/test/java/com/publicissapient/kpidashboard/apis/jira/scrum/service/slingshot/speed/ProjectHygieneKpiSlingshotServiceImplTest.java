@@ -245,7 +245,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 
 	private FieldMapping fieldMappingWith(List<CycleTimeGroup> groups) {
 		FieldMapping fm = new FieldMapping();
-		fm.setJiraFieldsSelectionKPI217(groups);
+		fm.setJiraFieldsSelectionKPI218(groups);
 		return fm;
 	}
 
@@ -455,8 +455,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 
 	@Test
 	public void testGetKpiData_nullCycleTimeGroups_usesEmptyPromptsMap() throws ApplicationException {
-		// FieldMapping with no jiraFieldsSelectionKPI217 → cycleTimeGroupList == null
-		// branch.
+
 		mockFieldMapping(new FieldMapping());
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))

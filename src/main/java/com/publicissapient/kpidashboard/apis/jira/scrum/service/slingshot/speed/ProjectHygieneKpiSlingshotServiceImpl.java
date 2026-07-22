@@ -387,7 +387,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 		FieldMapping fieldMapping =
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
-		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI217();
+		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI218();
 
 		Map<String, String> prompts =
 				cycleTimeGroupList == null

@@ -17,7 +17,7 @@ import io.mongock.api.annotations.RollbackExecution;
 		systemVersion = "17.1.0")
 public class ProjectHygieneSlingshotChangeUnit {
 
-	private static final String KPI_ID = "kpi217";
+	private static final String KPI_ID = "kpi218";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -28,8 +28,9 @@ public class ProjectHygieneSlingshotChangeUnit {
 	private static final String IS_DEFAULT = "isDefault";
 	private static final String FIELD_NAME = "fieldName";
 	private static final String DEFINITION = "definition";
-	private static final String THRESHOLD_FIELD = "thresholdValueKPI217";
-	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI217";
+	private static final String THRESHOLD_FIELD = "thresholdValueKPI218";
+	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI218";
+	private static final String FIELDS_TO_WRITE_PROMPT = "Fields to write prompts";
 
 	// ...existing code...
 	@Execution
@@ -147,13 +148,13 @@ public class ProjectHygieneSlingshotChangeUnit {
 		Document jiraFieldsSelectionStructure =
 				new Document()
 						.append(FIELD_NAME, JIRA_FIELDS_SELECTION_FIELD)
-						.append("fieldLabel", "Fields to write prompts")
-						.append("placeHolderText", "Fields to write prompts")
+						.append("fieldLabel", FIELDS_TO_WRITE_PROMPT)
+						.append("placeHolderText", FIELDS_TO_WRITE_PROMPT)
 						.append("fieldType", "chips")
 						.append("section", "Custom Fields Mapping")
 						.append("fieldCategory", "fields")
 						.append("processorCommon", false)
-						.append("tooltip", new Document().append(DEFINITION, "Fields to write prompts"))
+						.append("tooltip", new Document().append(DEFINITION, FIELDS_TO_WRITE_PROMPT))
 						.append("filterGroup", List.of("CustomField"))
 						.append("nodeSpecific", false)
 						.append("fieldDisplayOrder", 3)

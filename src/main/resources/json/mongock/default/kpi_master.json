@@ -5794,10 +5794,41 @@
     "combinedKpiSource" : "Jira/Azure/Rally",
     "upperThresholdBG" : "red",
     "lowerThresholdBG" : "white",
-    "forecastModel" : "exponentialSmoothing"
+    "forecastModel" : "thetaMethod"
   },
   {
     "kpiId" : "kpi217",
+    "kpiName" : "Mean Time to Recover",
+    "isDeleted" : "False",
+    "defaultOrder" : 3,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "Hours",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Hours",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "hideOverallFilter" : false,
+    "kpiSource" : "Jira",
+    "thresholdValue" : 24,
+    "kanban" : false,
+    "groupId" : 69,
+    "kpiInfo" : {
+      "definition" : "Median time from production incident detected to service restored."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jira/Azure/Rally",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "forecastModel" : "thetaMethod",
+    "maturityRange" : [ "336-", "168-336", "24-168", "1-24", "-1" ]
+  },
+  {
+    "kpiId" : "kpi218",
     "kpiName" : "Project Hygiene",
     "isDeleted" : "False",
     "defaultOrder" : 7,
