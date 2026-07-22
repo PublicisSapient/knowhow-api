@@ -295,9 +295,9 @@ public enum FieldMappingEnum {
 					"defectPriorityKPI216",
 					"includeRCAForKPI216",
 					"excludeUnlinkedDefects",
-					"jiraBugRaisedByCustomField",
-					"jiraBugRaisedByValue",
-					"jiraBugRaisedByIdentification")),
+					"jiraBugRaisedByCustomFieldKPI216",
+					"jiraBugRaisedByValueKPI216",
+					"jiraBugRaisedByIdentificationKPI216")),
 
 	KPI133(
 			"Quality Status",

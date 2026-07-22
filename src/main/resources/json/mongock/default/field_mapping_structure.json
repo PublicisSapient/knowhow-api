@@ -3401,6 +3401,15 @@
     "mandatory": true
   },
   {
+    "fieldName": "thresholdValueKPI202",
+    "fieldLabel": "Target KPI Value",
+    "fieldType": "number",
+    "section": "Project Level Threshold",
+    "tooltip": {
+      "definition": "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    }
+  },
+  {
     "fieldName": "thresholdValueKPI203",
     "fieldLabel": "Target KPI Value",
     "fieldType": "number",
@@ -5404,6 +5413,55 @@
     "sectionOrder" : 6,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+  {
+    "fieldName": "jiraBugRaisedByIdentificationKPI216",
+    "fieldLabel": "Escaped defects identification",
+    "fieldType": "radiobutton",
+    "section": "Defects Mapping",
+    "fieldDisplayOrder": 3,
+    "sectionOrder": 3,
+    "tooltip": {
+      "definition": "Any custom field or label used to identify escaped defects for Defect Escape Rate (KPI216). Only one field value is allowed."
+    },
+    "options": [
+      {
+        "label": "CustomField",
+        "value": "CustomField"
+      },
+      {
+        "label": "Labels",
+        "value": "Labels"
+      }
+    ],
+    "nestedFields": [
+      {
+        "fieldName": "jiraBugRaisedByCustomFieldKPI216",
+        "fieldLabel": "Custom field to identify escaped defects",
+        "placeHolderText": "Custom field to identify escaped defects",
+        "fieldType": "text",
+        "fieldCategory": "fields",
+        "filterGroup": [
+          "CustomField"
+        ],
+        "tooltip": {
+          "definition": "Provide customfield name to identify UAT or client raised defects for Defect Escape Rate. <br> Example: customfield_13907<hr>"
+        }
+      },
+      {
+        "fieldName": "jiraBugRaisedByValueKPI216",
+        "fieldLabel": "Field values that denote escaped defects",
+        "placeHolderText": "Field values that denote escaped defects",
+        "fieldType": "chips",
+        "filterGroup": [
+          "CustomField",
+          "Labels"
+        ],
+        "tooltip": {
+          "definition": "Provide label name to identify UAT or client raised defects for Defect Escape Rate.<br /> Example: Clone_by_QA <hr>"
+        }
+      }
+    ]
   },
   {
     "fieldName" : "jiraStoryIdentificationKPI217",
