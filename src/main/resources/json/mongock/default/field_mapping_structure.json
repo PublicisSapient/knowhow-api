@@ -5453,5 +5453,47 @@
     "sectionOrder" : 6,
     "mandatory" : false,
     "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "e2eTestJobNameKPI218",
+    "fieldLabel" : "E2E Test Job Name",
+    "fieldType" : "text",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Name of the CI job that runs your Selenium / E2E test suite. Only builds from this job are used to compute E2E Test Pass Rate. e.g. e2e-regression"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "e2eTestBranchKPI218",
+    "fieldLabel" : "E2E Test Branch",
+    "fieldType" : "text",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Branch name to filter E2E test builds on. Only builds on this branch are counted. e.g. main"
+    },
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI218",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target pass rate (%). Shown as a reference line on the chart. Leave empty to use the default maturity line."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
   }
 ]

@@ -5826,5 +5826,36 @@
     "lowerThresholdBG" : "white",
     "forecastModel" : "thetaMethod",
     "maturityRange" : [ "336-", "168-336", "24-168", "1-24", "-1" ]
+  },
+  {
+    "kpiId" : "kpi218",
+    "kpiName" : "E2E Test Pass Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 4,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : true,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "-60", "60-79", "80-89", "90-94", "95-" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "kanban" : false,
+    "groupId" : 70,
+    "kpiInfo" : {
+      "definition" : "% of automated end-to-end tests passing on main branch."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/AzurePipeline/Teamcity",
+    "upperThresholdBG" : "white",
+    "lowerThresholdBG" : "red",
+    "forecastModel" : "thetaMethod"
   }
 ]
