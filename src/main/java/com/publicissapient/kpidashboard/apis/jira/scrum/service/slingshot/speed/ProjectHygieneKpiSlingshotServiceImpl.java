@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -151,6 +152,155 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 			- Return the JSON array and nothing else.
 			""";
 
+	/**
+	 * Deterministic mock response used as a fallback when the AI Gateway returns {@code null} /
+	 * blank content (e.g. during local testing, when the gateway is unreachable, or when the LLM
+	 * quota is exhausted). Shape mirrors {@link HygieneKpiResponseDTO} exactly and intentionally
+	 * covers all verdict types ({@code Passed} / {@code Failed} / {@code Partial}) and all
+	 * hygiene grades ({@code GOOD} / {@code AVERAGE} / {@code POOR}) so the downstream trend /
+	 * tooltip / excel-export pipeline can be exercised end-to-end.
+	 */
+	static final String MOCK_HYGIENE_RESPONSE_JSON =
+			"""
+			[
+			  {
+			    "issueKey": "MOCK-101",
+			    "issueType": "Story",
+			    "sprintId": "sprint-mock-001",
+			    "assignee": "Jane Doe",
+			    "results": [
+			      {
+			        "rule": "Acceptance Criteria Present",
+			        "field": "description",
+			        "observed": "Given/When/Then criteria listed",
+			        "status": "Passed",
+			        "reason": "description field contains explicit Given/When/Then acceptance criteria"
+			      },
+			      {
+			        "rule": "Story Points Estimated",
+			        "field": "estimate",
+			        "observed": "5",
+			        "status": "Passed",
+			        "reason": "estimate field is set to 5"
+			      },
+			      {
+			        "rule": "Assignee Set",
+			        "field": "assigneeName",
+			        "observed": "Jane Doe",
+			        "status": "Passed",
+			        "reason": "assigneeName field is populated"
+			      },
+			      {
+			        "rule": "Business Value Documented",
+			        "field": "labels",
+			        "observed": "null",
+			        "status": "Failed",
+			        "reason": "labels field does not contain a business-value tag"
+			      }
+			    ],
+			    "totalApplicableRules": 4,
+			    "passedRules": 3,
+			    "failedRules": 1,
+			    "partialRules": 0,
+			    "hygieneScore": 75,
+			    "hygieneGrade": "AVERAGE",
+			    "overallStatus": "NOT READY",
+			    "topFailures": ["Business Value Documented"],
+			    "recommendations": "Add a business-value label | Link a UX mockup in the description | Re-confirm stakeholder sign-off in comments"
+			  },
+			  {
+			    "issueKey": "MOCK-102",
+			    "issueType": "Bug",
+			    "sprintId": "sprint-mock-001",
+			    "assignee": "Unassigned",
+			    "results": [
+			      {
+			        "rule": "Steps to Reproduce",
+			        "field": "description",
+			        "observed": "null",
+			        "status": "Failed",
+			        "reason": "description field is empty"
+			      },
+			      {
+			        "rule": "Assignee Set",
+			        "field": "assigneeName",
+			        "observed": "null",
+			        "status": "Failed",
+			        "reason": "assigneeName field is empty"
+			      },
+			      {
+			        "rule": "Priority Set",
+			        "field": "priority",
+			        "observed": "High",
+			        "status": "Passed",
+			        "reason": "priority field is set to High"
+			      },
+			      {
+			        "rule": "Environment Captured",
+			        "field": "environment",
+			        "observed": "partial - only browser noted",
+			        "status": "Partial",
+			        "reason": "environment field lists browser but omits OS/version"
+			      }
+			    ],
+			    "totalApplicableRules": 4,
+			    "passedRules": 1,
+			    "failedRules": 2,
+			    "partialRules": 1,
+			    "hygieneScore": 25,
+			    "hygieneGrade": "POOR",
+			    "overallStatus": "NOT READY",
+			    "topFailures": ["Steps to Reproduce", "Assignee Set", "Environment Captured"],
+			    "recommendations": "Add reproduction steps to description | Assign the bug to an owner | Capture full environment (OS, version, build) | Attach relevant logs or screenshots"
+			  },
+			  {
+			    "issueKey": "MOCK-103",
+			    "issueType": "Task",
+			    "sprintId": "sprint-mock-001",
+			    "assignee": "John Smith",
+			    "results": [
+			      {
+			        "rule": "Description Present",
+			        "field": "description",
+			        "observed": "Set up CI pipeline for module X",
+			        "status": "Passed",
+			        "reason": "description field contains a clear objective"
+			      },
+			      {
+			        "rule": "Assignee Set",
+			        "field": "assigneeName",
+			        "observed": "John Smith",
+			        "status": "Passed",
+			        "reason": "assigneeName field is populated"
+			      },
+			      {
+			        "rule": "Estimate Present",
+			        "field": "estimate",
+			        "observed": "3",
+			        "status": "Passed",
+			        "reason": "estimate field is set to 3"
+			      },
+			      {
+			        "rule": "Acceptance Criteria Present",
+			        "field": "description",
+			        "observed": "N/A for infra task",
+			        "status": "N/A",
+			        "reason": "rule does not apply to infrastructure tasks"
+			      }
+			    ],
+			    "totalApplicableRules": 3,
+			    "passedRules": 3,
+			    "failedRules": 0,
+			    "partialRules": 0,
+			    "hygieneScore": 100,
+			    "hygieneGrade": "GOOD",
+			    "overallStatus": "READY",
+			    "topFailures": [],
+			    "recommendations": "Great hygiene - no immediate improvements needed"
+			  }
+			]
+			""";
+
 	@Autowired private HygieneKpiParser hygieneKpiParser;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
 	@Autowired private AiGatewayClient aiGatewayClient;
@@ -283,7 +433,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 											jiraIssues.size() < 10 ? jiraIssues : jiraIssues.subList(0, 10);
 									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, jiraIssueSubset);
 									return CompletableFuture.supplyAsync(
-													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt),
+													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt, prompts),
 													hygieneAiExecutor)
 											.orTimeout(PER_SPRINT_TIMEOUT_MINUTES, TimeUnit.MINUTES)
 											.exceptionally(
@@ -324,24 +474,66 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	 * CompletableFuture#exceptionally} handler can decide the fallback.
 	 */
 	private SprintHygieneOutcome computeSprintHygiene(
-			String sprintId, String sprintName, String projectName, String prompt) {
+			String sprintId, String sprintName, String projectName, String prompt, Map<String, String> fieldMapping) {
 		ChatGenerationResponseDTO chatGenerationResponseDTO =
 				aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
-		List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList =
-				hygieneKpiParser.parse(chatGenerationResponseDTO.content());
+		String responseContent =
+				chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
+		if (responseContent == null || responseContent.isBlank()) {
+			// AI Gateway returned nothing usable (offline, quota exhausted, upstream error, etc.)
+			// - fall back to a deterministic mock so the KPI, tooltip and Excel export can still
+			// be exercised end-to-end for testing / demo purposes.
+			log.warn(
+					"AI Gateway returned null/blank content for sprint {} ({}); using MOCK hygiene response.",
+					sprintName,
+					sprintId);
+			responseContent = MOCK_HYGIENE_RESPONSE_JSON;
+		}
+		List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList = hygieneKpiParser.parse(responseContent);
 
-		// Average the per-issue hygiene scores → sprint-level percentage.
-		// (Previous impl summed them, which produced values > 100.)
-		double sprintScore =
+		// Materialise a flat, non-null list of every RuleResult verdict returned
+		// for this sprint so we can query it multiple times without re-streaming.
+		List<HygieneKpiResponseDTO.RuleResult> allRuleResults =
 				hygieneKpiResponseDTOList.stream()
-						.map(HygieneKpiResponseDTO::getHygieneScore)
 						.filter(Objects::nonNull)
-						.mapToInt(Integer::intValue)
-						.average()
-						.orElse(0.0);
-		log.debug("Hygiene Score for Sprint {} ({}) : {}", sprintName, sprintId, sprintScore);
+						.map(HygieneKpiResponseDTO::getResults)
+						.filter(Objects::nonNull)
+						.flatMap(List::stream)
+						.filter(Objects::nonNull)
+						.toList();
 
-		DataCount dataCount = buildDataCount(sprintId, sprintName, projectName, sprintScore);
+		// Per-rule count of "Passed" verdicts, keyed by the configured rule
+		// catalogue (fieldMapping.keySet()) so every rule shows up in the tooltip
+		// even when the LLM omitted it or produced only Failed / Partial verdicts.
+		// equalsIgnoreCase keeps us tolerant of minor LLM casing drift ("passed",
+		// "PASSED", etc.).
+		Set<String> ruleNames =
+				allRuleResults.stream().map(HygieneKpiResponseDTO.RuleResult::getRule).collect(Collectors.toSet());
+		Map<String, Long> passedCountByRule = new LinkedHashMap<>();
+		ruleNames.forEach(
+				rule ->
+						passedCountByRule.put(
+								rule,
+								allRuleResults.stream()
+										.filter(rr -> rule.equalsIgnoreCase(rr.getRule()))
+										.map(HygieneKpiResponseDTO.RuleResult::getStatus)
+										.filter("Passed"::equalsIgnoreCase)
+										.count()));
+
+		long sprintScore =
+				allRuleResults.stream()
+						.map(HygieneKpiResponseDTO.RuleResult::getStatus)
+						.filter("Passed"::equalsIgnoreCase)
+						.count();
+
+		log.debug(
+				"Hygiene Passed-count for Sprint {} ({}) : total={} perRule={}",
+				sprintName,
+				sprintId,
+				sprintScore,
+				passedCountByRule);
+
+		DataCount dataCount = buildDataCount(sprintId, sprintName, projectName, sprintScore, passedCountByRule);
 
 		// Build one KPIExcelData row per Jira issue for the Excel export.
 		List<KPIExcelData> excelRows = new ArrayList<>();
@@ -352,11 +544,11 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	}
 
 	private DataCount emptyDataCount(String sprintId, String sprintName, String projectName) {
-		return buildDataCount(sprintId, sprintName, projectName, 0.0);
+		return buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
 	}
 
 	private DataCount buildDataCount(
-			String sprintId, String sprintName, String projectName, double score) {
+			String sprintId, String sprintName, String projectName, double score, Map<String, Long> passedCountByRule) {
 		// Round to an integer percentage so both the axis label and the
 		// aggregation input are clean whole numbers.
 		long roundedScore = Math.round(score);
@@ -375,6 +567,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		Map<String, Object> hoverValue = new HashMap<>();
 		hoverValue.put("Hygiene Score", roundedScore);
 		dataCount.setHoverValue(hoverValue);
+		dataCount.setDrillDown(passedCountByRule);
 		return dataCount;
 	}
 

@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -3407,20 +3408,21 @@ public class KPIExcelUtility {
 	public static void populateProjectHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
 			String sprintId,
-			List<com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO>
+			List<HygieneKpiResponseDTO>
 					hygieneKpiResponseDTOList) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
 			return;
 		}
 		hygieneKpiResponseDTOList.forEach(
 				hygieneKpiResponseDTO -> {
+					LinkedHashMap<String, String> ruleResult = hygieneKpiResponseDTO.getResults().stream().collect(Collectors.toMap(HygieneKpiResponseDTO.RuleResult::getRule, HygieneKpiResponseDTO.RuleResult::getStatus, (first, second) -> first,
+							LinkedHashMap::new));
 					KPIExcelData excelData = new KPIExcelData();
-					// Sprint id is stored in the sprintName column (matches the sSprintName
-					// convention used by the KPI's DataCount rows).
 					excelData.setSprintName(sprintId);
 					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
+					excelData.setGroupMap(ruleResult);
 					excelData.setHygieneScore(hygieneKpiResponseDTO.getHygieneScore());
 					excelData.setOverallStatus(hygieneKpiResponseDTO.getOverallStatus());
 					excelData.setRecommendations(hygieneKpiResponseDTO.getRecommendations());
