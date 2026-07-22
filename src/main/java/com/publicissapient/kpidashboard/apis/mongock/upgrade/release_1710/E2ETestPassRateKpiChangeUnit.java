@@ -59,7 +59,7 @@ public class E2ETestPassRateKpiChangeUnit {
 						.append(KPI_ID_FIELD, KPI_ID)
 						.append("kpiName", "E2E Test Pass Rate")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 2)
+						.append("defaultOrder", 4)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Quality")
 						.append("kpiUnit", "%")
