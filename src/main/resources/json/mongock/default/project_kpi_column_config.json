@@ -4239,6 +4239,48 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi218",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Suite Name",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Tests",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Passed",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Failed",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Pass Rate %",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
   }
 ]
 
