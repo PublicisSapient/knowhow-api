@@ -73,7 +73,12 @@ public class DefectEscapeRateSlingshotChangeUnit {
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
 						.append("forecastModel", "thetaMethod");
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						kpiMaster,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -139,7 +144,12 @@ public class DefectEscapeRateSlingshotChangeUnit {
 												.append(ORDER, 11)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS_COLLECTION).insertOne(columnConfig);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						columnConfig,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
