@@ -5513,20 +5513,6 @@
     "nodeSpecific" : false
   },
   {
-    "fieldName" : "e2eTestJobNameKPI218",
-    "fieldLabel" : "E2E Test Workflow Names",
-    "fieldType" : "chips",
-    "section" : "Custom Fields Mapping",
-    "processorCommon" : false,
-    "tooltip" : {
-      "definition" : "Names of the CI workflows whose test results contribute to E2E Test Pass Rate. Add one or more workflow names (case-insensitive). e.g. API_CI_CD_Prod_Workflow, Processors_CI_CD_Prod_Workflow"
-    },
-    "fieldDisplayOrder" : 1,
-    "sectionOrder" : 5,
-    "mandatory" : false,
-    "nodeSpecific" : false
-  },
-  {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "text",

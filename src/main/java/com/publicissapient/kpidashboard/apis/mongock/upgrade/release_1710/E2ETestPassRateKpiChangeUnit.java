@@ -153,26 +153,6 @@ public class E2ETestPassRateKpiChangeUnit {
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
-		Document jobNameMapping =
-				new Document()
-						.append(FIELD_NAME, "e2eTestJobNameKPI218")
-						.append("fieldLabel", "E2E Test Workflow Names")
-						.append("fieldType", "chips")
-						.append("section", "Custom Fields Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document()
-										.append(
-												DEFINITION,
-												"Names of the CI workflows whose test results contribute to E2E Test Pass Rate. "
-														+ "Add one or more workflow names (case-insensitive). "
-														+ "e.g. API_CI_CD_Prod_Workflow, Processors_CI_CD_Prod_Workflow"))
-						.append("fieldDisplayOrder", 1)
-						.append("sectionOrder", 5)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
-
 		Document branchMapping =
 				new Document()
 						.append(FIELD_NAME, "e2eTestBranchKPI218")
@@ -214,12 +194,6 @@ public class E2ETestPassRateKpiChangeUnit {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "e2eTestJobNameKPI218"),
-						jobNameMapping,
-						new com.mongodb.client.model.ReplaceOptions().upsert(true));
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.replaceOne(
 						new Document(FIELD_NAME, "e2eTestBranchKPI218"),
 						branchMapping,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
@@ -244,9 +218,6 @@ public class E2ETestPassRateKpiChangeUnit {
 				.deleteMany(
 						new Document(
 								FIELD_NAME,
-								new Document(
-										"$in",
-										Arrays.asList(
-												"e2eTestJobNameKPI218", "e2eTestBranchKPI218", "thresholdValueKPI218"))));
+								new Document("$in", Arrays.asList("e2eTestBranchKPI218", "thresholdValueKPI218"))));
 	}
 }

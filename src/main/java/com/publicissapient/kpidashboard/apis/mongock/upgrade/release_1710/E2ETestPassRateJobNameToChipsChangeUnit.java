@@ -35,6 +35,7 @@ import io.mongock.api.annotations.RollbackExecution;
 public class E2ETestPassRateJobNameToChipsChangeUnit {
 
 	private static final String FIELD_MAPPING_STRUCTURE_COLLECTION = "field_mapping_structure";
+	private static final String FIELD_MAPPING_COLLECTION = "field_mapping";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
 	private static final String FIELD_NAME = "fieldName";
 	private static final String DEFINITION = "definition";
@@ -47,26 +48,22 @@ public class E2ETestPassRateJobNameToChipsChangeUnit {
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
-		updateFieldMappingStructure(mongoTemplate);
-		updateKpiColumnConfig(mongoTemplate);
-	}
-
-	private void updateFieldMappingStructure(MongoTemplate mongoTemplate) {
+		// e2eTestJobNameKPI218 is no longer needed — the tool connection already
+		// records which workflow is configured, so an explicit opt-in field is
+		// redundant.
+		// Remove it from field_mapping_structure and strip it from all field_mapping
+		// documents.
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.updateOne(
-						new Document(FIELD_NAME, FIELD_NAME_VALUE),
-						new Document(
-								"$set",
-								new Document("fieldType", "chips")
-										.append("fieldLabel", "E2E Test Workflow Names")
-										.append(
-												"tooltip",
-												new Document(
-														DEFINITION,
-														"Names of the CI workflows whose test results contribute to E2E Test Pass Rate. "
-																+ "Add one or more workflow names (case-insensitive). "
-																+ "e.g. API_CI_CD_Prod_Workflow, Processors_CI_CD_Prod_Workflow"))));
+				.deleteOne(new Document(FIELD_NAME, FIELD_NAME_VALUE));
+
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_COLLECTION)
+				.updateMany(
+						new Document(FIELD_NAME_VALUE, new Document("$exists", true)),
+						new Document("$unset", new Document(FIELD_NAME_VALUE, "")));
+
+		updateKpiColumnConfig(mongoTemplate);
 	}
 
 	private void updateKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -128,26 +125,35 @@ public class E2ETestPassRateJobNameToChipsChangeUnit {
 
 	@RollbackExecution
 	public void rollback(MongoTemplate mongoTemplate) {
-		rollbackFieldMappingStructure(mongoTemplate);
-		rollbackKpiColumnConfig(mongoTemplate);
-	}
+		// Restore the field_mapping_structure entry with its original text-field shape.
+		Document jobNameMapping =
+				new Document()
+						.append(FIELD_NAME, FIELD_NAME_VALUE)
+						.append("fieldLabel", "E2E Test Job Name")
+						.append("fieldType", "text")
+						.append("section", "Custom Fields Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document()
+										.append(
+												DEFINITION,
+												"Name of the CI job that runs your Selenium / E2E test suite. "
+														+ "Only builds from this job are used to compute E2E Test Pass Rate. "
+														+ "e.g. e2e-regression"))
+						.append("fieldDisplayOrder", 1)
+						.append("sectionOrder", 5)
+						.append("mandatory", false)
+						.append("nodeSpecific", false);
 
-	private void rollbackFieldMappingStructure(MongoTemplate mongoTemplate) {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.updateOne(
+				.replaceOne(
 						new Document(FIELD_NAME, FIELD_NAME_VALUE),
-						new Document(
-								"$set",
-								new Document("fieldType", "text")
-										.append("fieldLabel", "E2E Test Job Name")
-										.append(
-												"tooltip",
-												new Document(
-														DEFINITION,
-														"Name of the CI job that runs your Selenium / E2E test suite. "
-																+ "Only builds from this job are used to compute E2E Test Pass Rate. "
-																+ "e.g. e2e-regression"))));
+						jobNameMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+
+		rollbackKpiColumnConfig(mongoTemplate);
 	}
 
 	private void rollbackKpiColumnConfig(MongoTemplate mongoTemplate) {
