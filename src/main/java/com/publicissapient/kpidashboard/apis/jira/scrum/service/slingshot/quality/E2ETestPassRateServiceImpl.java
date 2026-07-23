@@ -65,9 +65,10 @@ import lombok.extern.slf4j.Slf4j;
 public class E2ETestPassRateServiceImpl
 		extends JenkinsKPIService<Double, List<Object>, Map<String, List<Object>>> {
 
-	private static final String TOTAL_TESTS = "Total Tests";
-	private static final String PASSED_TESTS = "Passed";
-	private static final String FAILED_TESTS = "Failed";
+	private static final String BUILDS_IN_WEEK = "Builds in Week";
+	private static final String AVG_TESTS_PER_BUILD = "Avg Tests/Build";
+	private static final String AVG_PASSED = "Avg Passed";
+	private static final String AVG_FAILED = "Avg Failed";
 	private static final String PASS_RATE = "Pass Rate %";
 
 	private final TestSuiteExecutionRepository testSuiteExecutionRepository;
@@ -200,6 +201,7 @@ public class E2ETestPassRateServiceImpl
 			int totalPassed = 0;
 			int totalFailed = 0;
 			int totalSkipped = 0;
+			int buildCount = 0;
 
 			for (TestSuiteExecution rec : suiteRecords) {
 				LocalDate buildDate =
@@ -214,6 +216,7 @@ public class E2ETestPassRateServiceImpl
 				totalPassed += rec.getPassedTests() != null ? rec.getPassedTests() : 0;
 				totalFailed += rec.getFailedTests() != null ? rec.getFailedTests() : 0;
 				totalSkipped += rec.getSkippedTests() != null ? rec.getSkippedTests() : 0;
+				buildCount++;
 			}
 
 			double passRate = 0.0;
@@ -230,9 +233,12 @@ public class E2ETestPassRateServiceImpl
 			dataCount.setValue(passRate);
 
 			Map<String, Object> hoverMap = new HashMap<>();
-			hoverMap.put(TOTAL_TESTS, totalPassed + totalFailed + totalSkipped);
-			hoverMap.put(PASSED_TESTS, totalPassed);
-			hoverMap.put(FAILED_TESTS, totalFailed);
+			hoverMap.put(BUILDS_IN_WEEK, buildCount);
+			hoverMap.put(
+					AVG_TESTS_PER_BUILD,
+					buildCount > 0 ? (totalPassed + totalFailed + totalSkipped) / buildCount : 0);
+			hoverMap.put(AVG_PASSED, buildCount > 0 ? totalPassed / buildCount : 0);
+			hoverMap.put(AVG_FAILED, buildCount > 0 ? totalFailed / buildCount : 0);
 			hoverMap.put(PASS_RATE, String.format("%.1f%%", passRate));
 			dataCount.setHoverValue(hoverMap);
 

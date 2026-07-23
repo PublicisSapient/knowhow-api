@@ -119,23 +119,28 @@ public class E2ETestPassRateKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Total Tests")
+												.append(COLUMN_NAME, "Builds in Week")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Passed")
+												.append(COLUMN_NAME, "Avg Tests/Build")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Failed")
+												.append(COLUMN_NAME, "Avg Passed")
 												.append(ORDER, 6)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Pass Rate %")
+												.append(COLUMN_NAME, "Avg Failed")
 												.append(ORDER, 7)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Pass Rate %")
+												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
