@@ -919,7 +919,7 @@ public enum FieldMappingEnum {
 	KPI218(
 			"E2E Test Pass Rate",
 			KPISource.JENKINS.name(),
-			List.of("e2eTestJobNameKPI218", "e2eTestBranchKPI218", "thresholdValueKPI218"));
+			List.of("e2eTestBranchKPI218", "thresholdValueKPI218"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;
