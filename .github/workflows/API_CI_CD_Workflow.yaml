@@ -195,6 +195,7 @@ jobs:
         if: ${{ github.event.inputs.test == 'true' && github.event.inputs.publish_test_results == 'true' }}
         with:
           files: "**/target/surefire-reports/*.xml"
+          comment_mode: off
 
       # ✅ SonarQube Analysis - knowhow-api
       - name: SonarQube Analysis - knowhow-api

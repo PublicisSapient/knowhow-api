@@ -21,6 +21,15 @@ on:
         default: "14.0.0"
         type: string
 
+      publish_test_results:
+        description: "Publish test results (Check Run)"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
 env:
   IMAGE_NAME: knowhow-api
   ACR_NAME: ${{ secrets.SPEEDTOOLS_ACR_NAME }}
@@ -136,9 +145,10 @@ jobs:
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        if: ${{ github.event.inputs.publish_test_results == 'true' }}
         with:
           files: "**/target/surefire-reports/*.xml"
+          comment_mode: off
 
       - name: SonarQube Analysis
         run: |
