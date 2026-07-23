@@ -431,6 +431,27 @@ public class KPIExcelData {
 	@JsonProperty("Days/Weeks")
 	private String daysWeeks;
 
+	@JsonProperty("Workflow")
+	private String workflow;
+
+	@JsonProperty("Suite Name")
+	private String suiteName;
+
+	@JsonProperty("Builds in Week")
+	private String buildsInWeek;
+
+	@JsonProperty("Avg Tests/Build")
+	private String avgTestsPerBuild;
+
+	@JsonProperty("Avg Passed")
+	private String avgPassedTests;
+
+	@JsonProperty("Avg Failed")
+	private String avgFailedTests;
+
+	@JsonProperty("Pass Rate %")
+	private String passRatePercentage;
+
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
 

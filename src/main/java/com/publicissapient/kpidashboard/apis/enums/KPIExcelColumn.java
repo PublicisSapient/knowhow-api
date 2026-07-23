@@ -1318,6 +1318,7 @@ public enum KPIExcelColumn {
 			"kpi218",
 			Arrays.asList(
 					"Days/Weeks",
+					"Workflow",
 					"Suite Name",
 					"Builds in Week",
 					"Avg Tests/Build",
