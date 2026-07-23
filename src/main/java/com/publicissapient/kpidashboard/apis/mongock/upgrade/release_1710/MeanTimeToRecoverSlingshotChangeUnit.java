@@ -171,7 +171,29 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 												new Document()
 														.append("label", "CustomField")
 														.append("value", "CustomField"),
-												new Document().append("label", "Labels").append("value", "Labels"))),
+												new Document().append("label", "Labels").append("value", "Labels")))
+								.append(
+										"nestedFields",
+										Arrays.asList(
+												new Document(FIELD_NAME, "jiraProdIncidentRaisedByCustomField")
+														.append("fieldLabel", "Production Incident Custom Field")
+														.append("fieldType", "text")
+														.append("fieldCategory", "fields")
+														.append("filterGroup", Arrays.asList("CustomField"))
+														.append(
+																"tooltip",
+																new Document(
+																		DEFINITION,
+																		"Provide customfield name to identify Production Incident. <br> Example: customfield_13907<hr>")),
+												new Document(FIELD_NAME, "jiraProdIncidentRaisedByValue")
+														.append("fieldLabel", "Production Incident Values")
+														.append("fieldType", "chips")
+														.append("filterGroup", Arrays.asList("CustomField", "Labels"))
+														.append(
+																"tooltip",
+																new Document(
+																		DEFINITION,
+																		"Provide label name to identify Production Incident Example: PROD_INCIDENT <hr>")))),
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate

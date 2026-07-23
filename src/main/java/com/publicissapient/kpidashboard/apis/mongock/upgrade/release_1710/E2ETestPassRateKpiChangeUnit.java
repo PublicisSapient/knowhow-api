@@ -51,6 +51,16 @@ public class E2ETestPassRateKpiChangeUnit {
 		insertKpiMaster(mongoTemplate);
 		insertKpiColumnConfig(mongoTemplate);
 		insertFieldMappingStructure(mongoTemplate);
+		// Safety cleanup: remove e2eTestJobNameKPI218 if present from a prior partial
+		// deploy
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.deleteOne(new Document(FIELD_NAME, "e2eTestJobNameKPI218"));
+		mongoTemplate
+				.getCollection("field_mapping")
+				.updateMany(
+						new Document("e2eTestJobNameKPI218", new Document("$exists", true)),
+						new Document("$unset", new Document("e2eTestJobNameKPI218", "")));
 	}
 
 	public void insertKpiMaster(MongoTemplate mongoTemplate) {
@@ -82,7 +92,7 @@ public class E2ETestPassRateKpiChangeUnit {
 						.append("aggregationCriteria", "average")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append("combinedKpiSource", "Jenkins/Bamboo/AzurePipeline/Teamcity")
+						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity")
 						.append("upperThresholdBG", "white")
 						.append("lowerThresholdBG", "red")
 						.append("forecastModel", "thetaMethod");
