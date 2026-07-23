@@ -149,6 +149,7 @@ jobs:
         with:
           files: "**/target/surefire-reports/*.xml"
           comment_mode: off
+          check_name: "API Unit Tests"
 
       - name: SonarQube Analysis
         run: |

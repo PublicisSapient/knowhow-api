@@ -196,6 +196,7 @@ jobs:
         with:
           files: "**/target/surefire-reports/*.xml"
           comment_mode: off
+          check_name: "API Unit Tests"
 
       # ✅ SonarQube Analysis - knowhow-api
       - name: SonarQube Analysis - knowhow-api

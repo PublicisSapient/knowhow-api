@@ -5514,12 +5514,12 @@
   },
   {
     "fieldName" : "e2eTestJobNameKPI218",
-    "fieldLabel" : "E2E Test Job Name",
-    "fieldType" : "text",
+    "fieldLabel" : "E2E Test Workflow Names",
+    "fieldType" : "chips",
     "section" : "Custom Fields Mapping",
     "processorCommon" : false,
     "tooltip" : {
-      "definition" : "Name of the CI job that runs your Selenium / E2E test suite. Only builds from this job are used to compute E2E Test Pass Rate. e.g. e2e-regression"
+      "definition" : "Names of the CI workflows whose test results contribute to E2E Test Pass Rate. Add one or more workflow names (case-insensitive). e.g. API_CI_CD_Prod_Workflow, Processors_CI_CD_Prod_Workflow"
     },
     "fieldDisplayOrder" : 1,
     "sectionOrder" : 5,

@@ -170,7 +170,8 @@ public class E2ETestPassRateServiceImpl
 		Map<String, List<DataCount>> aggDataMap = new LinkedHashMap<>();
 
 		Map<String, List<TestSuiteExecution>> bySuite =
-				allRecords.stream().collect(Collectors.groupingBy(TestSuiteExecution::getSuiteName));
+				allRecords.stream()
+						.collect(Collectors.groupingBy(r -> r.getJobName() + "#" + r.getSuiteName()));
 
 		for (Map.Entry<String, List<TestSuiteExecution>> entry : bySuite.entrySet()) {
 			prepareInfoForSuites(trendLineName, entry.getKey(), entry.getValue(), aggDataMap);

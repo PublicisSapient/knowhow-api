@@ -151,8 +151,8 @@ public class E2ETestPassRateKpiChangeUnit {
 		Document jobNameMapping =
 				new Document()
 						.append(FIELD_NAME, "e2eTestJobNameKPI218")
-						.append("fieldLabel", "E2E Test Job Name")
-						.append("fieldType", "text")
+						.append("fieldLabel", "E2E Test Workflow Names")
+						.append("fieldType", "chips")
 						.append("section", "Custom Fields Mapping")
 						.append("processorCommon", false)
 						.append(
@@ -160,9 +160,9 @@ public class E2ETestPassRateKpiChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"Name of the CI job that runs your Selenium / E2E test suite. "
-														+ "Only builds from this job are used to compute E2E Test Pass Rate. "
-														+ "e.g. e2e-regression"))
+												"Names of the CI workflows whose test results contribute to E2E Test Pass Rate. "
+														+ "Add one or more workflow names (case-insensitive). "
+														+ "e.g. API_CI_CD_Prod_Workflow, Processors_CI_CD_Prod_Workflow"))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 5)
 						.append("mandatory", false)
