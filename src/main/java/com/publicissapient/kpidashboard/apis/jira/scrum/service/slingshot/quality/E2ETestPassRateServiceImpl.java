@@ -179,7 +179,31 @@ public class E2ETestPassRateServiceImpl
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
-		kpiElement.setExcelData(new ArrayList<KPIExcelData>());
+
+		List<KPIExcelData> excelData = new ArrayList<>();
+		for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
+			String key = entry.getKey();
+			int sep = key.indexOf('#');
+			String displayWorkflow = sep >= 0 ? key.substring(0, sep) : key;
+			String displaySuite = sep >= 0 ? key.substring(sep + 1) : key;
+			for (DataCount dc : entry.getValue()) {
+				Map<String, Object> hover = dc.getHoverValue();
+				if (hover == null) continue;
+				int builds = (Integer) hover.getOrDefault(BUILDS_IN_WEEK, 0);
+				if (builds == 0) continue;
+				KPIExcelData row = new KPIExcelData();
+				row.setDaysWeeks(dc.getDate());
+				row.setWorkflow(displayWorkflow);
+				row.setSuiteName(displaySuite);
+				row.setBuildsInWeek(String.valueOf(builds));
+				row.setAvgTestsPerBuild(String.valueOf(hover.getOrDefault(AVG_TESTS_PER_BUILD, 0)));
+				row.setAvgPassedTests(String.valueOf(hover.getOrDefault(AVG_PASSED, 0)));
+				row.setAvgFailedTests(String.valueOf(hover.getOrDefault(AVG_FAILED, 0)));
+				row.setPassRatePercentage((String) hover.getOrDefault(PASS_RATE, "0.0%"));
+				excelData.add(row);
+			}
+		}
+		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.E2E_TEST_PASS_RATE.getColumns());
 	}
 
@@ -236,9 +260,11 @@ public class E2ETestPassRateServiceImpl
 			hoverMap.put(BUILDS_IN_WEEK, buildCount);
 			hoverMap.put(
 					AVG_TESTS_PER_BUILD,
-					buildCount > 0 ? (totalPassed + totalFailed + totalSkipped) / buildCount : 0);
-			hoverMap.put(AVG_PASSED, buildCount > 0 ? totalPassed / buildCount : 0);
-			hoverMap.put(AVG_FAILED, buildCount > 0 ? totalFailed / buildCount : 0);
+					buildCount > 0
+							? Math.round((double) (totalPassed + totalFailed + totalSkipped) / buildCount)
+							: 0);
+			hoverMap.put(AVG_PASSED, buildCount > 0 ? Math.round((double) totalPassed / buildCount) : 0);
+			hoverMap.put(AVG_FAILED, buildCount > 0 ? Math.round((double) totalFailed / buildCount) : 0);
 			hoverMap.put(PASS_RATE, String.format("%.1f%%", passRate));
 			dataCount.setHoverValue(hoverMap);
 

@@ -119,7 +119,7 @@ public class E2ETestPassRateKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Project")
+												.append(COLUMN_NAME, "Workflow")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
