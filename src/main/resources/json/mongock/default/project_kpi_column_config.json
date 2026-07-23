@@ -4257,26 +4257,32 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Total Tests",
+        "columnName" : "Builds in Week",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Passed",
+        "columnName" : "Avg Tests/Build",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Failed",
+        "columnName" : "Avg Passed",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Pass Rate %",
+        "columnName" : "Avg Failed",
         "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Pass Rate %",
+        "order" : 7,
         "isShown" : true,
         "isDefault" : true
       }
