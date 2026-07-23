@@ -260,9 +260,11 @@ public class E2ETestPassRateServiceImpl
 			hoverMap.put(BUILDS_IN_WEEK, buildCount);
 			hoverMap.put(
 					AVG_TESTS_PER_BUILD,
-					buildCount > 0 ? (totalPassed + totalFailed + totalSkipped) / buildCount : 0);
-			hoverMap.put(AVG_PASSED, buildCount > 0 ? totalPassed / buildCount : 0);
-			hoverMap.put(AVG_FAILED, buildCount > 0 ? totalFailed / buildCount : 0);
+					buildCount > 0
+							? Math.round((double) (totalPassed + totalFailed + totalSkipped) / buildCount)
+							: 0);
+			hoverMap.put(AVG_PASSED, buildCount > 0 ? Math.round((double) totalPassed / buildCount) : 0);
+			hoverMap.put(AVG_FAILED, buildCount > 0 ? Math.round((double) totalFailed / buildCount) : 0);
 			hoverMap.put(PASS_RATE, String.format("%.1f%%", passRate));
 			dataCount.setHoverValue(hoverMap);
 
