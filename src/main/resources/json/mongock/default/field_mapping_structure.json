@@ -5515,7 +5515,7 @@
   {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
-    "fieldType" : "text",
+    "fieldType" : "chips",
     "section" : "Custom Fields Mapping",
     "processorCommon" : false,
     "tooltip" : {
@@ -5534,6 +5534,34 @@
     "processorCommon" : false,
     "tooltip" : {
       "definition" : "Target pass rate (%). Shown as a reference line on the chart. Leave empty to use the default maturity line."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "e2eTestBranchKPI219",
+    "fieldLabel" : "E2E Test Branch",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Branch name to filter E2E test builds on. Only builds on this branch are counted. e.g. main"
+    },
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI219",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target average E2E test duration in minutes. Shown as a reference line on the chart. Leave empty to use the default maturity line."
     },
     "fieldDisplayOrder" : 1,
     "sectionOrder" : 6,

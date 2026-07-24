@@ -172,7 +172,8 @@ public class E2ETestPassRateServiceImpl
 
 		Map<String, List<TestSuiteExecution>> bySuite =
 				allRecords.stream()
-						.collect(Collectors.groupingBy(r -> r.getJobName() + "#" + r.getSuiteName()));
+						.collect(Collectors.groupingBy(
+								r -> r.getJobName() + "#" + r.getSuiteName() + "#" + r.getBuildBranch()));
 
 		for (Map.Entry<String, List<TestSuiteExecution>> entry : bySuite.entrySet()) {
 			prepareInfoForSuites(trendLineName, entry.getKey(), entry.getValue(), aggDataMap);
@@ -183,9 +184,11 @@ public class E2ETestPassRateServiceImpl
 		List<KPIExcelData> excelData = new ArrayList<>();
 		for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
 			String key = entry.getKey();
-			int sep = key.indexOf('#');
-			String displayWorkflow = sep >= 0 ? key.substring(0, sep) : key;
-			String displaySuite = sep >= 0 ? key.substring(sep + 1) : key;
+			int sep1 = key.indexOf('#');
+			int sep2 = key.lastIndexOf('#');
+			String displayWorkflow = sep1 >= 0 ? key.substring(0, sep1) : key;
+			String displaySuite = (sep1 >= 0 && sep2 > sep1) ? key.substring(sep1 + 1, sep2) : key;
+			String displayBranch = sep2 > sep1 ? key.substring(sep2 + 1) : "";
 			for (DataCount dc : entry.getValue()) {
 				Map<String, Object> hover = dc.getHoverValue();
 				if (hover == null) continue;
@@ -195,6 +198,7 @@ public class E2ETestPassRateServiceImpl
 				row.setDaysWeeks(dc.getDate());
 				row.setWorkflow(displayWorkflow);
 				row.setSuiteName(displaySuite);
+				row.setBranch(displayBranch);
 				row.setBuildsInWeek(String.valueOf(builds));
 				row.setAvgTestsPerBuild(String.valueOf(hover.getOrDefault(AVG_TESTS_PER_BUILD, 0)));
 				row.setAvgPassedTests(String.valueOf(hover.getOrDefault(AVG_PASSED, 0)));
