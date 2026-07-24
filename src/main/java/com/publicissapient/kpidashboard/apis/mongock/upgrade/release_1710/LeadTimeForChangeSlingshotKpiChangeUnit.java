@@ -89,7 +89,12 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 								"Bitbucket/AzureRepository/GitHub/GitLab & Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity/ArgoCD")
 						.append("forecastModel", "thetaMethod");
 
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						kpiMaster,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -146,7 +151,12 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS_COLLECTION).insertOne(columnConfig);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						columnConfig,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
@@ -190,7 +200,16 @@ public class LeadTimeForChangeSlingshotKpiChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertMany(Arrays.asList(productionBranchStructure, thresholdStructure));
+				.replaceOne(
+						new Document(FIELD_NAME, PRODUCTION_BRANCH_FIELD),
+						productionBranchStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, THRESHOLD_FIELD),
+						thresholdStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

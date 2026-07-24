@@ -803,10 +803,14 @@ public class LeadTimeForChangeSlingshotServiceImpl
 						.map(
 								mr -> {
 									String entry = "#" + mr.getExternalId();
-									String branch = mr.getFromBranch();
-									return (branch != null && !branch.isEmpty())
-											? entry + " (" + branch + ")"
-											: entry;
+									String from = mr.getFromBranch();
+									String to = mr.getToBranch();
+									if (from != null && !from.isEmpty() && to != null && !to.isEmpty()) {
+										return entry + " (" + from + " → " + to + ")";
+									} else if (from != null && !from.isEmpty()) {
+										return entry + " (" + from + ")";
+									}
+									return entry;
 								})
 						.collect(Collectors.joining(" → "));
 
@@ -887,10 +891,14 @@ public class LeadTimeForChangeSlingshotServiceImpl
 						.map(
 								mr -> {
 									String entry = "#" + mr.getExternalId();
-									String branch = mr.getFromBranch();
-									return (branch != null && !branch.isEmpty())
-											? entry + " (" + branch + ")"
-											: entry;
+									String from = mr.getFromBranch();
+									String to = mr.getToBranch();
+									if (from != null && !from.isEmpty() && to != null && !to.isEmpty()) {
+										return entry + " (" + from + " → " + to + ")";
+									} else if (from != null && !from.isEmpty()) {
+										return entry + " (" + from + ")";
+									}
+									return entry;
 								})
 						.collect(Collectors.joining(" → "));
 

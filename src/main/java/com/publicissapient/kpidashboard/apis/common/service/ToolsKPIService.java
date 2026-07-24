@@ -70,7 +70,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.MEAN_TIME_TO_MERGE.name(),
 							KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING.name(),
 							KPICode.OPEN_TICKET_AGING_BY_PRIORITY.name(),
-							KPICode.PI_PREDICTABILITY.name()));
+							KPICode.PI_PREDICTABILITY.name(),
+							KPICode.MEAN_TIME_TO_RECOVER_SLINGSHOT.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(

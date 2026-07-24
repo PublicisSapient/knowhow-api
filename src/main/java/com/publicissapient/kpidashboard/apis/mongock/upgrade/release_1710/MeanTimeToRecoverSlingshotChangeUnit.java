@@ -1,7 +1,6 @@
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -11,13 +10,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "defect_escape_rate_slingshot_kpi_insert",
-		order = "17154",
+		id = "mean_time_to_recover_slingshot_kpi_insert",
+		order = "17162",
 		author = "knowhow",
 		systemVersion = "17.1.0")
-public class DefectEscapeRateSlingshotChangeUnit {
+public class MeanTimeToRecoverSlingshotChangeUnit {
 
-	private static final String KPI_ID = "kpi216";
+	private static final String KPI_ID = "kpi217";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -40,39 +39,38 @@ public class DefectEscapeRateSlingshotChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "Defect Escape Rate")
+						.append("kpiName", "Mean Time to Recover")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 2)
+						.append("defaultOrder", 3)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Quality")
-						.append("kpiUnit", "%")
+						.append("kpiUnit", "Hours")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Percentage")
+						.append("yAxisLabel", "Hours")
 						.append("showTrend", true)
 						.append("isPositiveTrend", false)
 						.append("calculateMaturity", true)
-						.append("maturityRange", List.of("30-", "25-30", "20-25", "15-20", "-15"))
+						.append("maturityRange", Arrays.asList("336-", "168-336", "24-168", "1-24", "-1"))
 						.append("hideOverallFilter", false)
 						.append("kpiSource", "Jira")
-						.append("maxValue", 100)
-						.append("thresholdValue", 10.0)
+						.append("thresholdValue", 24.0)
 						.append("kanban", false)
-						.append("groupId", 68)
+						.append("groupId", 69)
 						.append(
 								"kpiInfo",
 								new Document()
 										.append(
 												DEFINITION,
-												"% of defects discovered in production vs. discovered preproduction."))
+												"Median time from production incident detected to service restored."))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
-						.append("isTrendCalculative", false)
-						.append("isAdditionalFilterSupport", true)
+						.append("isAdditionalFilterSupport", false)
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
 						.append("forecastModel", "thetaMethod");
+
 		mongoTemplate
 				.getCollection(KPI_MASTER_COLLECTION)
 				.replaceOne(
@@ -95,55 +93,36 @@ public class DefectEscapeRateSlingshotChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Sprint Name")
+												.append(COLUMN_NAME, "Issue ID")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Defect ID")
+												.append(COLUMN_NAME, "Issue Type")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Description")
+												.append(COLUMN_NAME, "Issue Description")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Escaped Defect")
+												.append(COLUMN_NAME, "Created Time")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Escaped defect identifier")
+												.append(COLUMN_NAME, "Closed Time")
 												.append(ORDER, 6)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Defect Priority")
+												.append(COLUMN_NAME, "Time to Recover (In Hours)")
 												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Defect Status")
-												.append(ORDER, 8)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Story ID")
-												.append(ORDER, 9)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Squad")
-												.append(ORDER, 10)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, false),
-										new Document()
-												.append(COLUMN_NAME, "Time Spent (in hours)")
-												.append(ORDER, 11)
-												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
+
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
 				.replaceOne(
@@ -156,113 +135,93 @@ public class DefectEscapeRateSlingshotChangeUnit {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "jiraIssueTypeKPI216"),
+						new Document(FIELD_NAME, "jiraStoryIdentificationKPI217"),
 						new Document()
-								.append(FIELD_NAME, "jiraIssueTypeKPI216")
-								.append("fieldLabel", "Issue types with defect linkages")
+								.append(FIELD_NAME, "jiraStoryIdentificationKPI217")
+								.append("fieldLabel", "Issue type to identify Production incidents")
 								.append("fieldType", "chips")
 								.append("fieldCategory", "Issue_Type")
 								.append("section", "Issue Types Mapping")
-								.append("fieldDisplayOrder", 1)
-								.append("sectionOrder", 2)
-								.append(
-										"tooltip",
-										new Document()
-												.append(DEFINITION, "All issue types that can have valid defect linkages"))
-								.append("mandatory", true),
-						new com.mongodb.client.model.ReplaceOptions().upsert(true));
-
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.replaceOne(
-						new Document(FIELD_NAME, "defectPriorityKPI216"),
-						new Document()
-								.append(FIELD_NAME, "defectPriorityKPI216")
-								.append("fieldLabel", "Priority to be excluded")
-								.append("placeHolderText", "Select values to be excluded")
-								.append("fieldType", "multiselect")
-								.append("section", "Defects Mapping")
-								.append("fieldDisplayOrder", 1)
-								.append("sectionOrder", 3)
 								.append(
 										"tooltip",
 										new Document()
 												.append(
 														DEFINITION,
-														"Priority values of defects that can be excluded from Defect Escape Rate calculation"))
+														"All issue types that are used as/equivalent to Production incidents.")),
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "jiraProductionIncidentIdentificationKPI217"),
+						new Document()
+								.append(FIELD_NAME, "jiraProductionIncidentIdentificationKPI217")
+								.append("fieldLabel", "Production incidents identification")
+								.append("fieldType", "radiobutton")
+								.append("section", "Defects Mapping")
+								.append(
+										"tooltip",
+										new Document()
+												.append(
+														DEFINITION,
+														"This field is used to identify if a production incident is raised by third party or client:<br>1. CustomField : If a separate custom field is used<br>2. Labels : If a label is used to identify. Example: PROD_DEFECT (This has to be one value).<hr>"))
 								.append(
 										"options",
 										Arrays.asList(
-												new Document().append("label", "p1").append("value", "p1"),
-												new Document().append("label", "p2").append("value", "p2"),
-												new Document().append("label", "p3").append("value", "p3"),
-												new Document().append("label", "p4").append("value", "p4"),
-												new Document().append("label", "p5").append("value", "p5"))),
-						new com.mongodb.client.model.ReplaceOptions().upsert(true));
-
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.replaceOne(
-						new Document(FIELD_NAME, "includeRCAForKPI216"),
-						new Document()
-								.append(FIELD_NAME, "includeRCAForKPI216")
-								.append("fieldLabel", "Root cause values to be included")
-								.append("placeHolderText", " Root cause values to be included")
-								.append("fieldType", "chips")
-								.append("section", "Defects Mapping")
-								.append("fieldDisplayOrder", 2)
-								.append("sectionOrder", 3)
+												new Document()
+														.append("label", "CustomField")
+														.append("value", "CustomField"),
+												new Document().append("label", "Labels").append("value", "Labels")))
 								.append(
-										"tooltip",
-										new Document()
-												.append(
-														DEFINITION,
-														"Root cause reasons for defects to be included In Defect Escape Rate calculation")),
+										"nestedFields",
+										Arrays.asList(
+												new Document(FIELD_NAME, "jiraProdIncidentRaisedByCustomField")
+														.append("fieldLabel", "Production Incident Custom Field")
+														.append("fieldType", "text")
+														.append("fieldCategory", "fields")
+														.append("filterGroup", Arrays.asList("CustomField"))
+														.append(
+																"tooltip",
+																new Document(
+																		DEFINITION,
+																		"Provide customfield name to identify Production Incident. <br> Example: customfield_13907<hr>")),
+												new Document(FIELD_NAME, "jiraProdIncidentRaisedByValue")
+														.append("fieldLabel", "Production Incident Values")
+														.append("fieldType", "chips")
+														.append("filterGroup", Arrays.asList("CustomField", "Labels"))
+														.append(
+																"tooltip",
+																new Document(
+																		DEFINITION,
+																		"Provide label name to identify Production Incident Example: PROD_INCIDENT <hr>")))),
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "resolutionTypeForRejectionKPI216"),
+						new Document(FIELD_NAME, "jiraDodKPI217"),
 						new Document()
-								.append(FIELD_NAME, "resolutionTypeForRejectionKPI216")
-								.append("fieldLabel", "Resolution type to be excluded")
+								.append(FIELD_NAME, "jiraDodKPI217")
+								.append("fieldLabel", "Status to identify completed issues")
 								.append("fieldType", "chips")
-								.append("section", "WorkFlow Status Mapping")
-								.append("fieldDisplayOrder", 6)
-								.append("sectionOrder", 4)
-								.append(
-										"tooltip",
-										new Document()
-												.append(
-														DEFINITION,
-														"Resolution types for defects that can be excluded from Defect Escape Rate calculation.")),
-						new com.mongodb.client.model.ReplaceOptions().upsert(true));
-
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.replaceOne(
-						new Document(FIELD_NAME, "jiraDefectRejectionStatusKPI216"),
-						new Document()
-								.append(FIELD_NAME, "jiraDefectRejectionStatusKPI216")
-								.append("fieldLabel", "Status to identify rejected defects")
-								.append("fieldType", "text")
 								.append("fieldCategory", "workflow")
-								.append("section", "WorkFlow Status Mapping")
-								.append("fieldDisplayOrder", 2)
+								.append("fieldDisplayOrder", 8)
 								.append("sectionOrder", 4)
+								.append("section", "WorkFlow Status Mapping")
 								.append(
 										"tooltip",
 										new Document()
-												.append(DEFINITION, "All workflow statuses used to reject defects")),
+												.append(
+														DEFINITION,
+														"All workflow statuses used to identify completed issues based on Definition of Done (DoD).")),
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "thresholdValueKPI216"),
+						new Document(FIELD_NAME, "thresholdValueKPI217"),
 						new Document()
-								.append(FIELD_NAME, "thresholdValueKPI216")
+								.append(FIELD_NAME, "thresholdValueKPI217")
 								.append("fieldLabel", "Target KPI Value")
 								.append("fieldType", "number")
 								.append("section", "Project Level Threshold")
@@ -296,11 +255,9 @@ public class DefectEscapeRateSlingshotChangeUnit {
 								new Document(
 										"$in",
 										Arrays.asList(
-												"jiraIssueTypeKPI216",
-												"defectPriorityKPI216",
-												"includeRCAForKPI216",
-												"resolutionTypeForRejectionKPI216",
-												"jiraDefectRejectionStatusKPI216",
-												"thresholdValueKPI216"))));
+												"jiraStoryIdentificationKPI217",
+												"jiraProductionIncidentIdentificationKPI217",
+												"jiraDodKPI217",
+												"thresholdValueKPI217"))));
 	}
 }

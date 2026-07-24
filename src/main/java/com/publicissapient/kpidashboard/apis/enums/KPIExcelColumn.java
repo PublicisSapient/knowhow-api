@@ -104,6 +104,9 @@ public enum KPIExcelColumn {
 					"PR Raised Time",
 					"PR Merged Time",
 					"Mean Time To Merge (In Hours)")),
+	PR_THROUGHPUT_SLINGSHOT(
+			"kpi208",
+			Arrays.asList("Project", "Repo", "Branch", "Days/Weeks", "Developer", "No of Merge")),
 	PR_CYCLE_TIME_SLINGSHOT(
 			"kpi209",
 			Arrays.asList(
@@ -836,7 +839,7 @@ public enum KPIExcelColumn {
 	FLOW_DISTRIBUTION("Kpi146", Arrays.asList("Date")),
 	FLOW_DISTRIBUTION_SLINGSHOT("kpi207", Arrays.asList("Date")),
 	FLOW_LOAD("kpi148", Arrays.asList("Date")),
-	FLOW_LOAD_SLINGSHOT("kpi148", Arrays.asList("Date")),
+	FLOW_LOAD_SLINGSHOT("kpi206", Arrays.asList("Date")),
 	RELEASE_BURNUP(
 			"kpi150",
 			Arrays.asList(
@@ -1279,14 +1282,13 @@ public enum KPIExcelColumn {
 			"kpi215",
 			Arrays.asList(
 					"Days/Weeks",
-					"Project",
 					"Repo",
 					"Branch",
 					"Developer",
 					"Email/Username",
-					"No of Merge",
-					"No of Revert PR",
-					"Merge Request Url",
+					"No. of PR",
+					"No. of Revert PR",
+					"Revert PR URL",
 					"Revert Rate")),
 	DEFECT_ESCAPE_RATE_SLINGSHOT(
 			"kpi216",
@@ -1302,6 +1304,27 @@ public enum KPIExcelColumn {
 					"Story ID",
 					"Squad",
 					"Time Spent (in hours)")),
+	MEAN_TIME_TO_RECOVER_SLINGSHOT(
+			"kpi217",
+			Arrays.asList(
+					"Days/Weeks",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Created Time",
+					"Closed Time",
+					"Time to Recover (In Hours)")),
+	E2E_TEST_PASS_RATE(
+			"kpi218",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Suite Name",
+					"Builds in Week",
+					"Avg Tests/Build",
+					"Avg Passed",
+					"Avg Failed",
+					"Pass Rate %")),
 	;
 
 	// @formatter:on
