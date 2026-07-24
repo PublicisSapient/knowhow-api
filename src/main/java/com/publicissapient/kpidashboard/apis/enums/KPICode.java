@@ -335,7 +335,10 @@ public enum KPICode {
 	DEPLOYMENT_FREQUENCY_SLINGSHOT("kpi213", KPISource.JENKINS.name()),
 	LEAD_TIME_FOR_CHANGE_SLINGSHOT("kpi214", KPISource.JENKINS.name()),
 	PR_REVERT_RATE_SLINGSHOT("kpi215", KPISource.BITBUCKET.name()),
-	DEFECT_ESCAPE_RATE_SLINGSHOT("kpi216", KPISource.JIRA.name());
+	DEFECT_ESCAPE_RATE_SLINGSHOT("kpi216", KPISource.JIRA.name()),
+	MEAN_TIME_TO_RECOVER_SLINGSHOT("kpi217", KPISource.JIRA.name()),
+	/** E2E Test Pass Rate */
+	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name());
 
 	// @formatter:on
 

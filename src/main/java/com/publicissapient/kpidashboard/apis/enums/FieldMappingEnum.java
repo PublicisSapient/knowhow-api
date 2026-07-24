@@ -295,9 +295,9 @@ public enum FieldMappingEnum {
 					"defectPriorityKPI216",
 					"includeRCAForKPI216",
 					"excludeUnlinkedDefects",
-					"jiraBugRaisedByCustomField",
-					"jiraBugRaisedByValue",
-					"jiraBugRaisedByIdentification")),
+					"jiraBugRaisedByCustomFieldKPI216",
+					"jiraBugRaisedByValueKPI216",
+					"jiraBugRaisedByIdentificationKPI216")),
 
 	KPI133(
 			"Quality Status",
@@ -904,7 +904,22 @@ public enum FieldMappingEnum {
 	KPI211("PR Size Distribution", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI211")),
 	KPI212("Build Success Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI212")),
 	KPI213("Deployment Frequency", KPISource.JENKINS.name(), List.of("thresholdValueKPI213")),
-	KPI215("PR Revert Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI215"));
+	KPI215("PR Revert Rate", KPISource.BITBUCKET.name(), List.of("thresholdValueKPI215")),
+	KPI217(
+			"Mean Time to Recover",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraStoryIdentificationKPI217",
+					"jiraProductionIncidentIdentificationKPI217",
+					"jiraProdIncidentRaisedByCustomField",
+					"jiraProdIncidentRaisedByValue",
+					"jiraDodKPI217",
+					"thresholdValueKPI217")),
+
+	KPI218(
+			"E2E Test Pass Rate",
+			KPISource.JENKINS.name(),
+			List.of("e2eTestBranchKPI218", "thresholdValueKPI218"));
 
 	/** kanban field mapping enums end * */
 	private List<String> fields;

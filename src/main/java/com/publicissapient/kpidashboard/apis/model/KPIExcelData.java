@@ -311,6 +311,9 @@ public class KPIExcelData {
 	@JsonProperty("No of Merge")
 	private String numberOfMerge;
 
+	@JsonProperty("No. of PR")
+	private String numberOfPr;
+
 	@JsonProperty("Created Date")
 	private String createdDate;
 
@@ -428,6 +431,27 @@ public class KPIExcelData {
 	@JsonProperty("Days/Weeks")
 	private String daysWeeks;
 
+	@JsonProperty("Workflow")
+	private String workflow;
+
+	@JsonProperty("Suite Name")
+	private String suiteName;
+
+	@JsonProperty("Builds in Week")
+	private String buildsInWeek;
+
+	@JsonProperty("Avg Tests/Build")
+	private String avgTestsPerBuild;
+
+	@JsonProperty("Avg Passed")
+	private String avgPassedTests;
+
+	@JsonProperty("Avg Failed")
+	private String avgFailedTests;
+
+	@JsonProperty("Pass Rate %")
+	private String passRatePercentage;
+
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
 
@@ -485,6 +509,9 @@ public class KPIExcelData {
 	@JsonProperty("Merge Request Url")
 	private Map<String, String> mergeRequestUrl;
 
+	@JsonProperty("Revert PR URL")
+	private Map<String, String> revertPrUrl;
+
 	@JsonProperty("Innovation Rate")
 	private String innovationRate;
 
@@ -505,6 +532,9 @@ public class KPIExcelData {
 
 	@JsonProperty("No of Revert PR")
 	private Long revertPrs;
+
+	@JsonProperty("No. of Revert PR")
+	private Long revertPrCount;
 
 	@JsonProperty("Declined PR")
 	private Long declinedPRs;

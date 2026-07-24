@@ -20,6 +20,14 @@ on:
         options:
           - "false"
           - "true"
+      publish_test_results:
+        description: "Publish test results (Check Run)"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
       env:
         description: "Environment to deploy"
         required: true
@@ -49,6 +57,10 @@ on:
         required: true
         default: "14.0.0"
         type: string
+
+permissions:
+  contents: read
+  checks: write
 
 env:
   IMAGE_NAME: knowhow-api
@@ -177,6 +189,14 @@ jobs:
       - name: Build & Test knowhow-api
         if: ${{ github.event.inputs.test == 'true' }}
         run: mvn clean install -Ddockerfile.skip=true
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: ${{ github.event.inputs.test == 'true' && github.event.inputs.publish_test_results == 'true' }}
+        with:
+          files: "**/target/surefire-reports/*.xml"
+          comment_mode: off
+          check_name: "API Unit Tests"
 
       # ✅ SonarQube Analysis - knowhow-api
       - name: SonarQube Analysis - knowhow-api

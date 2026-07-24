@@ -1,3 +1,21 @@
+/*******************************************************************************
+ * Copyright 2014 CapitalOne, LLC.
+ * Further development Copyright 2022 Sapient Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ ******************************************************************************/
+
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import java.util.Arrays;
@@ -10,13 +28,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "pr_throughput_kpi_insert",
-		order = "17123",
-		author = "kunkambl",
+		id = "e2e_test_pass_rate_kpi_insert",
+		order = "17164",
+		author = "knowhow",
 		systemVersion = "17.1.0")
-public class PRThroughputKpiChangeUnit {
+public class E2ETestPassRateKpiChangeUnit {
 
-	private static final String KPI_ID = "kpi208";
+	private static final String KPI_ID = "kpi218";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -25,48 +43,58 @@ public class PRThroughputKpiChangeUnit {
 	private static final String ORDER = "order";
 	private static final String IS_SHOWN = "isShown";
 	private static final String IS_DEFAULT = "isDefault";
+	private static final String FIELD_NAME = "fieldName";
+	private static final String DEFINITION = "definition";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
 		insertKpiMaster(mongoTemplate);
 		insertKpiColumnConfig(mongoTemplate);
 		insertFieldMappingStructure(mongoTemplate);
+		// Safety cleanup: remove e2eTestJobNameKPI218 if present from a prior partial
+		// deploy
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.deleteOne(new Document(FIELD_NAME, "e2eTestJobNameKPI218"));
+		mongoTemplate
+				.getCollection("field_mapping")
+				.updateMany(
+						new Document("e2eTestJobNameKPI218", new Document("$exists", true)),
+						new Document("$unset", new Document("e2eTestJobNameKPI218", "")));
 	}
 
 	public void insertKpiMaster(MongoTemplate mongoTemplate) {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "PR Throughput")
+						.append("kpiName", "E2E Test Pass Rate")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 1)
+						.append("defaultOrder", 4)
 						.append("kpiCategory", "Slingshot")
-						.append("kpiSubCategory", "Speed")
-						.append("kpiUnit", "PRs")
+						.append("kpiSubCategory", "Quality")
+						.append("kpiUnit", "%")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Count")
+						.append("yAxisLabel", "Percentage")
 						.append("showTrend", true)
 						.append("isPositiveTrend", true)
-						.append("calculateMaturity", false)
+						.append("calculateMaturity", true)
+						.append("maturityRange", Arrays.asList("-60", "60-79", "80-89", "90-94", "95-"))
 						.append("hideOverallFilter", true)
-						.append("kpiSource", "BitBucket")
-						.append("maxValue", 15)
-						.append("thresholdValue", 55.0)
+						.append("kpiSource", "Jenkins")
 						.append("kanban", false)
-						.append("groupId", 6)
+						.append("groupId", 70)
 						.append(
 								"kpiInfo",
 								new Document()
-										.append(
-												"definition",
-												"Merged pull requests per engineer per week, at team / org level only. "))
+										.append(DEFINITION, "% of automated end-to-end tests passing on main branch."))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append("isRepoToolKpi", true)
-						.append("combinedKpiSource", "Bitbucket/AzureRepository/GitHub/GitLab")
+						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity")
+						.append("upperThresholdBG", "white")
+						.append("lowerThresholdBG", "red")
 						.append("forecastModel", "thetaMethod");
 
 		mongoTemplate
@@ -75,12 +103,6 @@ public class PRThroughputKpiChangeUnit {
 						new Document(KPI_ID_FIELD, KPI_ID),
 						kpiMaster,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
-
-		mongoTemplate
-				.getCollection(KPI_MASTER_COLLECTION)
-				.updateOne(
-						new Document(KPI_ID, "kpi206"),
-						new Document("$set", new Document("kpiFilter", "dropDown")));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -92,33 +114,43 @@ public class PRThroughputKpiChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Project")
+												.append(COLUMN_NAME, "Days/Weeks")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Repo")
+												.append(COLUMN_NAME, "Workflow")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Branch")
+												.append(COLUMN_NAME, "Suite Name")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Days/Weeks")
+												.append(COLUMN_NAME, "Builds in Week")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Developer")
+												.append(COLUMN_NAME, "Avg Tests/Build")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "No of Merge")
+												.append(COLUMN_NAME, "Avg Passed")
+												.append(ORDER, 6)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Avg Failed")
 												.append(ORDER, 7)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Pass Rate %")
+												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
@@ -131,9 +163,28 @@ public class PRThroughputKpiChangeUnit {
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
-		Document fieldMapping =
+		Document branchMapping =
 				new Document()
-						.append("fieldName", "thresholdValueKPI208")
+						.append(FIELD_NAME, "e2eTestBranchKPI218")
+						.append("fieldLabel", "E2E Test Branch")
+						.append("fieldType", "text")
+						.append("section", "Custom Fields Mapping")
+						.append("processorCommon", false)
+						.append(
+								"tooltip",
+								new Document()
+										.append(
+												DEFINITION,
+												"Branch name to filter E2E test builds on. "
+														+ "Only builds on this branch are counted. e.g. main"))
+						.append("fieldDisplayOrder", 2)
+						.append("sectionOrder", 5)
+						.append("mandatory", false)
+						.append("nodeSpecific", false);
+
+		Document thresholdMapping =
+				new Document()
+						.append(FIELD_NAME, "thresholdValueKPI218")
 						.append("fieldLabel", "Target KPI Value")
 						.append("fieldType", "number")
 						.append("section", "Project Level Threshold")
@@ -142,8 +193,9 @@ public class PRThroughputKpiChangeUnit {
 								"tooltip",
 								new Document()
 										.append(
-												"definition",
-												"Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"))
+												DEFINITION,
+												"Target pass rate (%). Shown as a reference line on the chart. "
+														+ "Leave empty to use the default maturity line."))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 6)
 						.append("mandatory", false)
@@ -152,8 +204,14 @@ public class PRThroughputKpiChangeUnit {
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document("fieldName", "thresholdValueKPI208"),
-						fieldMapping,
+						new Document(FIELD_NAME, "e2eTestBranchKPI218"),
+						branchMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI218"),
+						thresholdMapping,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
@@ -167,6 +225,9 @@ public class PRThroughputKpiChangeUnit {
 				.deleteOne(new Document(KPI_ID_FIELD, KPI_ID));
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteOne(new Document("fieldName", "thresholdValueKPI208"));
+				.deleteMany(
+						new Document(
+								FIELD_NAME,
+								new Document("$in", Arrays.asList("e2eTestBranchKPI218", "thresholdValueKPI218"))));
 	}
 }
