@@ -37,13 +37,13 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.CommittmentReliabilityServiceImpl;
@@ -3438,15 +3438,20 @@ public class KPIExcelUtility {
 	public static void populateProjectHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
 			String sprintId,
-			List<HygieneKpiResponseDTO>
-					hygieneKpiResponseDTOList) {
+			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
 			return;
 		}
 		hygieneKpiResponseDTOList.forEach(
 				hygieneKpiResponseDTO -> {
-					LinkedHashMap<String, String> ruleResult = hygieneKpiResponseDTO.getResults().stream().collect(Collectors.toMap(HygieneKpiResponseDTO.RuleResult::getRule, HygieneKpiResponseDTO.RuleResult::getStatus, (first, second) -> first,
-							LinkedHashMap::new));
+					LinkedHashMap<String, String> ruleResult =
+							hygieneKpiResponseDTO.getResults().stream()
+									.collect(
+											Collectors.toMap(
+													HygieneKpiResponseDTO.RuleResult::getRule,
+													HygieneKpiResponseDTO.RuleResult::getStatus,
+													(first, second) -> first,
+													LinkedHashMap::new));
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setSprintName(sprintId);
 					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
