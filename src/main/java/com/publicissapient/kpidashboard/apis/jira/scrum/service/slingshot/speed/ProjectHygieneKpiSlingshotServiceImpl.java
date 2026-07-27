@@ -433,9 +433,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 											jiraIssues.size() < 10 ? jiraIssues : jiraIssues.subList(0, 10);
 									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, jiraIssueSubset);
 									return CompletableFuture.supplyAsync(
-													() ->
-															computeSprintHygiene(
-																	sprintId, sprintName, projectName, prompt, prompts),
+													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt),
 													hygieneAiExecutor)
 											.orTimeout(PER_SPRINT_TIMEOUT_MINUTES, TimeUnit.MINUTES)
 											.exceptionally(
@@ -465,6 +463,17 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		}
 		kpiElement.setExcelColumns(KPIExcelColumn.PROJECT_HYGIENE.getColumns());
 
+		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
+
+		kpiElement.setProjectScore(
+				dataCountList.isEmpty()
+						? 0
+						: dataCountList.stream()
+								.map(DataCount::getValue)
+								.filter(Objects::nonNull)
+								.mapToDouble(v -> ((Number) v).doubleValue())
+								.sum());
+
 		node.setValue(dataCountList);
 	}
 
@@ -476,11 +485,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	 * CompletableFuture#exceptionally} handler can decide the fallback.
 	 */
 	private SprintHygieneOutcome computeSprintHygiene(
-			String sprintId,
-			String sprintName,
-			String projectName,
-			String prompt,
-			Map<String, String> fieldMapping) {
+			String sprintId, String sprintName, String projectName, String prompt) {
 		ChatGenerationResponseDTO chatGenerationResponseDTO =
 				aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 		String responseContent =
@@ -510,11 +515,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 						.filter(Objects::nonNull)
 						.toList();
 
-		// Per-rule count of "Passed" verdicts, keyed by the configured rule
-		// catalogue (fieldMapping.keySet()) so every rule shows up in the tooltip
-		// even when the LLM omitted it or produced only Failed / Partial verdicts.
-		// equalsIgnoreCase keeps us tolerant of minor LLM casing drift ("passed",
-		// "PASSED", etc.).
 		Set<String> ruleNames =
 				allRuleResults.stream()
 						.map(HygieneKpiResponseDTO.RuleResult::getRule)

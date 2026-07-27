@@ -85,6 +85,9 @@ public class KpiElement implements Serializable { // NOPMD
 	private boolean kpiSprintSwitch;
 	private String labelXAxis;
 
+	@Getter @Setter private Double projectScore;
+	@Getter @Setter private Integer scoreFactor;
+
 	public String getLabelXAxis() {
 		return labelXAxis;
 	}
