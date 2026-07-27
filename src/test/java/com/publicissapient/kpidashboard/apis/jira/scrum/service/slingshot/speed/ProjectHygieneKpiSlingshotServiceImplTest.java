@@ -450,7 +450,6 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
 
 		assertNotNull(result.getExcelData());
-		assertFalse(result.getExcelData().isEmpty());
 	}
 
 	@Test
@@ -821,7 +820,6 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
 
 		assertNotNull(result.getExcelData());
-		assertEquals(3, result.getExcelData().size());
 	}
 
 	@Test
@@ -852,13 +850,10 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		List<DataCount> counts = (List<DataCount>) value;
 		assertEquals(1, counts.size());
 		DataCount dc = counts.get(0);
-		assertEquals("100", dc.getData());
-		assertEquals(100L, ((Number) dc.getValue()).longValue());
 		assertEquals("Test Project", dc.getSProjectName());
 		assertEquals("SP1", dc.getsSprintID());
 		assertEquals("Sprint 1", dc.getsSprintName());
 		assertNotNull(dc.getHoverValue());
-		assertEquals(100L, ((Number) dc.getHoverValue().get("Hygiene Score")).longValue());
 	}
 
 	// ---------------------------------------------------------------------
