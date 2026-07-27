@@ -245,7 +245,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 
 	private FieldMapping fieldMappingWith(List<CycleTimeGroup> groups) {
 		FieldMapping fm = new FieldMapping();
-		fm.setJiraFieldsSelectionKPI218(groups);
+		fm.setJiraFieldsSelectionKPI311(groups);
 		return fm;
 	}
 
