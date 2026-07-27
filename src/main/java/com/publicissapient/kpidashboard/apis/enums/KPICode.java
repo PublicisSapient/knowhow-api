@@ -337,7 +337,9 @@ public enum KPICode {
 	PR_REVERT_RATE_SLINGSHOT("kpi215", KPISource.BITBUCKET.name()),
 	DEFECT_ESCAPE_RATE_SLINGSHOT("kpi216", KPISource.JIRA.name()),
 	MEAN_TIME_TO_RECOVER_SLINGSHOT("kpi217", KPISource.JIRA.name()),
-	PROJECT_HYGIENE("kpi218", KPISource.JIRA.name());
+	/** E2E Test Pass Rate */
+	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name()),
+	PROJECT_HYGIENE("kpi311", KPISource.JIRA.name());
 
 	// @formatter:on
 

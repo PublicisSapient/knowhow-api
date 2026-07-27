@@ -43,10 +43,6 @@ public class LeadTimeForChangeSlingshotColumnRefinementChangeUnit {
 
 	@Execution
 	public void execute() {
-		mongoTemplate
-				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
-				.deleteOne(new Document(KPI_ID_FIELD, KPI_ID).append("basicProjectConfigId", null));
-
 		Document columnConfig =
 				new Document()
 						.append("basicProjectConfigId", null)
@@ -100,7 +96,12 @@ public class LeadTimeForChangeSlingshotColumnRefinementChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS_COLLECTION).insertOne(columnConfig);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID).append("basicProjectConfigId", null),
+						columnConfig,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

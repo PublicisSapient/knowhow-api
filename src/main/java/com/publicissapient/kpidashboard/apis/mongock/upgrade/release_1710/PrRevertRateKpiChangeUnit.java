@@ -69,7 +69,12 @@ public class PrRevertRateKpiChangeUnit {
 						.append("combinedKpiSource", "Bitbucket/AzureRepository/GitHub/GitLab")
 						.append("forecastModel", "thetaMethod");
 
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						kpiMaster,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
@@ -131,7 +136,12 @@ public class PrRevertRateKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS_COLLECTION).insertOne(columnConfig);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
+				.replaceOne(
+						new Document(KPI_ID_FIELD, KPI_ID),
+						columnConfig,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
@@ -153,7 +163,12 @@ public class PrRevertRateKpiChangeUnit {
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
-		mongoTemplate.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION).insertOne(fieldMapping);
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document(FIELD_NAME, "thresholdValueKPI215"),
+						fieldMapping,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

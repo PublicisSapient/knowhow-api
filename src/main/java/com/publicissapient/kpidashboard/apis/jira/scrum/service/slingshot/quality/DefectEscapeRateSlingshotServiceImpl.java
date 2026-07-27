@@ -61,7 +61,6 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
-import com.publicissapient.kpidashboard.common.constant.NormalizedJira;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
@@ -934,15 +933,15 @@ public class DefectEscapeRateSlingshotServiceImpl
 			List<JiraIssue> testCaseList, FieldMapping fieldMapping, Set<String> labels) {
 		Map<String, List<JiraIssue>> uatMap = new HashMap<>();
 		if (null != fieldMapping
-				&& StringUtils.isNotEmpty(fieldMapping.getJiraBugRaisedByIdentification())
-				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraBugRaisedByValue())) {
+				&& StringUtils.isNotEmpty(fieldMapping.getJiraBugRaisedByIdentificationKPI216())
+				&& CollectionUtils.isNotEmpty(fieldMapping.getJiraBugRaisedByValueKPI216())) {
 			Set<String> jiraBugRaisedByValue = new HashSet<>();
 			fieldMapping
-					.getJiraBugRaisedByValue()
+					.getJiraBugRaisedByValueKPI216()
 					.forEach(value -> jiraBugRaisedByValue.add(value.toLowerCase()));
 			labels.addAll(jiraBugRaisedByValue);
 			if (fieldMapping
-					.getJiraBugRaisedByIdentification()
+					.getJiraBugRaisedByIdentificationKPI216()
 					.trim()
 					.equalsIgnoreCase(Constant.LABELS)) {
 				testCaseList.stream()
@@ -962,18 +961,12 @@ public class DefectEscapeRateSlingshotServiceImpl
 																		.add(jIssue)));
 			} else {
 				testCaseList.stream()
-						.filter(
-								f ->
-										NormalizedJira.THIRD_PARTY_DEFECT_VALUE
-												.getValue()
-												.equalsIgnoreCase(f.getDefectRaisedBy()))
-						.toList()
-						.stream()
-						.filter(issue -> CollectionUtils.isNotEmpty(issue.getUatDefectGroup()))
+						.filter(JiraIssue::isEscapedDefectSlingshotKPI216)
+						.filter(issue -> CollectionUtils.isNotEmpty(issue.getUatDefectGroupKPI216()))
 						.forEach(
 								issue ->
 										issue
-												.getUatDefectGroup()
+												.getUatDefectGroupKPI216()
 												.forEach(
 														label ->
 																uatMap

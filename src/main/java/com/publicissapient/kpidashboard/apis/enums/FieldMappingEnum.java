@@ -295,9 +295,9 @@ public enum FieldMappingEnum {
 					"defectPriorityKPI216",
 					"includeRCAForKPI216",
 					"excludeUnlinkedDefects",
-					"jiraBugRaisedByCustomField",
-					"jiraBugRaisedByValue",
-					"jiraBugRaisedByIdentification")),
+					"jiraBugRaisedByCustomFieldKPI216",
+					"jiraBugRaisedByValueKPI216",
+					"jiraBugRaisedByIdentificationKPI216")),
 
 	KPI133(
 			"Quality Status",
@@ -915,7 +915,12 @@ public enum FieldMappingEnum {
 					"jiraProdIncidentRaisedByValue",
 					"jiraDodKPI217",
 					"thresholdValueKPI217")),
+
 	KPI218(
+			"E2E Test Pass Rate",
+			KPISource.JENKINS.name(),
+			List.of("e2eTestBranchKPI218", "thresholdValueKPI218")),
+	KPI311(
 			"Project Hygiene",
 			KPISource.JIRA.name(),
 			List.of("jiraFieldsSelectionKPI218", "thresholdValueKPI218"));

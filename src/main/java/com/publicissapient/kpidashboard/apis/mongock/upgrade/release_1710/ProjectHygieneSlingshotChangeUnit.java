@@ -17,7 +17,7 @@ import io.mongock.api.annotations.RollbackExecution;
 		systemVersion = "17.1.0")
 public class ProjectHygieneSlingshotChangeUnit {
 
-	private static final String KPI_ID = "kpi218";
+	private static final String KPI_ID = "kpi311";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -28,8 +28,8 @@ public class ProjectHygieneSlingshotChangeUnit {
 	private static final String IS_DEFAULT = "isDefault";
 	private static final String FIELD_NAME = "fieldName";
 	private static final String DEFINITION = "definition";
-	private static final String THRESHOLD_FIELD = "thresholdValueKPI218";
-	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI218";
+	private static final String THRESHOLD_FIELD = "thresholdValueKPI311";
+	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI311";
 	private static final String FIELDS_TO_WRITE_PROMPT = "Fields to write prompts";
 
 	// ...existing code...

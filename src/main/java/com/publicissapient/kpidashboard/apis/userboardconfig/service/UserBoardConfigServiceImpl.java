@@ -405,6 +405,9 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 	 *     boardId fields
 	 */
 	private Filters copyFiltersWithoutId(Filters original) {
+		if (original == null) {
+			return new Filters();
+		}
 		Filters copy = new Filters();
 		copy.setProjectTypeSwitch(original.getProjectTypeSwitch());
 		copy.setPrimaryFilter(original.getPrimaryFilter());
