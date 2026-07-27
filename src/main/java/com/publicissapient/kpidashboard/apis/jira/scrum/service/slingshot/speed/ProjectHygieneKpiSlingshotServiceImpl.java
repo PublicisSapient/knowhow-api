@@ -472,7 +472,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 								.map(DataCount::getValue)
 								.filter(Objects::nonNull)
 								.mapToDouble(v -> ((Number) v).doubleValue())
-								.sum());
+								.sum()/dataCountList.size());
 
 		node.setValue(dataCountList);
 	}
@@ -486,20 +486,25 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	 */
 	private SprintHygieneOutcome computeSprintHygiene(
 			String sprintId, String sprintName, String projectName, String prompt) {
-		ChatGenerationResponseDTO chatGenerationResponseDTO =
-				aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
-		String responseContent =
-				chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
-		if (responseContent == null || responseContent.isBlank()) {
-			// AI Gateway returned nothing usable (offline, quota exhausted, upstream error,
-			// etc.)
-			// - fall back to a deterministic mock so the KPI, tooltip and Excel export can
-			// still
-			// be exercised end-to-end for testing / demo purposes.
-			log.warn(
-					"AI Gateway returned null/blank content for sprint {} ({}); using MOCK hygiene response.",
-					sprintName,
-					sprintId);
+		String responseContent;
+		try {
+			ChatGenerationResponseDTO chatGenerationResponseDTO =
+					aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
+			responseContent =
+					chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
+			if (responseContent == null || responseContent.isBlank()) {
+				// AI Gateway returned nothing usable (offline, quota exhausted, upstream error,
+				// etc.)
+				// - fall back to a deterministic mock so the KPI, tooltip and Excel export can
+				// still
+				// be exercised end-to-end for testing / demo purposes.
+				log.warn(
+						"AI Gateway returned null/blank content for sprint {} ({}); using MOCK hygiene response.",
+						sprintName,
+						sprintId);
+				responseContent = MOCK_HYGIENE_RESPONSE_JSON;
+			}
+		} catch (Exception ex) {
 			responseContent = MOCK_HYGIENE_RESPONSE_JSON;
 		}
 		List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList = hygieneKpiParser.parse(responseContent);
