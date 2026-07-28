@@ -647,8 +647,8 @@ public class KPIExcelData {
 	@JsonProperty("Deployment End Date (UTC)")
 	private String deploymentEndDate;
 
-	// ---- Project Hygiene KPI (kpi215) fields ----
-	@JsonProperty("Issue Key")
+	// ---- Story Hygiene KPI (kpi311) fields ----
+	@JsonProperty("Issue ID")
 	private String issueKey;
 
 	@JsonProperty("Hygiene Score")

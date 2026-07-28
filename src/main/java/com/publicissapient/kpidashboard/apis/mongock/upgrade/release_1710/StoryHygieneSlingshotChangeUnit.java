@@ -1,7 +1,6 @@
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -11,11 +10,11 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "project_hygiene_slingshot_kpi_insert",
+		id = "story_hygiene_slingshot_kpi_insert",
 		order = "17143",
 		author = "knowhow",
 		systemVersion = "17.1.0")
-public class ProjectHygieneSlingshotChangeUnit {
+public class StoryHygieneSlingshotChangeUnit {
 
 	private static final String KPI_ID = "kpi311";
 	private static final String KPI_ID_FIELD = "kpiId";
@@ -45,9 +44,9 @@ public class ProjectHygieneSlingshotChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "Project Hygiene")
+						.append("kpiName", "Story Hygiene")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 7)
+						.append("defaultOrder", 1)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Sandbox")
 						.append("kpiUnit", "%")
@@ -56,13 +55,16 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append("yAxisLabel", "Percentage")
 						.append("showTrend", true)
 						.append("isPositiveTrend", true)
-						.append("calculateMaturity", false)
+						.append("calculateMaturity", true)
+						.append("maturityRange", Arrays.asList("0-20", "20-40", "40-60", "60-80", "80-"))
 						.append("hideOverallFilter", true)
 						.append("kpiSource", "Jira")
 						.append("maxValue", 100)
 						.append("thresholdValue", 80.0)
+						.append("upperThresholdBG", "white")
+						.append("lowerThresholdBG", "red")
 						.append("kanban", false)
-						.append("groupId", 48)
+						.append("groupId", 311)
 						.append(
 								"kpiInfo",
 								new Document()
@@ -75,7 +77,12 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append("isAdditionalFilterSupport", false)
 						.append("combinedKpiSource", "Jira/Azure Boards/Rally")
 						.append("forecastModel", "thetaMethod");
-		mongoTemplate.getCollection(KPI_MASTER_COLLECTION).insertOne(kpiMaster);
+		mongoTemplate
+				.getCollection(KPI_MASTER_COLLECTION)
+				.replaceOne(
+						new Document("kpiId", KPI_ID),
+						kpiMaster,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	// ...existing code...
@@ -93,7 +100,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Issue Key")
+												.append(COLUMN_NAME, "Issue ID")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
@@ -119,11 +126,16 @@ public class ProjectHygieneSlingshotChangeUnit {
 												.append(IS_DEFAULT, true),
 										new Document()
 												.append(COLUMN_NAME, "Recommendations")
-												.append(ORDER, 8)
+												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, false)));
+												.append(IS_DEFAULT, true)));
 
-		mongoTemplate.getCollection(KPI_COLUMN_CONFIGS_COLLECTION).insertOne(columnConfig);
+		mongoTemplate
+				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
+				.replaceOne(
+						new Document("kpiId", KPI_ID),
+						columnConfig,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
@@ -155,7 +167,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 						.append("fieldCategory", "fields")
 						.append("processorCommon", false)
 						.append("tooltip", new Document().append(DEFINITION, FIELDS_TO_WRITE_PROMPT))
-						.append("filterGroup", List.of("CustomField"))
+						.append("filterGroup", java.util.List.of("CustomField"))
 						.append("nodeSpecific", false)
 						.append("fieldDisplayOrder", 3)
 						.append("toggleLabelLeft", null)
@@ -166,7 +178,16 @@ public class ProjectHygieneSlingshotChangeUnit {
 
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.insertMany(Arrays.asList(thresholdStructure, jiraFieldsSelectionStructure));
+				.replaceOne(
+						new Document("fieldName", THRESHOLD_FIELD),
+						thresholdStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
+		mongoTemplate
+				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
+				.replaceOne(
+						new Document("fieldName", JIRA_FIELDS_SELECTION_FIELD),
+						jiraFieldsSelectionStructure,
+						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	@RollbackExecution

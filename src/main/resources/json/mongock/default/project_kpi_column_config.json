@@ -4599,6 +4599,18 @@
         "isDefault" : true
       }
     ]
+  },
+  {
+    "kpiId": "kpi311",
+    "kpiColumnDetails": [
+      { "columnName": "Sprint Name",     "order": 1, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue ID",        "order": 2, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue Type",      "order": 3, "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",        "order": 4, "isShown": true,  "isDefault": true  },
+      { "columnName": "Hygiene Score",   "order": 5, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
+    ]
   }
 ]
 

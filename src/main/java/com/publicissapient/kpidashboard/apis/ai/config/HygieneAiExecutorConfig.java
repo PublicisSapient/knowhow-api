@@ -20,8 +20,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * Shared thread pool used by AI-driven KPIs (Project Hygiene, KPI recommendations, search-KPI,
- * etc.) to fan out concurrent chat-completion calls to the AI gateway.
+ * Shared thread pool used by AI-driven KPIs (Story Hygiene, KPI recommendations, search-KPI, etc.)
+ * to fan out concurrent chat-completion calls to the AI gateway.
  *
  * <p>All AI calls are I/O-bound (each one blocks on the network for seconds to minutes waiting for
  * the LLM), so we size the pool generously but bound the queue so bursts don't accumulate

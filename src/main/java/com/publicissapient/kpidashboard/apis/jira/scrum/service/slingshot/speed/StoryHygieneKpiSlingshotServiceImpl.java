@@ -18,9 +18,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
-import com.publicissapient.kpidashboard.common.model.jira.Metadata;
-import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -52,7 +49,10 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.Metadata;
+import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 
@@ -60,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class ProjectHygieneKpiSlingshotServiceImpl
+public class StoryHygieneKpiSlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String JIRA_ISSUES = "jiraIssues";
@@ -68,7 +68,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	private static final String JIRA_METADATA = "jiraMetadata";
 	private static final String FINAL_HYGIENE_PROMPT =
 			"""
-			You are an Expert Project Hygiene Analyzer Agent.
+			You are an Expert Story Hygiene Analyzer Agent.
 			Your job is to evaluate Jira issues against a Definition-of-Ready (DoR)
 			style hygiene checklist and produce a strict, evidence-based verdict
 			for each issue.
@@ -329,7 +329,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.PROJECT_HYGIENE.name();
+		return KPICode.STORY_HYGIENE.name();
 	}
 
 	@Override
@@ -347,9 +347,9 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		// in case if only projects or sprint filters are applied
 		projectWiseLeafNodeValue(kpiElement, project, kpiRequest);
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValue(project, nodeWiseKPIValue, KPICode.PROJECT_HYGIENE);
+		calculateAggregatedValue(project, nodeWiseKPIValue, KPICode.STORY_HYGIENE);
 		List<DataCount> trendValues =
-				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.PROJECT_HYGIENE);
+				getTrendValues(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.STORY_HYGIENE);
 		kpiElement.setTrendValueList(trendValues);
 
 		return kpiElement;
@@ -397,10 +397,16 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 											LinkedHashMap::new));
 		}
 
-		FieldMapping fieldMapping =
-				configHelperService.getFieldMapping(basicProjectConfigId);
+		FieldMapping fieldMapping = configHelperService.getFieldMapping(basicProjectConfigId);
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
-		Set<String> fieldNames = cycleTimeGroupList == null? new HashSet<>() : cycleTimeGroupList.stream().map(CycleTimeGroup::getLabel).collect(Collectors.toSet());
+		Set<String> fieldNames =
+				cycleTimeGroupList == null
+						? new HashSet<>()
+						: cycleTimeGroupList.stream()
+								.filter(Objects::nonNull)
+								.map(CycleTimeGroup::getLabel)
+								.filter(Objects::nonNull)
+								.collect(Collectors.toSet());
 		Set<String> jiraFields = new HashSet<>();
 		for (String field : fieldNames) {
 			String fieldName = data.get(field);
@@ -428,7 +434,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		FieldMapping fieldMapping =
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
-
 
 		Map<String, String> prompts =
 				cycleTimeGroupList == null
@@ -492,18 +497,35 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 								})
 						.toList();
 
-		// Wait for all sprints, then collect results in a stable order.
+		// Wait for all sprints, then collect results sorted by sprint start date.
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 		List<SprintHygieneOutcome> outcomes = futures.stream().map(CompletableFuture::join).toList();
 
-		List<DataCount> dataCountList = outcomes.stream().map(SprintHygieneOutcome::dataCount).toList();
+		Map<String, String> sprintStartDateMap =
+				sprintDetailsList.stream()
+						.filter(sd -> sd.getSprintID() != null)
+						.collect(
+								Collectors.toMap(
+										SprintDetails::getSprintID,
+										sd -> sd.getStartDate() != null ? sd.getStartDate() : "",
+										(a, b) -> a));
+
+		List<DataCount> dataCountList =
+				outcomes.stream()
+						.map(SprintHygieneOutcome::dataCount)
+						.filter(Objects::nonNull)
+						.sorted(
+								Comparator.comparing(
+										dc -> sprintStartDateMap.getOrDefault(dc.getsSprintID(), ""),
+										Comparator.nullsLast(Comparator.naturalOrder())))
+						.collect(Collectors.toList());
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			List<KPIExcelData> excelData =
 					outcomes.stream().flatMap(o -> o.excelRows().stream()).toList();
 			kpiElement.setExcelData(excelData);
 		}
-		kpiElement.setExcelColumns(KPIExcelColumn.PROJECT_HYGIENE.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.STORY_HYGIENE.getColumns());
 
 		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
 		kpiElement.setValidScoreFactor(
@@ -565,7 +587,8 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 						.collect(Collectors.toSet());
 
 		long totalIssues = hygieneKpiResponseDTOList.stream().filter(Objects::nonNull).count();
-		Map<String, Double> passedPercentageByRule = new LinkedHashMap<>();
+
+		Map<String, Double> rulePassRates = new LinkedHashMap<>();
 		ruleNames.forEach(
 				rule -> {
 					long passed =
@@ -574,8 +597,14 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 									.filter(rr -> "Passed".equalsIgnoreCase(rr.getStatus()))
 									.count();
 					double percentage = totalIssues == 0 ? 0.0 : (passed * 100.0) / totalIssues;
-					passedPercentageByRule.put(rule, percentage);
+					rulePassRates.put(rule, percentage);
 				});
+		Map<String, Double> passedPercentageByRule =
+				rulePassRates.entrySet().stream()
+						.sorted(Map.Entry.comparingByKey())
+						.collect(
+								Collectors.toMap(
+										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
 		OptionalDouble sprintScore =
 				hygieneKpiResponseDTOList.stream()
@@ -603,7 +632,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 		// Build one KPIExcelData row per Jira issue for the Excel export.
 		List<KPIExcelData> excelRows = new ArrayList<>();
-		KPIExcelUtility.populateProjectHygieneExcelData(
+		KPIExcelUtility.populateStoryHygieneExcelData(
 				excelRows, sprintName != null ? sprintName : sprintId, hygieneKpiResponseDTOList);
 
 		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);

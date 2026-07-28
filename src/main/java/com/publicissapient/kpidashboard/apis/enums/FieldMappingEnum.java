@@ -926,7 +926,7 @@ public enum FieldMappingEnum {
 			KPISource.JENKINS.name(),
 			List.of("e2eTestBranchKPI219", "thresholdValueKPI219")),
 	KPI311(
-			"Project Hygiene",
+			"Story Hygiene",
 			KPISource.JIRA.name(),
 			List.of("jiraFieldsSelectionKPI311", "thresholdValueKPI311"));
 
