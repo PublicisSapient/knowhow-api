@@ -338,7 +338,9 @@ public enum KPICode {
 	DEFECT_ESCAPE_RATE_SLINGSHOT("kpi216", KPISource.JIRA.name()),
 	MEAN_TIME_TO_RECOVER_SLINGSHOT("kpi217", KPISource.JIRA.name()),
 	/** E2E Test Pass Rate */
-	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name());
+	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name()),
+	/** Mean Time to Test Feedback */
+	MEAN_TIME_TO_TEST_FEEDBACK("kpi219", KPISource.JENKINS.name());
 
 	// @formatter:on
 

@@ -5816,7 +5816,7 @@
     "kanban" : false,
     "groupId" : 69,
     "kpiInfo" : {
-      "definition" : "Median time from production incident detected to service restored."
+      "definition" : "Mean time from production incident detected to service restored."
     },
     "kpiFilter" : "dropDown",
     "aggregationCriteria" : "average",
@@ -5848,6 +5848,37 @@
     "groupId" : 70,
     "kpiInfo" : {
       "definition" : "% of automated end-to-end tests passing on main branch."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
+    "upperThresholdBG" : "white",
+    "lowerThresholdBG" : "red",
+    "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi219",
+    "kpiName" : "Mean Time to Test Feedback",
+    "isDeleted" : "False",
+    "defaultOrder" : 5,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "Hours",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Hours",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "-1.5", "0.75-1.5", "0.5-0.75", "0.25-0.5", "0.25-" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "kanban" : false,
+    "groupId" : 70,
+    "kpiInfo" : {
+      "definition" : "Time from PR push to all CI / Selenium results posted back to the PR."
     },
     "kpiFilter" : "dropDown",
     "aggregationCriteria" : "average",

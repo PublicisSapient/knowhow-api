@@ -27,15 +27,19 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -49,11 +53,12 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
+import com.publicissapient.kpidashboard.common.constant.BuildStatus;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.Build;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
-import com.publicissapient.kpidashboard.common.model.application.TestSuiteExecution;
-import com.publicissapient.kpidashboard.common.repository.application.TestSuiteExecutionRepository;
+import com.publicissapient.kpidashboard.common.repository.application.BuildRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -62,19 +67,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class E2ETestPassRateServiceImpl
+public class MeanTimeToTestFeedbackServiceImpl
 		extends JenkinsKPIService<Double, List<Object>, Map<String, List<Object>>> {
 
 	private static final String TOTAL_BUILDS = "Total Builds";
-	private static final String AVG_PASSED = "Avg Passed";
-	private static final String AVG_FAILED = "Avg Failed";
-	private static final String PASS_RATE = "Pass Rate %";
 
-	private final TestSuiteExecutionRepository testSuiteExecutionRepository;
+	private final BuildRepository buildRepository;
+	private final ConfigHelperService configHelperService;
 
 	@Override
 	public String getQualifierType() {
-		return KPICode.E2E_TEST_PASS_RATE.name();
+		return KPICode.MEAN_TIME_TO_TEST_FEEDBACK.name();
 	}
 
 	@Override
@@ -95,14 +98,15 @@ public class E2ETestPassRateServiceImpl
 				projectNode);
 
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
-		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.E2E_TEST_PASS_RATE);
+		calculateAggregatedValueMap(projectNode, nodeWiseKPIValue, KPICode.MEAN_TIME_TO_TEST_FEEDBACK);
 
 		Map<String, List<DataCount>> trendValuesMap =
-				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.E2E_TEST_PASS_RATE);
+				getTrendValuesMap(
+						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.MEAN_TIME_TO_TEST_FEEDBACK);
 
 		kpiElement.setTrendValueList(
 				DeveloperKpiHelper.prepareDataCountGroups(
-						trendValuesMap, KPICode.E2E_TEST_PASS_RATE.getKpiId()));
+						trendValuesMap, KPICode.MEAN_TIME_TO_TEST_FEEDBACK.getKpiId()));
 		return kpiElement;
 	}
 
@@ -117,16 +121,16 @@ public class E2ETestPassRateServiceImpl
 
 		String projectId = leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId().toString();
 
-		long startEpochMs =
-				LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+		List<Build> builds =
+				buildRepository.findBuildList(
+						new HashMap<>(),
+						Collections.singleton(leafNodeList.get(0).getProjectFilter().getBasicProjectConfigId()),
+						startDate,
+						endDate);
 
-		List<TestSuiteExecution> records =
-				testSuiteExecutionRepository.findByBasicProjectConfigIdInAndBuildTimestampGreaterThanEqual(
-						List.of(projectId), startEpochMs);
-
-		Map<String, List<Object>> projectData = new HashMap<>();
-		projectData.put(projectId, new ArrayList<>(records));
-		return projectData;
+		Map<String, List<Object>> result = new HashMap<>();
+		result.put(projectId, new ArrayList<>(builds));
+		return result;
 	}
 
 	@Override
@@ -137,10 +141,9 @@ public class E2ETestPassRateServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI218(), KPICode.E2E_TEST_PASS_RATE.getKpiId());
+				fieldMapping.getThresholdValueKPI219(), KPICode.MEAN_TIME_TO_TEST_FEEDBACK.getKpiId());
 	}
 
-	@SuppressWarnings("unchecked")
 	private void calculateProjectKpiTrendData(
 			KpiElement kpiElement,
 			Map<String, Node> mapTmp,
@@ -155,141 +158,159 @@ public class E2ETestPassRateServiceImpl
 						kpiRequest);
 
 		String projectId = projectLeafNode.getProjectFilter().getBasicProjectConfigId().toString();
+		ObjectId basicProjectConfigId = projectLeafNode.getProjectFilter().getBasicProjectConfigId();
 
-		List<TestSuiteExecution> allRecords =
+		List<Build> allBuilds =
 				dataMap.getOrDefault(projectId, Collections.emptyList()).stream()
-						.map(TestSuiteExecution.class::cast)
+						.map(Build.class::cast)
 						.toList();
 
-		if (CollectionUtils.isEmpty(allRecords)) {
+		if (CollectionUtils.isEmpty(allBuilds)) {
 			mapTmp.get(projectLeafNode.getId()).setValue(null);
 			return;
 		}
 
+		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+		List<String> e2eBranchList =
+				fieldMapping != null ? fieldMapping.getE2eTestBranchKPI219() : null;
+		Set<String> resolvedBranches =
+				CollectionUtils.isEmpty(e2eBranchList)
+						? Collections.emptySet()
+						: new HashSet<>(e2eBranchList);
+
+		List<Build> filtered =
+				allBuilds.stream()
+						.filter(
+								b ->
+										resolvedBranches.isEmpty()
+												|| resolvedBranches.stream()
+														.anyMatch(br -> br.equalsIgnoreCase(b.getBuildBranch())))
+						.collect(Collectors.toList());
+
+		if (CollectionUtils.isEmpty(filtered)) {
+			mapTmp.get(projectLeafNode.getId()).setValue(null);
+			return;
+		}
+
+		// keyMetadata maps the filter-visible display label → [workflow, branch]
+		Map<String, String[]> keyMetadata = new LinkedHashMap<>();
+
+		Map<String, List<Build>> byWorkflow =
+				filtered.stream()
+						.collect(Collectors.groupingBy(b -> b.getBuildJob() + "#" + b.getBuildBranch()));
+
 		String trendLineName = projectLeafNode.getProjectFilter().getName();
 		Map<String, List<DataCount>> aggDataMap = new LinkedHashMap<>();
 
-		// keyMetadata maps the filter-visible display label → [workflow, suite, branch]
-		Map<String, String[]> keyMetadata = new LinkedHashMap<>();
-
-		Map<String, List<TestSuiteExecution>> bySuite =
-				allRecords.stream()
-						.collect(
-								Collectors.groupingBy(
-										r -> r.getJobName() + "#" + r.getSuiteName() + "#" + r.getBuildBranch()));
-
-		for (Map.Entry<String, List<TestSuiteExecution>> entry : bySuite.entrySet()) {
+		for (Map.Entry<String, List<Build>> entry : byWorkflow.entrySet()) {
 			String rawKey = entry.getKey();
-			int sep1 = rawKey.indexOf('#');
-			int sep2 = rawKey.lastIndexOf('#');
-			String workflow = sep1 >= 0 ? rawKey.substring(0, sep1) : rawKey;
-			String suite = (sep1 >= 0 && sep2 > sep1) ? rawKey.substring(sep1 + 1, sep2) : rawKey;
-			String branch = sep2 > sep1 ? rawKey.substring(sep2 + 1) : "";
-			// filter1 = workflow (first dropdown), filter2 = "suiteName (branch)" (second)
-			// prepareDataCountGroups splits on first "#" to produce the two filter values
-			String displayKey = workflow + "#" + suite + " (" + branch + ")";
-			keyMetadata.put(displayKey, new String[] {workflow, suite, branch});
-			prepareInfoForSuites(trendLineName, displayKey, entry.getValue(), aggDataMap);
+			int sep = rawKey.indexOf('#');
+			String workflow = sep >= 0 ? rawKey.substring(0, sep) : rawKey;
+			String branch = sep >= 0 ? rawKey.substring(sep + 1) : "";
+			// filter1 = workflow, filter2 = branch — two independent filter dropdowns
+			String displayKey = workflow + "#" + branch;
+			keyMetadata.put(displayKey, new String[] {workflow, branch});
+			prepareInfoForWorkflow(trendLineName, displayKey, entry.getValue(), aggDataMap);
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
 
+		// Excel: date-first ordering (oldest week first), all workflows per week
+		// together.
+		// aggDataMap lists are newest-first (index 0 = this week), so read from the
+		// tail.
 		List<KPIExcelData> excelData = new ArrayList<>();
-		for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
-			String[] meta =
-					keyMetadata.getOrDefault(entry.getKey(), new String[] {"", entry.getKey(), ""});
-			for (DataCount dc : entry.getValue()) {
+		int weekCount = aggDataMap.isEmpty() ? 0 : aggDataMap.values().iterator().next().size();
+		for (int weekIdx = weekCount - 1; weekIdx >= 0; weekIdx--) {
+			for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
+				String[] meta = keyMetadata.getOrDefault(entry.getKey(), new String[] {entry.getKey(), ""});
+				DataCount dc = entry.getValue().get(weekIdx);
 				Map<String, Object> hover = dc.getHoverValue();
 				if (hover == null) continue;
 				int builds = (Integer) hover.getOrDefault(TOTAL_BUILDS, 0);
 				if (builds == 0) continue;
 				Map<String, Object> extras =
 						dc.getSubfilterValues() != null ? dc.getSubfilterValues() : Map.of();
-				int totalTests = (Integer) extras.getOrDefault("totalTests", 0);
-				int totalSkipped = (Integer) extras.getOrDefault("totalSkipped", 0);
 				KPIExcelData row = new KPIExcelData();
 				row.setDaysWeeks(dc.getDate());
 				row.setWorkflow(meta[0]);
-				row.setSuiteName(meta[1]);
-				row.setBranch(meta[2]);
+				row.setBranch(meta[1]);
 				row.setTotalBuilds(String.valueOf(builds));
-				row.setAvgTestsPerBuild(
-						builds > 0 ? String.valueOf((int) Math.round((double) totalTests / builds)) : "0");
-				row.setAvgPassedTests(String.valueOf(hover.getOrDefault(AVG_PASSED, 0)));
-				row.setAvgFailedTests(String.valueOf(hover.getOrDefault(AVG_FAILED, 0)));
-				row.setAvgSkippedTests(
-						builds > 0 ? String.valueOf((int) Math.round((double) totalSkipped / builds)) : "0");
-				row.setPassRatePercentage((String) hover.getOrDefault(PASS_RATE, "0.0%"));
+				row.setSuccessfulBuilds(String.valueOf(extras.getOrDefault("successCount", 0)));
+				row.setFailedBuilds(String.valueOf(extras.getOrDefault("failCount", 0)));
+				row.setAvgDuration(dc.getData()); // plain hours value; column header carries the unit
 				excelData.add(row);
 			}
 		}
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.E2E_TEST_PASS_RATE.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.MEAN_TIME_TO_TEST_FEEDBACK.getColumns());
 	}
 
-	private void prepareInfoForSuites(
+	private void prepareInfoForWorkflow(
 			String trendLineName,
-			String suiteName,
-			List<TestSuiteExecution> suiteRecords,
+			String workflowName,
+			List<Build> builds,
 			Map<String, List<DataCount>> aggDataMap) {
 
+		// Build newest-first so the chart framework's internal reversal yields
+		// oldest-left.
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 
 		for (int i = 0; i < 12; i++) {
-			CustomDateRange periodRange =
+			CustomDateRange range =
 					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, CommonConstant.WEEK);
-			LocalDate monday = periodRange.getStartDate();
-			LocalDate sunday = periodRange.getEndDate();
-			String dateLabel = KpiHelperService.getDateRange(periodRange, CommonConstant.WEEK);
+			LocalDate monday = range.getStartDate();
+			LocalDate sunday = range.getEndDate();
+			String dateLabel = KpiHelperService.getDateRange(range, CommonConstant.WEEK);
 
-			int totalPassed = 0;
-			int totalFailed = 0;
-			int totalSkipped = 0;
 			int buildCount = 0;
+			int successCount = 0;
+			int failCount = 0;
+			long totalMs = 0;
 
-			for (TestSuiteExecution rec : suiteRecords) {
+			for (Build b : builds) {
 				LocalDate buildDate =
-						Instant.ofEpochMilli(rec.getBuildTimestamp())
-								.atZone(ZoneId.systemDefault())
-								.toLocalDate();
+						Instant.ofEpochMilli(b.getStartTime()).atZone(ZoneId.systemDefault()).toLocalDate();
 				boolean inRange =
 						(buildDate.isAfter(monday) || buildDate.isEqual(monday))
 								&& (buildDate.isBefore(sunday) || buildDate.isEqual(sunday));
 				if (!inRange) continue;
-
-				totalPassed += rec.getPassedTests() != null ? rec.getPassedTests() : 0;
-				totalFailed += rec.getFailedTests() != null ? rec.getFailedTests() : 0;
-				totalSkipped += rec.getSkippedTests() != null ? rec.getSkippedTests() : 0;
+				totalMs += b.getDuration();
 				buildCount++;
+				if (BuildStatus.SUCCESS == b.getBuildStatus()) {
+					successCount++;
+				} else {
+					failCount++;
+				}
 			}
 
-			double passRate = 0.0;
-			int denominator = totalPassed + totalFailed;
-			if (denominator > 0) {
-				passRate = ((double) totalPassed / denominator) * 100;
-			}
+			double avgMinutes = buildCount > 0 ? (totalMs / (double) buildCount) / 60_000.0 : 0.0;
+			// Chart value always in hours (kpiUnit = "Hours"); tooltip stays adaptive.
+			double avgHours = Math.round((avgMinutes / 60.0) * 100.0) / 100.0;
+			String tooltipDisplay =
+					avgMinutes >= 60.0
+							? String.format("%.2f Hrs", avgHours)
+							: String.format("%.2f Mins", Math.round(avgMinutes * 100.0) / 100.0);
 
-			aggDataMap.putIfAbsent(suiteName, new ArrayList<>());
-			DataCount dataCount = new DataCount();
-			dataCount.setData(String.format("%.2f", passRate));
-			dataCount.setSProjectName(trendLineName);
-			dataCount.setDate(dateLabel);
-			dataCount.setValue(Math.round(passRate * 100.0) / 100.0);
+			aggDataMap.putIfAbsent(workflowName, new ArrayList<>());
+			DataCount dc = new DataCount();
+			dc.setData(String.format("%.2f", avgHours));
+			dc.setSProjectName(trendLineName);
+			dc.setDate(dateLabel);
+			dc.setValue(avgHours);
 
-			Map<String, Object> hoverMap = new HashMap<>();
-			hoverMap.put(TOTAL_BUILDS, buildCount);
-			hoverMap.put(AVG_PASSED, buildCount > 0 ? Math.round((double) totalPassed / buildCount) : 0);
-			hoverMap.put(AVG_FAILED, buildCount > 0 ? Math.round((double) totalFailed / buildCount) : 0);
-			hoverMap.put(PASS_RATE, String.format("%.2f%%", passRate));
-			dataCount.setHoverValue(hoverMap);
+			Map<String, Object> hover = new HashMap<>();
+			hover.put(TOTAL_BUILDS, buildCount);
+			hover.put("Avg Duration", tooltipDisplay);
+			dc.setHoverValue(hover);
 
-			// Store raw totals for Excel-only columns (not displayed in tooltip)
+			// Store for Excel-only columns (not displayed in tooltip)
 			Map<String, Object> excelExtras = new HashMap<>();
-			excelExtras.put("totalTests", totalPassed + totalFailed + totalSkipped);
-			excelExtras.put("totalSkipped", totalSkipped);
-			dataCount.setSubfilterValues(excelExtras);
+			excelExtras.put("successCount", successCount);
+			excelExtras.put("failCount", failCount);
+			dc.setSubfilterValues(excelExtras);
 
-			aggDataMap.get(suiteName).add(dataCount);
+			aggDataMap.get(workflowName).add(dc);
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
 		}
 	}

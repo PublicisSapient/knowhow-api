@@ -4251,37 +4251,103 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Suite Name",
+        "columnName" : "Workflow",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Builds in Week",
+        "columnName" : "Branch",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Tests/Build",
+        "columnName" : "Suite Name",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Passed",
+        "columnName" : "Total Builds",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Failed",
+        "columnName" : "Avg Tests/Build",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
+        "columnName" : "Avg Passed",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Failed",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Skipped",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
         "columnName" : "Pass Rate %",
+        "order" : 10,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi219",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Workflow",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Branch",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Builds",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Successful Builds",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Failed Builds",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Duration (Hours)",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true

@@ -129,7 +129,7 @@ public class E2ETestPassRateKpiChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Builds in Week")
+												.append(COLUMN_NAME, "Total Builds")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

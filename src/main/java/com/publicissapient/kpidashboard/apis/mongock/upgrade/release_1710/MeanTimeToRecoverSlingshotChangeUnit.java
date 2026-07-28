@@ -62,7 +62,7 @@ public class MeanTimeToRecoverSlingshotChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"Median time from production incident detected to service restored."))
+												"Mean time from production incident detected to service restored."))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
 						.append("isAdditionalFilterSupport", false)
