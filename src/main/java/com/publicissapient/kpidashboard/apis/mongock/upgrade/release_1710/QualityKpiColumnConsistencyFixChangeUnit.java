@@ -75,13 +75,14 @@ public class QualityKpiColumnConsistencyFixChangeUnit {
 								Arrays.asList(
 										col("Days/Weeks", 1, true),
 										col("Workflow", 2, true),
-										col("Suite Name", 3, true),
-										col("Branch", 4, true),
-										col("Builds in Week", 5, true),
+										col("Branch", 3, true),
+										col("Suite Name", 4, true),
+										col("Total Builds", 5, true),
 										col("Avg Tests/Build", 6, true),
 										col("Avg Passed", 7, true),
 										col("Avg Failed", 8, true),
-										col("Pass Rate %", 9, true)));
+										col("Avg Skipped", 9, true),
+										col("Pass Rate %", 10, true)));
 
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)

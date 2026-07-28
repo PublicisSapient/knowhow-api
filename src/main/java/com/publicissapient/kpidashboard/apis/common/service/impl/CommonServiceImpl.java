@@ -80,7 +80,9 @@ public class CommonServiceImpl implements CommonService {
 			List<String> maturityRangeList, String kpiId, String actualMaturityVal) {
 
 		try {
-			if (actualMaturityVal == null || Constant.NOT_AVAILABLE.equalsIgnoreCase(actualMaturityVal)) {
+			if (actualMaturityVal == null
+					|| "null".equals(actualMaturityVal)
+					|| Constant.NOT_AVAILABLE.equalsIgnoreCase(actualMaturityVal)) {
 				return Constant.ZERO;
 			}
 			if (maturityRangeList == null || maturityRangeList.isEmpty()) {

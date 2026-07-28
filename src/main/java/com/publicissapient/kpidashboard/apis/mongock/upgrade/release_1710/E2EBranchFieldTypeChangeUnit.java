@@ -26,8 +26,8 @@ public class E2EBranchFieldTypeChangeUnit {
 
 	private static final String FIELD_MAPPING_STRUCTURE = "field_mapping_structure";
 	private static final String FIELD_MAPPING = "field_mapping";
-	private static final List<String> BRANCH_FIELDS =
-			List.of("e2eTestBranchKPI218", "e2eTestBranchKPI219");
+	// kpi219 branch field is managed by MeanTimeToTestFeedbackKpiChangeUnit
+	private static final List<String> BRANCH_FIELDS = List.of("e2eTestBranchKPI218");
 
 	private final MongoTemplate mongoTemplate;
 
@@ -48,9 +48,9 @@ public class E2EBranchFieldTypeChangeUnit {
 	}
 
 	/**
-	 * Converts any existing String value of e2eTestBranchKPI218 / e2eTestBranchKPI219
-	 * in field_mapping to a single-element array so the List<String> model can deserialize it.
-	 * Documents that already hold an array or have no value are left untouched.
+	 * Converts any existing String value of e2eTestBranchKPI218 in field_mapping to a single-element
+	 * array so the List<String> model can deserialize it. Documents that already hold an array or
+	 * have no value are left untouched.
 	 */
 	private void convertBranchStringToArray() {
 		for (String fieldName : BRANCH_FIELDS) {
@@ -68,9 +68,9 @@ public class E2EBranchFieldTypeChangeUnit {
 					asList.replaceAll(String::trim);
 					asList.removeIf(String::isBlank);
 					if (asList.isEmpty()) continue;
-					bulk.add(new UpdateManyModel<>(
-							new Document("_id", doc.get("_id")),
-							Updates.set(fieldName, asList)));
+					bulk.add(
+							new UpdateManyModel<>(
+									new Document("_id", doc.get("_id")), Updates.set(fieldName, asList)));
 				}
 			}
 			if (!bulk.isEmpty()) {

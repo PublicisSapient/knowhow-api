@@ -5484,6 +5484,27 @@
     "options" : [
       { "label" : "CustomField", "value" : "CustomField" },
       { "label" : "Labels", "value" : "Labels" }
+    ],
+    "nestedFields" : [
+      {
+        "fieldName" : "jiraProdIncidentRaisedByCustomField",
+        "fieldLabel" : "Production Incident Custom Field",
+        "fieldType" : "text",
+        "fieldCategory" : "fields",
+        "filterGroup" : [ "CustomField" ],
+        "tooltip" : {
+          "definition" : "Provide customfield name to identify Production Incident. <br> Example: customfield_13907<hr>"
+        }
+      },
+      {
+        "fieldName" : "jiraProdIncidentRaisedByValue",
+        "fieldLabel" : "Production Incident Values",
+        "fieldType" : "chips",
+        "filterGroup" : [ "CustomField", "Labels" ],
+        "tooltip" : {
+          "definition" : "Provide label name to identify Production Incident Example: PROD_INCIDENT <hr>"
+        }
+      }
     ]
   },
   {
@@ -5542,12 +5563,12 @@
   },
   {
     "fieldName" : "e2eTestBranchKPI219",
-    "fieldLabel" : "E2E Test Branch",
+    "fieldLabel" : "CI Branch",
     "fieldType" : "chips",
     "section" : "Custom Fields Mapping",
     "processorCommon" : false,
     "tooltip" : {
-      "definition" : "Branch name to filter E2E test builds on. Only builds on this branch are counted. e.g. main"
+      "definition" : "Branch name(s) to filter CI builds on. Only builds on these branches are counted. Leave blank to auto-detect from SCM tool connections. e.g. main"
     },
     "fieldDisplayOrder" : 2,
     "sectionOrder" : 5,
@@ -5561,7 +5582,7 @@
     "section" : "Project Level Threshold",
     "processorCommon" : false,
     "tooltip" : {
-      "definition" : "Target average E2E test duration in minutes. Shown as a reference line on the chart. Leave empty to use the default maturity line."
+      "definition" : "Target average CI pipeline duration in hours. Shown as a reference line on the chart. Leave empty to use the default maturity line."
     },
     "fieldDisplayOrder" : 1,
     "sectionOrder" : 6,
