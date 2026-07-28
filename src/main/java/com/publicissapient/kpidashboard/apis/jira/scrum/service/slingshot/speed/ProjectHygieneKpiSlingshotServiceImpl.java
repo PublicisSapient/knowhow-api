@@ -446,7 +446,8 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 																ex);
 														return new SprintHygieneOutcome(
 																emptyDataCount(sprintId, sprintName, projectName),
-																Collections.emptyList(), 0);
+																Collections.emptyList(),
+																0);
 													});
 								})
 						.toList();
@@ -465,16 +466,18 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		kpiElement.setExcelColumns(KPIExcelColumn.PROJECT_HYGIENE.getColumns());
 
 		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
-		kpiElement.setValidScoreFactor(outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
+		kpiElement.setValidScoreFactor(
+				outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
 
 		kpiElement.setProjectScore(
 				dataCountList.isEmpty()
 						? 0
 						: dataCountList.stream()
-								.map(DataCount::getValue)
-								.filter(Objects::nonNull)
-								.mapToDouble(v -> ((Number) v).doubleValue())
-								.sum()/dataCountList.size());
+										.map(DataCount::getValue)
+										.filter(Objects::nonNull)
+										.mapToDouble(v -> ((Number) v).doubleValue())
+										.sum()
+								/ dataCountList.size());
 
 		node.setValue(dataCountList);
 	}
@@ -535,10 +538,18 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 				});
 
 		OptionalDouble sprintScore =
-				hygieneKpiResponseDTOList.stream().mapToInt(HygieneKpiResponseDTO::getHygieneScore).average();
+				hygieneKpiResponseDTOList.stream()
+						.mapToInt(HygieneKpiResponseDTO::getHygieneScore)
+						.average();
 		double score = sprintScore.isPresent() ? sprintScore.getAsDouble() : 0d;
 
-		int passedIssues = Math.toIntExact(hygieneKpiResponseDTOList.stream().filter(hygieneKpiResponseDTO -> hygieneKpiResponseDTO.getOverallStatus().equalsIgnoreCase("READY")).count());
+		int passedIssues =
+				Math.toIntExact(
+						hygieneKpiResponseDTOList.stream()
+								.filter(
+										hygieneKpiResponseDTO ->
+												hygieneKpiResponseDTO.getOverallStatus().equalsIgnoreCase("READY"))
+								.count());
 
 		log.debug(
 				"Hygiene passed-percentage for Sprint {} ({}) : sprintScore={} perRule={}",
@@ -585,5 +596,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	}
 
 	/** Bundle returned by {@link #computeSprintHygiene} — trend point + excel rows. */
-	private record SprintHygieneOutcome(DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
+	private record SprintHygieneOutcome(
+			DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
 }
