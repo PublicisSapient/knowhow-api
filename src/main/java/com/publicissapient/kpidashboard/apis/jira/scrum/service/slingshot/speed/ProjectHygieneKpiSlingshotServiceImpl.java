@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -445,7 +446,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 																ex);
 														return new SprintHygieneOutcome(
 																emptyDataCount(sprintId, sprintName, projectName),
-																Collections.emptyList());
+																Collections.emptyList(), 0);
 													});
 								})
 						.toList();
@@ -464,6 +465,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		kpiElement.setExcelColumns(KPIExcelColumn.PROJECT_HYGIENE.getColumns());
 
 		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
+		kpiElement.setValidScoreFactor(outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
 
 		kpiElement.setProjectScore(
 				dataCountList.isEmpty()
@@ -493,11 +495,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 			responseContent =
 					chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
 			if (responseContent == null || responseContent.isBlank()) {
-				// AI Gateway returned nothing usable (offline, quota exhausted, upstream error,
-				// etc.)
-				// - fall back to a deterministic mock so the KPI, tooltip and Excel export can
-				// still
-				// be exercised end-to-end for testing / demo purposes.
+
 				log.warn(
 						"AI Gateway returned null/blank content for sprint {} ({}); using MOCK hygiene response.",
 						sprintName,
@@ -509,8 +507,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		}
 		List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList = hygieneKpiParser.parse(responseContent);
 
-		// Materialise a flat, non-null list of every RuleResult verdict returned
-		// for this sprint so we can query it multiple times without re-streaming.
 		List<HygieneKpiResponseDTO.RuleResult> allRuleResults =
 				hygieneKpiResponseDTOList.stream()
 						.filter(Objects::nonNull)
@@ -524,39 +520,42 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 				allRuleResults.stream()
 						.map(HygieneKpiResponseDTO.RuleResult::getRule)
 						.collect(Collectors.toSet());
-		Map<String, Long> passedCountByRule = new LinkedHashMap<>();
-		ruleNames.forEach(
-				rule ->
-						passedCountByRule.put(
-								rule,
-								allRuleResults.stream()
-										.filter(rr -> rule.equalsIgnoreCase(rr.getRule()))
-										.map(HygieneKpiResponseDTO.RuleResult::getStatus)
-										.filter("Passed"::equalsIgnoreCase)
-										.count()));
 
-		long sprintScore =
-				allRuleResults.stream()
-						.map(HygieneKpiResponseDTO.RuleResult::getStatus)
-						.filter("Passed"::equalsIgnoreCase)
-						.count();
+		long totalIssues = hygieneKpiResponseDTOList.stream().filter(Objects::nonNull).count();
+		Map<String, Double> passedPercentageByRule = new LinkedHashMap<>();
+		ruleNames.forEach(
+				rule -> {
+					long passed =
+							allRuleResults.stream()
+									.filter(rr -> rule.equalsIgnoreCase(rr.getRule()))
+									.filter(rr -> "Passed".equalsIgnoreCase(rr.getStatus()))
+									.count();
+					double percentage = totalIssues == 0 ? 0.0 : (passed * 100.0) / totalIssues;
+					passedPercentageByRule.put(rule, percentage);
+				});
+
+		OptionalDouble sprintScore =
+				hygieneKpiResponseDTOList.stream().mapToInt(HygieneKpiResponseDTO::getHygieneScore).average();
+		double score = sprintScore.isPresent() ? sprintScore.getAsDouble() : 0d;
+
+		int passedIssues = Math.toIntExact(hygieneKpiResponseDTOList.stream().filter(hygieneKpiResponseDTO -> hygieneKpiResponseDTO.getOverallStatus().equalsIgnoreCase("READY")).count());
 
 		log.debug(
-				"Hygiene Passed-count for Sprint {} ({}) : total={} perRule={}",
+				"Hygiene passed-percentage for Sprint {} ({}) : sprintScore={} perRule={}",
 				sprintName,
 				sprintId,
-				sprintScore,
-				passedCountByRule);
+				score,
+				passedPercentageByRule);
 
 		DataCount dataCount =
-				buildDataCount(sprintId, sprintName, projectName, sprintScore, passedCountByRule);
+				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
 		// Build one KPIExcelData row per Jira issue for the Excel export.
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateProjectHygieneExcelData(
 				excelRows, sprintName != null ? sprintName : sprintId, hygieneKpiResponseDTOList);
 
-		return new SprintHygieneOutcome(dataCount, excelRows);
+		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
 	}
 
 	private DataCount emptyDataCount(String sprintId, String sprintName, String projectName) {
@@ -568,29 +567,23 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 			String sprintName,
 			String projectName,
 			double score,
-			Map<String, Long> passedCountByRule) {
-		// Round to an integer percentage so both the axis label and the
-		// aggregation input are clean whole numbers.
+			Map<String, Double> passedPercentageByRule) {
 		long roundedScore = Math.round(score);
 		String displayName = sprintName != null ? sprintName : sprintId;
 
 		DataCount dataCount = new DataCount();
-		// `data` is the display-ready string shown on the point/tooltip.
 		dataCount.setData(String.valueOf(roundedScore));
-		// `value` is the numeric input the parent JiraKPIService uses when it
-		// aggregates the trend and computes maturity — keep it numeric.
 		dataCount.setValue(roundedScore);
 		dataCount.setSProjectName(projectName);
 		dataCount.setSSprintID(sprintId);
 		dataCount.setSSprintName(displayName);
-		// hoverValue populates the tooltip on the trend line hover.
 		Map<String, Object> hoverValue = new HashMap<>();
 		hoverValue.put("Hygiene Score", roundedScore);
 		dataCount.setHoverValue(hoverValue);
-		dataCount.setDrillDown(passedCountByRule);
+		dataCount.setDrillDown(passedPercentageByRule);
 		return dataCount;
 	}
 
 	/** Bundle returned by {@link #computeSprintHygiene} — trend point + excel rows. */
-	private record SprintHygieneOutcome(DataCount dataCount, List<KPIExcelData> excelRows) {}
+	private record SprintHygieneOutcome(DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
 }

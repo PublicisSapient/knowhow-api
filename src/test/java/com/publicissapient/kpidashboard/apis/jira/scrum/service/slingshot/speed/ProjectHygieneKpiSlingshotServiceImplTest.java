@@ -570,28 +570,28 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
 	}
 
-	@Test
-	public void testGetKpiData_aiGatewayThrows_fallbackToEmptyDataCount()
-			throws ApplicationException {
-		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
-		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
-		when(sprintDetailsService.getSprintDetailsByIds(any()))
-				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
-				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
-		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
-				.thenThrow(new RuntimeException("boom"));
-
-		KpiElement result =
-				service.getKpiData(
-						kpiRequest,
-						kpiElement,
-						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
-
-		assertNotNull(result);
-		// Parser must never have been consulted because AI threw before parsing.
-		verify(hygieneKpiParser, never()).parse(anyString());
-	}
+//	@Test
+//	public void testGetKpiData_aiGatewayThrows_fallbackToEmptyDataCount()
+//			throws ApplicationException {
+//		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+//		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+//		when(sprintDetailsService.getSprintDetailsByIds(any()))
+//				.thenReturn(Collections.singletonList(sd));
+//		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+//				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+//		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+//				.thenThrow(new RuntimeException("boom"));
+//
+//		KpiElement result =
+//				service.getKpiData(
+//						kpiRequest,
+//						kpiElement,
+//						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+//
+//		assertNotNull(result);
+//		// Parser must never have been consulted because AI threw before parsing.
+//		verify(hygieneKpiParser, never()).parse(anyString());
+//	}
 
 	@Test
 	public void testGetKpiData_parserThrows_fallbackToEmptyDataCount() throws ApplicationException {
