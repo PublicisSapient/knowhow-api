@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
+import com.publicissapient.kpidashboard.common.model.jira.Metadata;
+import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +65,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
+	private static final String JIRA_METADATA = "jiraMetadata";
 	private static final String FINAL_HYGIENE_PROMPT =
 			"""
 			You are an Expert Project Hygiene Analyzer Agent.
@@ -371,12 +378,44 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 						.toList();
 		List<SprintDetails> limitedSprintList =
 				sortedSprintList.stream().skip(Math.max(0, sortedSprintList.size() - 5)).toList();
+		Map<String, String> data = new HashMap<>();
+		BoardMetadata boardmetadata = configHelperService.getBoardMetaData(basicProjectConfigId);
+		if (boardmetadata != null && CollectionUtils.isNotEmpty(boardmetadata.getMetadata())) {
+			data =
+					boardmetadata.getMetadata().stream()
+							.filter(Objects::nonNull)
+							.filter(metadata -> "fields".equalsIgnoreCase(metadata.getType()))
+							.map(Metadata::getValue)
+							.filter(Objects::nonNull)
+							.flatMap(List::stream)
+							.filter(mv -> mv != null && mv.getKey() != null)
+							.collect(
+									Collectors.toMap(
+											MetadataValue::getKey,
+											MetadataValue::getData,
+											(first, second) -> first,
+											LinkedHashMap::new));
+		}
+
+		FieldMapping fieldMapping =
+				configHelperService.getFieldMapping(basicProjectConfigId);
+		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
+		Set<String> fieldNames = cycleTimeGroupList == null? new HashSet<>() : cycleTimeGroupList.stream().map(CycleTimeGroup::getLabel).collect(Collectors.toSet());
+		Set<String> jiraFields = new HashSet<>();
+		for (String field : fieldNames) {
+			String fieldName = data.get(field);
+			if (StringUtils.isNotEmpty(fieldName)) {
+				jiraFields.add(fieldName);
+			}
+		}
 
 		List<JiraIssue> jiraIssueList =
-				jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(
+				jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
 						limitedSprintList.stream().map(SprintDetails::getSprintID).collect(Collectors.toSet()),
-						basicProjectConfigId.toString());
+						basicProjectConfigId.toString(),
+						jiraFields);
 
+		resultListMap.put(JIRA_METADATA, data);
 		resultListMap.put(JIRA_ISSUES, jiraIssueList);
 		resultListMap.put(SPRINT_DETAILS, limitedSprintList);
 		return resultListMap;
@@ -389,6 +428,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 		FieldMapping fieldMapping =
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
+
 
 		Map<String, String> prompts =
 				cycleTimeGroupList == null
