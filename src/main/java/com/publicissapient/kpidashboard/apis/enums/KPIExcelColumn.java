@@ -1319,12 +1319,24 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Workflow",
+					"Branch",
 					"Suite Name",
-					"Builds in Week",
+					"Total Builds",
 					"Avg Tests/Build",
 					"Avg Passed",
 					"Avg Failed",
+					"Avg Skipped",
 					"Pass Rate %")),
+	MEAN_TIME_TO_TEST_FEEDBACK(
+			"kpi219",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Branch",
+					"Total Builds",
+					"Successful Builds",
+					"Failed Builds",
+					"Avg Duration (Hours)")),
 	PROJECT_HYGIENE(
 			"kpi311",
 			Arrays.asList(

@@ -920,6 +920,11 @@ public enum FieldMappingEnum {
 			"E2E Test Pass Rate",
 			KPISource.JENKINS.name(),
 			List.of("e2eTestBranchKPI218", "thresholdValueKPI218")),
+
+	KPI219(
+			"Mean Time to Test Feedback",
+			KPISource.JENKINS.name(),
+			List.of("e2eTestBranchKPI219", "thresholdValueKPI219")),
 	KPI311(
 			"Project Hygiene",
 			KPISource.JIRA.name(),
