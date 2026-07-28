@@ -2,6 +2,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,6 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
@@ -33,6 +37,7 @@ import com.publicissapient.kpidashboard.apis.ai.config.HygieneAiExecutorConfig;
 import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
@@ -314,6 +319,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	@Autowired private AiGatewayClient aiGatewayClient;
 	@Autowired private SprintDetailsService sprintDetailsService;
 	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private CustomApiConfig customApiConfig;
+	@Autowired private ObjectMapper objectMapper;
 
 	@Autowired
 	@Qualifier(HygieneAiExecutorConfig.HYGIENE_AI_EXECUTOR)
@@ -376,8 +383,19 @@ public class StoryHygieneKpiSlingshotServiceImpl
 								Comparator.comparing(
 										SprintDetails::getStartDate, Comparator.nullsLast(Comparator.naturalOrder())))
 						.toList();
+		int hygieneSprintCount = customApiConfig.getSlingshotHygieneSprintCount();
+		if (sortedSprintList.size() > hygieneSprintCount) {
+			log.warn(
+					"Story Hygiene (kpi311): sprint cap of {} hit — {} sprints available, evaluating only the most recent {}. "
+							+ "Increase slingshotHygieneSprintCount to raise the limit.",
+					hygieneSprintCount,
+					sortedSprintList.size(),
+					hygieneSprintCount);
+		}
 		List<SprintDetails> limitedSprintList =
-				sortedSprintList.stream().skip(Math.max(0, sortedSprintList.size() - 5)).toList();
+				sortedSprintList.stream()
+						.skip(Math.max(0, sortedSprintList.size() - hygieneSprintCount))
+						.toList();
 		Map<String, String> data = new HashMap<>();
 		BoardMetadata boardmetadata = configHelperService.getBoardMetaData(basicProjectConfigId);
 		if (boardmetadata != null && CollectionUtils.isNotEmpty(boardmetadata.getMetadata())) {
@@ -414,6 +432,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 				jiraFields.add(fieldName);
 			}
 		}
+		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
+		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
+			jiraFields.addAll(anchorFieldNames);
+		}
+		// Operational fields required for sprint grouping and priority+recency sort —
+		// always projected regardless of anchor or user config.
+		jiraFields.addAll(List.of("sprintID", "priority", "changeDate"));
 
 		List<JiraIssue> jiraIssueList =
 				jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
@@ -463,9 +488,14 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.get(JIRA_ISSUES);
 		List<SprintDetails> sprintDetailsList = (List<SprintDetails>) resultMap.get(SPRINT_DETAILS);
+		@SuppressWarnings("unchecked")
+		Map<String, String> metaData = (Map<String, String>) resultMap.get(JIRA_METADATA);
+		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
 
 		Map<String, List<JiraIssue>> jiraIssuesBySprint =
-				jiraIssueList.stream().collect(Collectors.groupingBy(JiraIssue::getSprintID));
+				jiraIssueList.stream()
+						.filter(ji -> ji.getSprintID() != null)
+						.collect(Collectors.groupingBy(JiraIssue::getSprintID));
 
 		List<CompletableFuture<SprintHygieneOutcome>> futures =
 				sprintDetailsList.stream()
@@ -475,11 +505,63 @@ public class StoryHygieneKpiSlingshotServiceImpl
 									String sprintId = sprintDetails.getSprintID();
 									String sprintName = sprintDetails.getSprintName();
 									List<JiraIssue> jiraIssues = jiraIssuesBySprint.get(sprintId);
+									int issueCountCap = customApiConfig.getSlingshotHygieneIssueCountPerSprint();
+									int totalIssueCount = jiraIssues.size();
+									if (totalIssueCount > issueCountCap) {
+										log.warn(
+												"Story Hygiene (kpi311): issue cap of {} hit for sprint '{}' — {} issues available, "
+														+ "sampling top {} by priority then recency. "
+														+ "Increase slingshotHygieneIssueCountPerSprint to raise the limit.",
+												issueCountCap,
+												sprintName,
+												totalIssueCount,
+												issueCountCap);
+									}
 									List<JiraIssue> jiraIssueSubset =
-											jiraIssues.size() < 10 ? jiraIssues : jiraIssues.subList(0, 10);
-									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, jiraIssueSubset);
+											totalIssueCount <= issueCountCap
+													? jiraIssues
+													: jiraIssues.stream()
+															.sorted(
+																	Comparator.comparingInt(
+																					(JiraIssue ji) -> priorityRank(ji.getPriority()))
+																			.thenComparing(
+																					ji ->
+																							ji.getChangeDate() != null ? ji.getChangeDate() : "",
+																					Comparator.reverseOrder()))
+															.limit(issueCountCap)
+															.toList();
+									int sampledCount = jiraIssueSubset.size();
+									List<ObjectNode> issueNodes =
+											jiraIssueSubset.stream()
+													.map(
+															ji ->
+																	buildIssueNode(
+																			ji, anchorFieldNames, cycleTimeGroupList, metaData))
+													.toList();
+									String issuesJson;
+									try {
+										issuesJson = objectMapper.writeValueAsString(issueNodes);
+									} catch (JsonProcessingException e) {
+										log.warn(
+												"Story Hygiene (kpi311): failed to serialize issues for sprint '{}' — skipping sprint. {}",
+												sprintName,
+												e.getMessage());
+										return CompletableFuture.completedFuture(
+												new SprintHygieneOutcome(
+														emptyDataCount(sprintId, sprintName, projectName),
+														Collections.emptyList(),
+														0));
+									}
+									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, issuesJson);
 									return CompletableFuture.supplyAsync(
-													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt),
+													() ->
+															computeSprintHygiene(
+																	sprintId,
+																	sprintName,
+																	projectName,
+																	prompt,
+																	sampledCount,
+																	totalIssueCount),
 													hygieneAiExecutor)
 											.orTimeout(PER_SPRINT_TIMEOUT_MINUTES, TimeUnit.MINUTES)
 											.exceptionally(
@@ -531,15 +613,16 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		kpiElement.setValidScoreFactor(
 				outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
 
-		kpiElement.setProjectScore(
-				dataCountList.isEmpty()
-						? 0
-						: dataCountList.stream()
-										.map(DataCount::getValue)
-										.filter(Objects::nonNull)
-										.mapToDouble(v -> ((Number) v).doubleValue())
-										.sum()
-								/ dataCountList.size());
+		if (!dataCountList.isEmpty()) {
+			double rawProjectScore =
+					dataCountList.stream()
+									.map(DataCount::getValue)
+									.filter(Objects::nonNull)
+									.mapToDouble(v -> ((Number) v).doubleValue())
+									.sum()
+							/ dataCountList.size();
+			kpiElement.setProjectScore(Math.round(rawProjectScore * 100.0) / 100.0);
+		}
 
 		node.setValue(dataCountList);
 	}
@@ -552,7 +635,12 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	 * CompletableFuture#exceptionally} handler can decide the fallback.
 	 */
 	private SprintHygieneOutcome computeSprintHygiene(
-			String sprintId, String sprintName, String projectName, String prompt) {
+			String sprintId,
+			String sprintName,
+			String projectName,
+			String prompt,
+			int sampledCount,
+			int totalIssueCount) {
 		String responseContent;
 		try {
 			ChatGenerationResponseDTO chatGenerationResponseDTO =
@@ -597,7 +685,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 									.filter(rr -> "Passed".equalsIgnoreCase(rr.getStatus()))
 									.count();
 					double percentage = totalIssues == 0 ? 0.0 : (passed * 100.0) / totalIssues;
-					rulePassRates.put(rule, percentage);
+					rulePassRates.put(rule, Math.round(percentage * 100.0) / 100.0);
 				});
 		Map<String, Double> passedPercentageByRule =
 				rulePassRates.entrySet().stream()
@@ -630,6 +718,12 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
+		if (sampledCount < totalIssueCount) {
+			dataCount
+					.getHoverValue()
+					.put("Issue Count", sampledCount + " of " + totalIssueCount + " (Capped)");
+		}
+
 		// Build one KPIExcelData row per Jira issue for the Excel export.
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateStoryHygieneExcelData(
@@ -648,11 +742,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			String projectName,
 			double score,
 			Map<String, Double> passedPercentageByRule) {
-		long roundedScore = Math.round(score);
+		double roundedScore = Math.round(score * 100.0) / 100.0;
 		String displayName = sprintName != null ? sprintName : sprintId;
 
 		DataCount dataCount = new DataCount();
-		dataCount.setData(String.valueOf(roundedScore));
+		dataCount.setData(String.format("%.2f", roundedScore));
 		dataCount.setValue(roundedScore);
 		dataCount.setSProjectName(projectName);
 		dataCount.setSSprintID(sprintId);
@@ -662,6 +756,83 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		dataCount.setHoverValue(hoverValue);
 		dataCount.setDrillDown(passedPercentageByRule);
 		return dataCount;
+	}
+
+	/**
+	 * Builds a slim JSON object for one {@link JiraIssue} containing only the fields the LLM needs.
+	 * Anchor fields (from config) are always written first; configured rule fields follow, skipping
+	 * any field name already written by an anchor. Null values are omitted from the output.
+	 */
+	private ObjectNode buildIssueNode(
+			JiraIssue ji,
+			List<String> anchorFieldNames,
+			List<CycleTimeGroup> configuredFields,
+			Map<String, String> labelToFieldName) {
+		ObjectNode node = objectMapper.createObjectNode();
+		Set<String> writtenFields = new HashSet<>();
+
+		if (anchorFieldNames != null) {
+			for (String fieldName : anchorFieldNames) {
+				writtenFields.add(fieldName);
+				Object value = getFieldValue(ji, fieldName);
+				if (value != null) {
+					node.set(fieldName, objectMapper.valueToTree(value));
+				}
+			}
+		}
+
+		if (configuredFields != null) {
+			for (CycleTimeGroup ctg : configuredFields) {
+				if (ctg == null || ctg.getLabel() == null) continue;
+				String fieldName = labelToFieldName != null ? labelToFieldName.get(ctg.getLabel()) : null;
+				if (fieldName == null || writtenFields.contains(fieldName)) continue;
+				Object value = getFieldValue(ji, fieldName);
+				if (value != null) {
+					node.set(ctg.getLabel(), objectMapper.valueToTree(value));
+					writtenFields.add(fieldName);
+				}
+			}
+		}
+		return node;
+	}
+
+	private Object getFieldValue(JiraIssue issue, String fieldName) {
+		try {
+			Field f = findDeclaredField(issue.getClass(), fieldName);
+			if (f != null) {
+				f.setAccessible(true);
+				return f.get(issue);
+			}
+		} catch (IllegalAccessException e) {
+			log.debug("kpi311: could not read field '{}' from JiraIssue", fieldName);
+		}
+		return null;
+	}
+
+	private static Field findDeclaredField(Class<?> clazz, String fieldName) {
+		while (clazz != null && clazz != Object.class) {
+			try {
+				return clazz.getDeclaredField(fieldName);
+			} catch (NoSuchFieldException ignored) {
+				clazz = clazz.getSuperclass();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Maps a Jira priority string to a sort rank (lower = higher priority). Critical/Highest → 0,
+	 * High → 1, Medium → 2, Low/Lowest → 3, unset/unknown → 4.
+	 */
+	private static int priorityRank(String priority) {
+		if (priority == null) return 4;
+		return switch (priority.trim().toLowerCase()) {
+			case "critical", "highest" -> 0;
+			case "high" -> 1;
+			case "medium" -> 2;
+			case "low", "lowest" -> 3;
+			default -> 4;
+		};
 	}
 
 	/** Bundle returned by {@link #computeSprintHygiene} — trend point + excel rows. */

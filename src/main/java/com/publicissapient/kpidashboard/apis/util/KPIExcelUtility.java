@@ -3454,7 +3454,10 @@ public class KPIExcelUtility {
 													LinkedHashMap::new));
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setSprintName(sprintId);
-					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
+					String issueKey = hygieneKpiResponseDTO.getIssueKey();
+					Map<String, String> issueIdMap = new HashMap<>();
+					issueIdMap.put(issueKey, "");
+					excelData.setIssueID(issueIdMap);
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
 					excelData.setGroupMap(ruleResult);

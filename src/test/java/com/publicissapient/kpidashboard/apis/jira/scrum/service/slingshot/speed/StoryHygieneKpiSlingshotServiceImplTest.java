@@ -116,6 +116,7 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "commonService", commonService);
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
+		injectField(service, "objectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
 
 		projectConfigId = new ObjectId("6335363749794a18e8a4479b");
 
@@ -149,6 +150,12 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		lenient()
 				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
 				.thenReturn(new FieldMapping());
+
+		lenient().when(customApiConfig.getSlingshotHygieneSprintCount()).thenReturn(5);
+		lenient().when(customApiConfig.getSlingshotHygieneIssueCountPerSprint()).thenReturn(25);
+		lenient()
+				.when(customApiConfig.getSlingshotHygieneAnchorFields())
+				.thenReturn(Arrays.asList("number", "name", "typeName", "status"));
 
 		lenient().when(commonService.sortTrendValueMap(anyMap())).thenAnswer(i -> i.getArgument(0));
 	}

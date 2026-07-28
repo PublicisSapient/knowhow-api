@@ -1341,7 +1341,7 @@ public enum KPIExcelColumn {
 			"kpi311",
 			Arrays.asList(
 					"Sprint Name",
-					"Issue ID",
+					"Issue Id",
 					"Issue Type",
 					"Assignee",
 					"Hygiene Score",

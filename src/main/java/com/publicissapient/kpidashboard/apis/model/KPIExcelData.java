@@ -648,7 +648,7 @@ public class KPIExcelData {
 	private String deploymentEndDate;
 
 	// ---- Story Hygiene KPI (kpi311) fields ----
-	@JsonProperty("Issue ID")
+	@JsonProperty("Issue Key")
 	private String issueKey;
 
 	@JsonProperty("Hygiene Score")

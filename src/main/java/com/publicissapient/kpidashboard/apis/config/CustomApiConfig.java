@@ -366,6 +366,21 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private boolean slingshotFlowLoadMultiFilter;
 
+	@Value("${slingshotHygieneSprintCount:5}")
+	@Getter
+	@Setter
+	private int slingshotHygieneSprintCount;
+
+	@Value("${slingshotHygieneIssueCountPerSprint:25}")
+	@Getter
+	@Setter
+	private int slingshotHygieneIssueCountPerSprint;
+
+	@Value("${slingshotHygieneAnchorFields:number,name,typeName,status}")
+	@Getter
+	@Setter
+	private List<String> slingshotHygieneAnchorFields;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}
