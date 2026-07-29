@@ -39,6 +39,7 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -71,6 +72,7 @@ import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGr
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 
 /**
  * Tests for {@link ProjectHygieneKpiSlingshotServiceImpl}.
@@ -92,6 +94,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	@Mock private CacheService cacheService;
 	@Mock private CommonService commonService;
 	@Mock private CustomApiConfig customApiConfig;
+	@Mock private PromptService promptService;
 
 	@InjectMocks private ProjectHygieneKpiSlingshotServiceImpl service;
 
@@ -116,6 +119,12 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "commonService", commonService);
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
+		injectField(service, "promptService", promptService);
+
+		// Prompt template now comes from the `prompt_details` collection.
+		lenient()
+				.when(promptService.getProjectHygienePrompt(any(), any()))
+				.thenReturn("project-hygiene-prompt");
 
 		projectConfigId = new ObjectId("6335363749794a18e8a4479b");
 
@@ -148,6 +157,12 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		lenient().when(configHelperService.getFieldMappingMap()).thenReturn(new HashMap<>());
 
 		lenient().when(commonService.sortTrendValueMap(anyMap())).thenAnswer(i -> i.getArgument(0));
+
+		// fetchKPIDataFromDb always resolves the field mapping to derive the jira
+		// fields that must be pulled for the prompt.
+		lenient()
+				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
+				.thenReturn(new FieldMapping());
 	}
 
 	// ---------------------------------------------------------------------
@@ -279,7 +294,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails s1 = createSprintDetails("sp1", "Sprint 1", "2026-01-01T00:00:00Z");
 		SprintDetails s2 = createSprintDetails("sp2", "Sprint 2", "2026-01-15T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(s1, s2));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		Map<String, Object> result =
@@ -303,7 +319,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 					createSprintDetails(ids.get(i), "Name " + i, "2026-01-0" + (i + 1) + "T00:00:00Z"));
 		}
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(sdList);
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		Map<String, Object> result =
@@ -325,7 +342,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 					createSprintDetails(ids.get(i), "Name " + i, "2026-01-0" + (i + 1) + "T00:00:00Z"));
 		}
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(sdList);
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		Map<String, Object> result =
@@ -346,7 +364,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails s2 = createSprintDetails("s2", "Name 2", "2026-01-01T00:00:00Z");
 		SprintDetails s3 = createSprintDetails("s3", "Name 3", null);
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(s1, s2, s3));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		Map<String, Object> result =
@@ -364,7 +383,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	public void testFetchKPIDataFromDb_emptySprintList_returnsEmptyResults() throws Exception {
 		setSprintIdList(Collections.emptyList());
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(new ArrayList<>());
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		Map<String, Object> result =
@@ -384,7 +404,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 				.thenReturn(Collections.singletonList(sd));
 		JiraIssue i1 = createJiraIssue("ISS-1", "SP1");
 		JiraIssue i2 = createJiraIssue("ISS-2", "SP1");
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Arrays.asList(i1, i2));
 
 		Map<String, Object> result =
@@ -412,7 +433,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -439,7 +461,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -459,7 +482,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -480,7 +504,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -510,7 +535,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -524,13 +550,16 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testGetKpiData_duplicateLabels_mergeKeepsFirst() throws ApplicationException {
+	public void testGetKpiData_duplicateLabels_bothRuleSetsRetained() throws ApplicationException {
+		// Previously the second rule set on a repeated label was dropped
+		// (Collectors.toMap merge "keep first"). Both must now be retained.
 		mockFieldMapping(
 				fieldMappingWith(Arrays.asList(group("Rule1", "PromptA"), group("Rule1", "PromptB"))));
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -541,6 +570,89 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
 
 		assertNotNull(result);
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+		assertTrue(rules.contains("PromptA"));
+		assertTrue(rules.contains("PromptB"));
+	}
+
+	@Test
+	public void testGetKpiData_multipleRuleSetsOnSameField_areIndependentRules()
+			throws ApplicationException {
+		// Two distinct rule sets written against the SAME field ("description"): an
+		// acceptance-criteria check and a BDD-definition check. Both must survive and
+		// be
+		// handed to the LLM as two separately named, independent rules.
+		mockFieldMapping(
+				fieldMappingWith(
+						Arrays.asList(
+								group("description", "Acceptance criteria must be present"),
+								group("description", "A BDD definition must be present"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+
+		// Two independent rule entries, uniquely named so downstream per-rule maps
+		// (drill-down + excel groupMap) cannot overwrite each other.
+		assertTrue(rules.contains("ruleName: description (1)"));
+		assertTrue(rules.contains("ruleName: description (2)"));
+		assertTrue(rules.contains("Acceptance criteria must be present"));
+		assertTrue(rules.contains("A BDD definition must be present"));
+		// Both rules still point at the same underlying Jira field.
+		assertEquals(2, countOccurrences(rules, "field: description"));
+		assertTrue(rules.contains("Rule 1"));
+		assertTrue(rules.contains("Rule 2"));
+	}
+
+	@Test
+	public void testGetKpiData_singleRuleSetOnField_keepsPlainLabelAsRuleName()
+			throws ApplicationException {
+		// A field with only one rule set keeps its plain label (no "(1)" suffix).
+		mockFieldMapping(
+				fieldMappingWith(Collections.singletonList(group("priority", "Priority must be set"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+
+		assertTrue(rules.contains("ruleName: priority"));
+		assertFalse(rules.contains("priority (1)"));
+	}
+
+	private int countOccurrences(String text, String token) {
+		int count = 0;
+		int idx = text.indexOf(token);
+		while (idx != -1) {
+			count++;
+			idx = text.indexOf(token, idx + token.length());
+		}
+		return count;
 	}
 
 	@Test
@@ -553,7 +665,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		for (int i = 0; i < 15; i++) {
 			issues.add(createJiraIssue("ISS-" + i, "SP1"));
 		}
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(issues);
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -603,7 +716,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -626,7 +740,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd1 = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		SprintDetails sd2 = createSprintDetails("SP2", "Sprint 2", "2026-01-15T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(sd1, sd2));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-A", "SP2")));
 		primeAiHappyPath();
 
@@ -649,7 +764,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -672,7 +788,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -695,7 +812,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -723,7 +841,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", null, "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		primeAiHappyPath();
 
@@ -742,7 +861,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd1 = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		SprintDetails sd2 = createSprintDetails("SP2", "Sprint 2", "2026-01-15T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(sd1, sd2));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(
 						Arrays.asList(createJiraIssue("ISS-1", "SP1"), createJiraIssue("ISS-2", "SP2")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
@@ -769,7 +889,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		KpiElement result =
@@ -786,7 +907,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	public void testGetKpiData_noSprintDetails_noAiCalls() throws ApplicationException {
 		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
 		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(new ArrayList<>());
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(new ArrayList<>());
 
 		KpiElement result =
@@ -808,7 +930,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));
@@ -832,7 +955,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
 		when(sprintDetailsService.getSprintDetailsByIds(any()))
 				.thenReturn(Collections.singletonList(sd));
-		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(), anyString()))
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
 				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenReturn(new ChatGenerationResponseDTO("[]"));

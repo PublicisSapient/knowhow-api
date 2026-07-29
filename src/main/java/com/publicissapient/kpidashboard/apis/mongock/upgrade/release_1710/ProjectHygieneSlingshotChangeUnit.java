@@ -45,7 +45,7 @@ public class ProjectHygieneSlingshotChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "Project Hygiene")
+						.append("kpiName", "Story Hygiene")
 						.append("isDeleted", "False")
 						.append("defaultOrder", 7)
 						.append("kpiCategory", "Slingshot")

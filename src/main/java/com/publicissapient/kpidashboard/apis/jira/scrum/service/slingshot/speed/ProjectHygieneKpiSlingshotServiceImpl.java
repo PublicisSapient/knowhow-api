@@ -18,9 +18,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
-import com.publicissapient.kpidashboard.common.model.jira.Metadata;
-import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -52,9 +49,13 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.Metadata;
+import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,99 +67,6 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
 	private static final String JIRA_METADATA = "jiraMetadata";
-	private static final String FINAL_HYGIENE_PROMPT =
-			"""
-			You are an Expert Project Hygiene Analyzer Agent.
-			Your job is to evaluate Jira issues against a Definition-of-Ready (DoR)
-			style hygiene checklist and produce a strict, evidence-based verdict
-			for each issue.
-
-			=== Non-Negotiable Principles ===
-			- Rely STRICTLY on the fields provided in the Jira Issue JSON below.
-			- NEVER assume, infer, or fabricate a value that is not present.
-			- If evidence is missing, mark the rule as "Failed" (never "Passed").
-			- Differentiate REQUESTS from CONFIRMATIONS —
-					a request for sign-off is NOT approval.
-			- Every verdict MUST cite the exact field name and observed value.
-
-			=== Hygiene Rules ===
-			Each map entry is {ruleName -> evaluation criteria}. Apply every rule
-			independently, in the order given, using ONLY the fields named in the rule.
-			%1$s
-
-			=== Jira Issues (JSON array) ===
-			%2$s
-
-			=== Per-Rule Verdict Vocabulary ===
-			- "Passed"  → rule is fully satisfied by explicit evidence
-																	in the listed fields
-			- "Failed"  → rule is not met OR required evidence is missing
-			- "Partial" → rule is partially met — present but
-																	incomplete / unclear / unconfirmed
-			- "N/A"     → rule does not apply to this issue type/status
-																	per its own criteria
-
-			=== Overall Status Rules ===
-			- "READY"     → every applicable rule (i.e. excluding "N/A")
-																			has status "Passed"
-			- "NOT READY" → any applicable rule is "Failed" or "Partial"
-
-			=== Hygiene Score ===
-			- totalApplicableRules = count of rules whose status is not "N/A"
-			- passedRules          = count of rules whose status is "Passed"
-			- hygieneScore         = passedRules * 100 / totalApplicableRules
-																											(if totalApplicableRules == 0 → 100)
-			- hygieneGrade         = "GOOD"    when hygieneScore >= 80
-																											"AVERAGE" when 50 <= hygieneScore < 80
-																											"POOR"    when hygieneScore < 50
-
-			=== Improvement Recommendations ===
-			- Provide 3 to 5 short, actionable suggestions that would raise the
-					hygiene score for this issue.
-			- Each suggestion must reference a specific field or missing evidence.
-			- Return them as ONE string with items joined by " | ".
-
-			=== Output Contract ===
-			Return a JSON ARRAY — one element per input Jira issue, in the same
-			order as the input. No markdown, no prose, no code fences, no trailing
-			commentary. Schema per element:
-			[
-					{
-							"issueKey":             "<jiraIssue.number>",
-							"issueType":            "<jiraIssue.typeName>",
-							"sprintId":             "<jiraIssue.sprintID>",
-							"assignee":             "<jiraIssue.assigneeName or 'Unassigned'>",
-							"results": [
-									{
-											"rule":     "<ruleName from map key>",
-											"field":    "<jiraIssue field(s) evaluated>",
-											"observed": "<actual field value or 'null'>",
-											"status":   "Passed | Failed | Partial | N/A",
-											"reason":   "<one-line justification citing the observed value>"
-									}
-							],
-							"totalApplicableRules": <int>,
-							"passedRules":          <int>,
-							"failedRules":          <int>,
-							"partialRules":         <int>,
-							"hygieneScore":         <int 0-100>,
-							"hygieneGrade":         "GOOD | AVERAGE | POOR",
-							"overallStatus":        "READY | NOT READY",
-							"topFailures":          ["<up to 3 ruleNames of most impactful non-Passed rules>"],
-							"recommendations":      "<3-5 fixes joined by ' | '>"
-					}
-			]
-
-			=== Hard Constraints ===
-			- Evaluate EVERY rule in the map for EVERY issue; never skip a rule
-					and never skip an issue.
-			- status MUST be exactly one of "Passed", "Failed", "Partial", "N/A"
-					(case sensitive, spelled exactly).
-			- overallStatus MUST be exactly "READY" or "NOT READY".
-			- reason MUST cite the exact field name and value observed.
-			- Never invent field values that are not present in the input JSON.
-			- Return the JSON array and nothing else.
-			""";
 
 	/**
 	 * Deterministic mock response used as a fallback when the AI Gateway returns {@code null} / blank
@@ -314,6 +222,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 	@Autowired private AiGatewayClient aiGatewayClient;
 	@Autowired private SprintDetailsService sprintDetailsService;
 	@Autowired private ConfigHelperService configHelperService;
+	@Autowired private PromptService promptService;
 
 	@Autowired
 	@Qualifier(HygieneAiExecutorConfig.HYGIENE_AI_EXECUTOR)
@@ -397,10 +306,16 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 											LinkedHashMap::new));
 		}
 
-		FieldMapping fieldMapping =
-				configHelperService.getFieldMapping(basicProjectConfigId);
+		FieldMapping fieldMapping = configHelperService.getFieldMapping(basicProjectConfigId);
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
-		Set<String> fieldNames = cycleTimeGroupList == null? new HashSet<>() : cycleTimeGroupList.stream().map(CycleTimeGroup::getLabel).collect(Collectors.toSet());
+		Set<String> fieldNames =
+				cycleTimeGroupList == null
+						? new HashSet<>()
+						: cycleTimeGroupList.stream()
+								.filter(Objects::nonNull)
+								.map(CycleTimeGroup::getLabel)
+								.filter(Objects::nonNull)
+								.collect(Collectors.toSet());
 		Set<String> jiraFields = new HashSet<>();
 		for (String field : fieldNames) {
 			String fieldName = data.get(field);
@@ -429,28 +344,7 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
 
-
-		Map<String, String> prompts =
-				cycleTimeGroupList == null
-						? new LinkedHashMap<>()
-						: cycleTimeGroupList.stream()
-								.filter(
-										ctg ->
-												ctg != null
-														&& ctg.getLabel() != null
-														&& !ctg.getLabel().isBlank()
-														&& ctg.getPrompt() != null)
-								.collect(
-										Collectors.toMap(
-												CycleTimeGroup::getLabel,
-												CycleTimeGroup::getPrompt,
-												(first, second) -> first,
-												LinkedHashMap::new));
-
-		// Final aggregate prompt sent to the LLM per sprint's list of JiraIssues.
-		// At call-time substitute:
-		// %1$s → JSON of fieldMappingPrompts (rule name → criteria)
-		// %2$s → JSON of the JiraIssue list under evaluation
+		String hygieneRules = buildHygieneRules(cycleTimeGroupList);
 
 		long time = System.currentTimeMillis();
 		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(node), null, null, kpiRequest);
@@ -472,9 +366,13 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 									List<JiraIssue> jiraIssues = jiraIssuesBySprint.get(sprintId);
 									List<JiraIssue> jiraIssueSubset =
 											jiraIssues.size() < 10 ? jiraIssues : jiraIssues.subList(0, 10);
-									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, jiraIssueSubset);
 									return CompletableFuture.supplyAsync(
-													() -> computeSprintHygiene(sprintId, sprintName, projectName, prompt),
+													() -> {
+														String prompt =
+																promptService.getProjectHygienePrompt(
+																		hygieneRules, jiraIssueSubset);
+														return computeSprintHygiene(sprintId, sprintName, projectName, prompt);
+													},
 													hygieneAiExecutor)
 											.orTimeout(PER_SPRINT_TIMEOUT_MINUTES, TimeUnit.MINUTES)
 											.exceptionally(
@@ -520,6 +418,72 @@ public class ProjectHygieneKpiSlingshotServiceImpl
 								/ dataCountList.size());
 
 		node.setValue(dataCountList);
+	}
+
+	/**
+	 * Flattens the project's configured field/prompt pairs into a numbered list of <b>independent</b>
+	 * hygiene rules.
+	 *
+	 * <p>A user may configure several rule sets against the <b>same</b> Jira field — e.g. an
+	 * "acceptance criteria" check and a "BDD definition" check, both written against {@code
+	 * description}. Previously such entries were collapsed by field name (only the first survived).
+	 * Every configured rule set is now emitted as its own rule and is given a unique {@code
+	 * ruleName}, so the LLM returns one independent verdict per rule set and the downstream
+	 * drill-down / Excel maps — which are keyed by rule name — no longer overwrite each other.
+	 *
+	 * <p>A field carrying a single rule set keeps its plain label as the rule name; a field carrying
+	 * several rule sets gets {@code label (1)}, {@code label (2)}, … suffixes.
+	 *
+	 * @param cycleTimeGroupList the configured field/prompt pairs, may be {@code null} or contain
+	 *     {@code null} entries
+	 * @return the rendered rule list, or an empty string when nothing is configured
+	 */
+	private String buildHygieneRules(List<CycleTimeGroup> cycleTimeGroupList) {
+		if (CollectionUtils.isEmpty(cycleTimeGroupList)) {
+			return "";
+		}
+
+		// groupingBy keeps every rule set configured against a field instead of
+		// collapsing
+		// them; LinkedHashMap preserves the order in which the fields were declared.
+		Map<String, List<String>> criteriaByField =
+				cycleTimeGroupList.stream()
+						.filter(Objects::nonNull)
+						.filter(
+								ctg ->
+										StringUtils.isNotBlank(ctg.getLabel())
+												&& StringUtils.isNotBlank(ctg.getPrompt()))
+						.collect(
+								Collectors.groupingBy(
+										CycleTimeGroup::getLabel,
+										LinkedHashMap::new,
+										Collectors.mapping(CycleTimeGroup::getPrompt, Collectors.toList())));
+
+		StringBuilder rules = new StringBuilder();
+		int ruleNumber = 0;
+		for (Map.Entry<String, List<String>> entry : criteriaByField.entrySet()) {
+			String field = entry.getKey();
+			List<String> criteriaList = entry.getValue();
+			for (int index = 0; index < criteriaList.size(); index++) {
+				String ruleName = criteriaList.size() == 1 ? field : field + " (" + (index + 1) + ")";
+				rules
+						.append("Rule ")
+						.append(++ruleNumber)
+						.append("\n  ruleName: ")
+						.append(ruleName)
+						.append("\n  field: ")
+						.append(field)
+						.append("\n  criteria: ")
+						.append(criteriaList.get(index).trim())
+						.append("\n\n");
+			}
+		}
+
+		log.debug(
+				"Built {} independent hygiene rule(s) across {} field(s)",
+				ruleNumber,
+				criteriaByField.size());
+		return rules.toString().trim();
 	}
 
 	/**
