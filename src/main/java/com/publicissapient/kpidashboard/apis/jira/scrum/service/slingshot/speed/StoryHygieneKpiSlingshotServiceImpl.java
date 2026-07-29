@@ -16,6 +16,7 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -599,6 +600,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 						.filter(ji -> ji.getSprintID() != null)
 						.collect(Collectors.groupingBy(JiraIssue::getSprintID));
 
+		AtomicBoolean mockServed = new AtomicBoolean(false);
 		List<CompletableFuture<SprintHygieneOutcome>> futures =
 				sprintDetailsList.stream()
 						.filter(sd -> !jiraIssuesBySprint.getOrDefault(sd.getSprintID(), List.of()).isEmpty())
@@ -688,7 +690,14 @@ public class StoryHygieneKpiSlingshotServiceImpl
 													ex -> {
 														Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 														if (cause instanceof MockHygieneResponseException mockEx) {
-															return mockEx.outcome();
+															if (mockServed.compareAndSet(false, true)) {
+																return mockEx.outcome();
+															}
+															return new SprintHygieneOutcome(
+																	emptyDataCount(sprintId, sprintName, projectName),
+																	Collections.emptyList(),
+																	0,
+																	0);
 														}
 														log.error(
 																"Hygiene evaluation failed for sprint {}: {}",
