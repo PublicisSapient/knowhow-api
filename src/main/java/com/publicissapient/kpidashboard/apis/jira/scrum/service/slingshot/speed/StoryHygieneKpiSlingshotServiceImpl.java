@@ -2,7 +2,7 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
-import java.lang.reflect.Field;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,7 +16,6 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,14 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.config.HygieneAiExecutorConfig;
-import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
@@ -55,11 +52,15 @@ import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.BoardMetadata;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.Metadata;
 import com.publicissapient.kpidashboard.common.model.jira.MetadataValue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.model.jira.StoryHygieneSprintResult;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.StoryHygieneSprintResultRepository;
+import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -71,245 +72,343 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
 	private static final String JIRA_METADATA = "jiraMetadata";
-	private static final String FINAL_HYGIENE_PROMPT =
-			"""
-			You are an Expert Story Hygiene Analyzer Agent.
-			Your job is to evaluate Jira issues against a Definition-of-Ready (DoR)
-			style hygiene checklist and produce a strict, evidence-based verdict
-			for each issue.
-
-			=== Non-Negotiable Principles ===
-			- Rely STRICTLY on the fields provided in the Jira Issue JSON below.
-			- NEVER assume, infer, or fabricate a value that is not present.
-			- If evidence is missing, mark the rule as "Failed" (never "Passed").
-			- Differentiate REQUESTS from CONFIRMATIONS —
-					a request for sign-off is NOT approval.
-			- Every verdict MUST cite the exact field name and observed value.
-
-			=== Hygiene Rules ===
-			Each map entry is {ruleName -> evaluation criteria}. Apply every rule
-			independently, in the order given, using ONLY the fields named in the rule.
-			%1$s
-
-			=== Jira Issues (JSON array) ===
-			%2$s
-
-			=== Per-Rule Verdict Vocabulary ===
-			- "Passed"  → rule is fully satisfied by explicit evidence
-																	in the listed fields
-			- "Failed"  → rule is not met OR required evidence is missing
-			- "Partial" → rule is partially met — present but
-																	incomplete / unclear / unconfirmed
-			- "N/A"     → rule does not apply to this issue type/status
-																	per its own criteria
-
-			=== Overall Status Rules ===
-			- "READY"     → every applicable rule (i.e. excluding "N/A")
-																			has status "Passed"
-			- "NOT READY" → any applicable rule is "Failed" or "Partial"
-
-			=== Hygiene Score ===
-			- totalApplicableRules = count of rules whose status is not "N/A"
-			- passedRules          = count of rules whose status is "Passed"
-			- hygieneScore         = passedRules * 100 / totalApplicableRules
-																											(if totalApplicableRules == 0 → 100)
-			- hygieneGrade         = "GOOD"    when hygieneScore >= 80
-																											"AVERAGE" when 50 <= hygieneScore < 80
-																											"POOR"    when hygieneScore < 50
-
-			=== Improvement Recommendations ===
-			- Provide 3 to 5 short, actionable suggestions that would raise the
-					hygiene score for this issue.
-			- Each suggestion must reference a specific field or missing evidence.
-			- Return them as ONE string with items joined by " | ".
-
-			=== Output Contract ===
-			Return a JSON ARRAY — one element per input Jira issue, in the same
-			order as the input. No markdown, no prose, no code fences, no trailing
-			commentary. Schema per element:
-			[
-					{
-							"issueKey":             "<jiraIssue.number>",
-							"issueType":            "<jiraIssue.typeName>",
-							"sprintId":             "<jiraIssue.sprintID>",
-							"assignee":             "<jiraIssue.assigneeName or 'Unassigned'>",
-							"results": [
-									{
-											"rule":     "<ruleName from map key>",
-											"field":    "<jiraIssue field(s) evaluated>",
-											"observed": "<actual field value or 'null'>",
-											"status":   "Passed | Failed | Partial | N/A",
-											"reason":   "<one-line justification citing the observed value>"
-									}
-							],
-							"totalApplicableRules": <int>,
-							"passedRules":          <int>,
-							"failedRules":          <int>,
-							"partialRules":         <int>,
-							"hygieneScore":         <int 0-100>,
-							"hygieneGrade":         "GOOD | AVERAGE | POOR",
-							"overallStatus":        "READY | NOT READY",
-							"topFailures":          ["<up to 3 ruleNames of most impactful non-Passed rules>"],
-							"recommendations":      "<3-5 fixes joined by ' | '>"
-					}
-			]
-
-			=== Hard Constraints ===
-			- Evaluate EVERY rule in the map for EVERY issue; never skip a rule
-					and never skip an issue.
-			- status MUST be exactly one of "Passed", "Failed", "Partial", "N/A"
-					(case sensitive, spelled exactly).
-			- overallStatus MUST be exactly "READY" or "NOT READY".
-			- reason MUST cite the exact field name and value observed.
-			- Never invent field values that are not present in the input JSON.
-			- Return the JSON array and nothing else.
-			""";
 
 	/**
-	 * Deterministic mock response used as a fallback when the AI Gateway returns {@code null} / blank
-	 * content (e.g. during local testing, when the gateway is unreachable, or when the LLM quota is
-	 * exhausted). Shape mirrors {@link HygieneKpiResponseDTO} exactly and intentionally covers all
-	 * verdict types ({@code Passed} / {@code Failed} / {@code Partial}) and all hygiene grades
-	 * ({@code GOOD} / {@code AVERAGE} / {@code POOR}) so the downstream trend / tooltip /
-	 * excel-export pipeline can be exercised end-to-end.
+	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
+	 * persisted.
 	 */
 	static final String MOCK_HYGIENE_RESPONSE_JSON =
 			"""
 			[
 				{
-					"issueKey": "MOCK-101",
+					"issueKey": "DTS-48971",
 					"issueType": "Story",
-					"sprintId": "sprint-mock-001",
-					"assignee": "Jane Doe",
+					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+					"assignee": "Raja Kurru",
 					"results": [
 						{
-							"rule": "Acceptance Criteria Present",
-							"field": "description",
-							"observed": "Given/When/Then criteria listed",
+							"rule": "Assignee Set",
+							"field": "assigneeName",
+							"observed": "Raja Kurru",
 							"status": "Passed",
-							"reason": "description field contains explicit Given/When/Then acceptance criteria"
+							"reason": "assigneeName is populated with a valid team member name"
 						},
 						{
 							"rule": "Story Points Estimated",
 							"field": "estimate",
-							"observed": "5",
+							"observed": "3.0",
 							"status": "Passed",
-							"reason": "estimate field is set to 5"
-						},
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Jane Doe",
-							"status": "Passed",
-							"reason": "assigneeName field is populated"
-						},
-						{
-							"rule": "Business Value Documented",
-							"field": "labels",
-							"observed": "null",
-							"status": "Failed",
-							"reason": "labels field does not contain a business-value tag"
-						}
-					],
-					"totalApplicableRules": 4,
-					"passedRules": 3,
-					"failedRules": 1,
-					"partialRules": 0,
-					"hygieneScore": 75,
-					"hygieneGrade": "AVERAGE",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Business Value Documented"],
-					"recommendations": "Add a business-value label | Link a UX mockup in the description | Re-confirm stakeholder sign-off in comments"
-				},
-				{
-					"issueKey": "MOCK-102",
-					"issueType": "Bug",
-					"sprintId": "sprint-mock-001",
-					"assignee": "Unassigned",
-					"results": [
-						{
-							"rule": "Steps to Reproduce",
-							"field": "description",
-							"observed": "null",
-							"status": "Failed",
-							"reason": "description field is empty"
-						},
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "null",
-							"status": "Failed",
-							"reason": "assigneeName field is empty"
+							"reason": "estimate is set to 3.0, greater than 0"
 						},
 						{
 							"rule": "Priority Set",
 							"field": "priority",
-							"observed": "High",
+							"observed": "P3 - Major",
 							"status": "Passed",
-							"reason": "priority field is set to High"
+							"reason": "priority is set to P3 - Major, a recognised priority value"
 						},
 						{
-							"rule": "Environment Captured",
-							"field": "environment",
-							"observed": "partial - only browser noted",
-							"status": "Partial",
-							"reason": "environment field lists browser but omits OS/version"
+							"rule": "Sprint Assigned",
+							"field": "sprintID",
+							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+							"status": "Passed",
+							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
+						},
+						{
+							"rule": "Issue Type Valid",
+							"field": "typeName",
+							"observed": "Story",
+							"status": "Passed",
+							"reason": "typeName is Story, a recognised issue type"
+						},
+						{
+							"rule": "Summary Meaningful",
+							"field": "summary",
+							"observed": "FE | Role based access to KH Resources | Move access control from FE to BE",
+							"status": "Passed",
+							"reason": "summary clearly describes the feature scope and the architectural direction of the change"
+						},
+						{
+							"rule": "Acceptance Criteria Defined",
+							"field": "description",
+							"observed": "Given a user with role X / When they navigate to KH Resources / Then access is enforced by BE role rules and the FE reflects the result accordingly",
+							"status": "Passed",
+							"reason": "description contains structured Given-When-Then AC with testable role-based outcomes"
 						}
 					],
-					"totalApplicableRules": 4,
-					"passedRules": 1,
-					"failedRules": 2,
-					"partialRules": 1,
-					"hygieneScore": 25,
-					"hygieneGrade": "POOR",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Steps to Reproduce", "Assignee Set", "Environment Captured"],
-					"recommendations": "Add reproduction steps to description | Assign the bug to an owner | Capture full environment (OS, version, build) | Attach relevant logs or screenshots"
-				},
-				{
-					"issueKey": "MOCK-103",
-					"issueType": "Task",
-					"sprintId": "sprint-mock-001",
-					"assignee": "John Smith",
-					"results": [
-						{
-							"rule": "Description Present",
-							"field": "description",
-							"observed": "Set up CI pipeline for module X",
-							"status": "Passed",
-							"reason": "description field contains a clear objective"
-						},
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "John Smith",
-							"status": "Passed",
-							"reason": "assigneeName field is populated"
-						},
-						{
-							"rule": "Estimate Present",
-							"field": "estimate",
-							"observed": "3",
-							"status": "Passed",
-							"reason": "estimate field is set to 3"
-						},
-						{
-							"rule": "Acceptance Criteria Present",
-							"field": "description",
-							"observed": "N/A for infra task",
-							"status": "N/A",
-							"reason": "rule does not apply to infrastructure tasks"
-						}
-					],
-					"totalApplicableRules": 3,
-					"passedRules": 3,
+					"totalApplicableRules": 7,
+					"passedRules": 7,
 					"failedRules": 0,
 					"partialRules": 0,
 					"hygieneScore": 100,
 					"hygieneGrade": "GOOD",
 					"overallStatus": "READY",
 					"topFailures": [],
-					"recommendations": "Great hygiene - no immediate improvements needed"
+					"recommendations": "Story is well-defined | Add edge-case AC for users with multiple conflicting roles | Document expected API contract between FE and BE | Add negative scenario for unauthorized access attempt | Consider adding rollback plan for the access migration"
+				},
+				{
+					"issueKey": "DTS-47979",
+					"issueType": "Story",
+					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+					"assignee": "Andrada Mihai",
+					"results": [
+						{
+							"rule": "Assignee Set",
+							"field": "assigneeName",
+							"observed": "Andrada Mihai",
+							"status": "Passed",
+							"reason": "assigneeName is populated with a valid team member name"
+						},
+						{
+							"rule": "Story Points Estimated",
+							"field": "estimate",
+							"observed": "3.0",
+							"status": "Passed",
+							"reason": "estimate is set to 3.0, greater than 0"
+						},
+						{
+							"rule": "Priority Set",
+							"field": "priority",
+							"observed": "P3 - Major",
+							"status": "Passed",
+							"reason": "priority is set to P3 - Major, a recognised priority value"
+						},
+						{
+							"rule": "Sprint Assigned",
+							"field": "sprintID",
+							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+							"status": "Passed",
+							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
+						},
+						{
+							"rule": "Issue Type Valid",
+							"field": "typeName",
+							"observed": "Story",
+							"status": "Passed",
+							"reason": "typeName is Story, a recognised issue type"
+						},
+						{
+							"rule": "Summary Meaningful",
+							"field": "summary",
+							"observed": "FE | Enhance Retro UI for supporting soft delete/pause",
+							"status": "Passed",
+							"reason": "summary clearly identifies the UI component and the feature being enhanced"
+						},
+						{
+							"rule": "Acceptance Criteria Defined",
+							"field": "description",
+							"observed": "UI should support soft delete and pause. States should be reflected in the list view.",
+							"status": "Partial",
+							"reason": "description outlines expected behaviour but lacks structured format, does not define visual treatment of soft-deleted items, and omits undo/restore scenarios"
+						}
+					],
+					"totalApplicableRules": 7,
+					"passedRules": 6,
+					"failedRules": 0,
+					"partialRules": 1,
+					"hygieneScore": 85,
+					"hygieneGrade": "GOOD",
+					"overallStatus": "NOT READY",
+					"topFailures": ["Acceptance Criteria Defined"],
+					"recommendations": "Rewrite AC in Given-When-Then or checklist format | Add scenario for restoring a soft-deleted item | Define visual treatment of paused vs deleted state | Specify keyboard and screen-reader behaviour for state toggles | Link to Figma designs if available"
+				},
+				{
+					"issueKey": "DTS-50876",
+					"issueType": "Story",
+					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+					"assignee": "Theodor Constantin",
+					"results": [
+						{
+							"rule": "Assignee Set",
+							"field": "assigneeName",
+							"observed": "Theodor Constantin",
+							"status": "Passed",
+							"reason": "assigneeName is populated with a valid team member name"
+						},
+						{
+							"rule": "Story Points Estimated",
+							"field": "estimate",
+							"observed": "5.0",
+							"status": "Passed",
+							"reason": "estimate is set to 5.0, greater than 0"
+						},
+						{
+							"rule": "Priority Set",
+							"field": "priority",
+							"observed": "P3 - Major",
+							"status": "Passed",
+							"reason": "priority is set to P3 - Major, a recognised priority value"
+						},
+						{
+							"rule": "Sprint Assigned",
+							"field": "sprintID",
+							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+							"status": "Passed",
+							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
+						},
+						{
+							"rule": "Issue Type Valid",
+							"field": "typeName",
+							"observed": "Story",
+							"status": "Passed",
+							"reason": "typeName is Story, a recognised issue type"
+						},
+						{
+							"rule": "Summary Meaningful",
+							"field": "summary",
+							"observed": "BE | Developer KPIs - As a user, I want the system to predict the next KPI value for Quality KPIs so that I can anticipate performance trends and plan corrective actions.",
+							"status": "Passed",
+							"reason": "summary follows user-story format and clearly states the user goal, context, and benefit"
+						},
+						{
+							"rule": "Acceptance Criteria Defined",
+							"field": "description",
+							"observed": "System should predict next sprint KPI value using historical data. Prediction should be visible on the KPI tile.",
+							"status": "Partial",
+							"reason": "description states the high-level expectation but does not define the prediction algorithm, confidence threshold, fallback when history is insufficient, or how the predicted value is visually differentiated from actual"
+						}
+					],
+					"totalApplicableRules": 7,
+					"passedRules": 6,
+					"failedRules": 0,
+					"partialRules": 1,
+					"hygieneScore": 85,
+					"hygieneGrade": "GOOD",
+					"overallStatus": "NOT READY",
+					"topFailures": ["Acceptance Criteria Defined"],
+					"recommendations": "Define minimum sprint history required before prediction activates | Specify visual treatment of predicted vs actual value on the KPI tile | Add AC for fallback when insufficient data is available | Clarify which Quality KPIs are in scope for this iteration | Add non-functional requirement for prediction latency"
+				},
+				{
+					"issueKey": "DTS-50715",
+					"issueType": "Bug",
+					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+					"assignee": "Baldev Krishna",
+					"results": [
+						{
+							"rule": "Assignee Set",
+							"field": "assigneeName",
+							"observed": "Baldev Krishna",
+							"status": "Passed",
+							"reason": "assigneeName is populated with a valid team member name"
+						},
+						{
+							"rule": "Story Points Estimated",
+							"field": "estimate",
+							"observed": "0",
+							"status": "Failed",
+							"reason": "estimate is 0; bug has not been sized by the team"
+						},
+						{
+							"rule": "Priority Set",
+							"field": "priority",
+							"observed": "P3 - Major",
+							"status": "Passed",
+							"reason": "priority is set to P3 - Major, a recognised priority value"
+						},
+						{
+							"rule": "Sprint Assigned",
+							"field": "sprintID",
+							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+							"status": "Passed",
+							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
+						},
+						{
+							"rule": "Issue Type Valid",
+							"field": "typeName",
+							"observed": "Bug",
+							"status": "Passed",
+							"reason": "typeName is Bug, a recognised issue type"
+						},
+						{
+							"rule": "Summary Meaningful",
+							"field": "summary",
+							"observed": "Regression issue - Jira Configuration Type & Template dropdown showing empty values instead of expected configuration options",
+							"status": "Passed",
+							"reason": "summary clearly describes the regression symptom and the affected UI component"
+						},
+						{
+							"rule": "Acceptance Criteria Defined",
+							"field": "description",
+							"observed": "null",
+							"status": "Failed",
+							"reason": "description field is empty; no reproduction steps, expected behaviour, or fix-verification criteria documented"
+						}
+					],
+					"totalApplicableRules": 7,
+					"passedRules": 5,
+					"failedRules": 2,
+					"partialRules": 0,
+					"hygieneScore": 71,
+					"hygieneGrade": "AVERAGE",
+					"overallStatus": "NOT READY",
+					"topFailures": ["Story Points Estimated", "Acceptance Criteria Defined"],
+					"recommendations": "Add story point estimate to size the fix effort | Document reproduction steps: steps to reproduce, expected vs actual behaviour | Specify affected Jira configuration types and templates | Attach screenshot showing the empty dropdown | Link to related regression test case"
+				},
+				{
+					"issueKey": "DTS-51662",
+					"issueType": "Story",
+					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+					"assignee": "Akshat Shrivastav",
+					"results": [
+						{
+							"rule": "Assignee Set",
+							"field": "assigneeName",
+							"observed": "Akshat Shrivastav",
+							"status": "Passed",
+							"reason": "assigneeName is populated with a valid team member name"
+						},
+						{
+							"rule": "Story Points Estimated",
+							"field": "estimate",
+							"observed": "0",
+							"status": "Failed",
+							"reason": "estimate is 0; story has not been sized by the team"
+						},
+						{
+							"rule": "Priority Set",
+							"field": "priority",
+							"observed": "P3 - Major",
+							"status": "Passed",
+							"reason": "priority is set to P3 - Major, a recognised priority value"
+						},
+						{
+							"rule": "Sprint Assigned",
+							"field": "sprintID",
+							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
+							"status": "Passed",
+							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
+						},
+						{
+							"rule": "Issue Type Valid",
+							"field": "typeName",
+							"observed": "Story",
+							"status": "Passed",
+							"reason": "typeName is Story, a recognised issue type"
+						},
+						{
+							"rule": "Summary Meaningful",
+							"field": "summary",
+							"observed": "L3 Rollout Support ITR6",
+							"status": "Failed",
+							"reason": "summary is 4 words relying on unexplained acronyms (L3, ITR6); it functions as a label rather than a description of user value or scope"
+						},
+						{
+							"rule": "Acceptance Criteria Defined",
+							"field": "description",
+							"observed": "null",
+							"status": "Failed",
+							"reason": "description field is empty; no acceptance criteria, scope, or deliverables documented"
+						}
+					],
+					"totalApplicableRules": 7,
+					"passedRules": 4,
+					"failedRules": 3,
+					"partialRules": 0,
+					"hygieneScore": 57,
+					"hygieneGrade": "AVERAGE",
+					"overallStatus": "NOT READY",
+					"topFailures": ["Story Points Estimated", "Summary Meaningful", "Acceptance Criteria Defined"],
+					"recommendations": "Replace summary with a meaningful description of the rollout scope and user value | Add story point estimate | Document acceptance criteria: what constitutes a successful L3 rollout for ITR6 | List affected modules and environments | Define exit criteria for rollout completion"
 				}
 			]
 			""";
@@ -321,16 +420,15 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ObjectMapper objectMapper;
+	@Autowired private StoryHygieneSprintResultRepository hygieneResultRepository;
 
 	@Autowired
 	@Qualifier(HygieneAiExecutorConfig.HYGIENE_AI_EXECUTOR)
 	private Executor hygieneAiExecutor;
 
-	/**
-	 * Client-side hard cap per sprint LLM call. Bounded above by the OkHttp callTimeout in {@code
-	 * ai-gateway-config.http-client.call-timeout}.
-	 */
-	private static final long PER_SPRINT_TIMEOUT_MINUTES = 15;
+	// Per-sprint HTTP timeout is governed by OkHttp's callTimeout in
+	// AiGatewayConfig
+	// (currently 150 s). No additional CompletableFuture timeout is needed here.
 
 	private List<String> sprintIdList = Collections.synchronizedList(new ArrayList<>());
 
@@ -351,7 +449,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		Node project =
 				treeAggregatorDetail.getMapOfListOfProjectNodes().get(HIERARCHY_LEVEL_ID_PROJECT).get(0);
 
-		// in case if only projects or sprint filters are applied
 		projectWiseLeafNodeValue(kpiElement, project, kpiRequest);
 		Map<Pair<String, String>, Node> nodeWiseKPIValue = new HashMap<>();
 		calculateAggregatedValue(project, nodeWiseKPIValue, KPICode.STORY_HYGIENE);
@@ -386,8 +483,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		int hygieneSprintCount = customApiConfig.getSlingshotHygieneSprintCount();
 		if (sortedSprintList.size() > hygieneSprintCount) {
 			log.warn(
-					"Story Hygiene (kpi311): sprint cap of {} hit — {} sprints available, evaluating only the most recent {}. "
-							+ "Increase slingshotHygieneSprintCount to raise the limit.",
+					"Story Hygiene (kpi311): sprint cap of {} hit — {} sprints available, evaluating only the most recent {}.",
 					hygieneSprintCount,
 					sortedSprintList.size(),
 					hygieneSprintCount);
@@ -436,8 +532,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
 			jiraFields.addAll(anchorFieldNames);
 		}
-		// Operational fields required for sprint grouping and priority+recency sort —
-		// always projected regardless of anchor or user config.
 		jiraFields.addAll(List.of("sprintID", "priority", "changeDate"));
 
 		List<JiraIssue> jiraIssueList =
@@ -455,6 +549,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Node node, KpiRequest kpiRequest) {
 		String requestTrackerId = getRequestTrackerId();
 		String projectName = node.getProjectFilter().getName();
+		String basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId().toString();
 
 		FieldMapping fieldMapping =
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
@@ -477,20 +572,27 @@ public class StoryHygieneKpiSlingshotServiceImpl
 												(first, second) -> first,
 												LinkedHashMap::new));
 
-		// Final aggregate prompt sent to the LLM per sprint's list of JiraIssues.
-		// At call-time substitute:
-		// %1$s → JSON of fieldMappingPrompts (rule name → criteria)
-		// %2$s → JSON of the JiraIssue list under evaluation
+		String ruleSetHash = HygienePromptBuilder.computeRuleSetHash(cycleTimeGroupList, objectMapper);
 
 		long time = System.currentTimeMillis();
 		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(node), null, null, kpiRequest);
-		log.info("DSR taking fetchKPIDataFromDb {}", System.currentTimeMillis() - time);
+		log.info(
+				"Story Hygiene (kpi311): fetchKPIDataFromDb took {} ms", System.currentTimeMillis() - time);
 
 		List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.get(JIRA_ISSUES);
 		List<SprintDetails> sprintDetailsList = (List<SprintDetails>) resultMap.get(SPRINT_DETAILS);
 		@SuppressWarnings("unchecked")
 		Map<String, String> metaData = (Map<String, String>) resultMap.get(JIRA_METADATA);
 		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
+
+		// Pre-load all cached results for the sprints in this request (single DB
+		// round-trip)
+		List<String> sprintIds = sprintDetailsList.stream().map(SprintDetails::getSprintID).toList();
+		Map<String, StoryHygieneSprintResult> cachedBySprintId =
+				hygieneResultRepository
+						.findByBasicProjectConfigIdAndSprintIdIn(basicProjectConfigId, sprintIds)
+						.stream()
+						.collect(Collectors.toMap(StoryHygieneSprintResult::getSprintId, r -> r));
 
 		Map<String, List<JiraIssue>> jiraIssuesBySprint =
 				jiraIssueList.stream()
@@ -505,13 +607,29 @@ public class StoryHygieneKpiSlingshotServiceImpl
 									String sprintId = sprintDetails.getSprintID();
 									String sprintName = sprintDetails.getSprintName();
 									List<JiraIssue> jiraIssues = jiraIssuesBySprint.get(sprintId);
-									int issueCountCap = customApiConfig.getSlingshotHygieneIssueCountPerSprint();
 									int totalIssueCount = jiraIssues.size();
+
+									// ── Cache hit: valid stored result for the current rule-set ──
+									StoryHygieneSprintResult cached = cachedBySprintId.get(sprintId);
+									if (cached != null && ruleSetHash.equals(cached.getRuleSetHash())) {
+										log.debug(
+												"Story Hygiene (kpi311): cache hit for sprint '{}' — serving from DB",
+												sprintName);
+										return CompletableFuture.completedFuture(
+												buildOutcomeFromVerdicts(
+														sprintId,
+														sprintName,
+														projectName,
+														cached.getIssueVerdicts(),
+														cached.getSampledIssueCount(),
+														cached.getTotalIssueCount()));
+									}
+
+									// ── Cache miss or stale: run LLM ──
+									int issueCountCap = customApiConfig.getSlingshotHygieneIssueCountPerSprint();
 									if (totalIssueCount > issueCountCap) {
 										log.warn(
-												"Story Hygiene (kpi311): issue cap of {} hit for sprint '{}' — {} issues available, "
-														+ "sampling top {} by priority then recency. "
-														+ "Increase slingshotHygieneIssueCountPerSprint to raise the limit.",
+												"Story Hygiene (kpi311): issue cap of {} hit for sprint '{}' — {} issues available, sampling top {}.",
 												issueCountCap,
 												sprintName,
 												totalIssueCount,
@@ -523,7 +641,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 													: jiraIssues.stream()
 															.sorted(
 																	Comparator.comparingInt(
-																					(JiraIssue ji) -> priorityRank(ji.getPriority()))
+																					(JiraIssue ji) ->
+																							HygienePromptBuilder.priorityRank(ji.getPriority()))
 																			.thenComparing(
 																					ji ->
 																							ji.getChangeDate() != null ? ji.getChangeDate() : "",
@@ -535,24 +654,23 @@ public class StoryHygieneKpiSlingshotServiceImpl
 											jiraIssueSubset.stream()
 													.map(
 															ji ->
-																	buildIssueNode(
-																			ji, anchorFieldNames, cycleTimeGroupList, metaData))
+																	HygienePromptBuilder.buildIssueNode(
+																			ji,
+																			anchorFieldNames,
+																			cycleTimeGroupList,
+																			metaData,
+																			objectMapper))
 													.toList();
-									String issuesJson;
-									try {
-										issuesJson = objectMapper.writeValueAsString(issueNodes);
-									} catch (JsonProcessingException e) {
-										log.warn(
-												"Story Hygiene (kpi311): failed to serialize issues for sprint '{}' — skipping sprint. {}",
-												sprintName,
-												e.getMessage());
+									String prompt =
+											HygienePromptBuilder.buildPrompt(prompts, issueNodes, metaData, objectMapper);
+									if (prompt == null) {
 										return CompletableFuture.completedFuture(
 												new SprintHygieneOutcome(
 														emptyDataCount(sprintId, sprintName, projectName),
 														Collections.emptyList(),
 														0));
 									}
-									String prompt = String.format(FINAL_HYGIENE_PROMPT, prompts, issuesJson);
+
 									return CompletableFuture.supplyAsync(
 													() ->
 															computeSprintHygiene(
@@ -561,11 +679,17 @@ public class StoryHygieneKpiSlingshotServiceImpl
 																	projectName,
 																	prompt,
 																	sampledCount,
-																	totalIssueCount),
+																	totalIssueCount,
+																	ruleSetHash,
+																	basicProjectConfigId,
+																	cached),
 													hygieneAiExecutor)
-											.orTimeout(PER_SPRINT_TIMEOUT_MINUTES, TimeUnit.MINUTES)
 											.exceptionally(
 													ex -> {
+														Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+														if (cause instanceof MockHygieneResponseException mockEx) {
+															return mockEx.outcome();
+														}
 														log.error(
 																"Hygiene evaluation failed for sprint {}: {}",
 																sprintId,
@@ -579,7 +703,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 								})
 						.toList();
 
-		// Wait for all sprints, then collect results sorted by sprint start date.
 		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 		List<SprintHygieneOutcome> outcomes = futures.stream().map(CompletableFuture::join).toList();
 
@@ -628,11 +751,9 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	}
 
 	/**
-	 * Runs the LLM hygiene evaluation for a single sprint and turns the response into (a) a {@link
-	 * DataCount} that feeds the KPI trend line and (b) a list of {@link KPIExcelData} rows — one per
-	 * Jira issue — that feed the Excel export. Called from the async pipeline, one invocation per
-	 * sprint. All exceptions are propagated so the surrounding {@link
-	 * CompletableFuture#exceptionally} handler can decide the fallback.
+	 * Calls the LLM for a single sprint, persists the result to MongoDB, and returns the outcome. The
+	 * {@code existingResult} is used to carry over the document {@code _id} for an in-place upsert
+	 * (avoids insert + delete on hash change).
 	 */
 	private SprintHygieneOutcome computeSprintHygiene(
 			String sprintId,
@@ -640,28 +761,83 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			String projectName,
 			String prompt,
 			int sampledCount,
-			int totalIssueCount) {
+			int totalIssueCount,
+			String ruleSetHash,
+			String basicProjectConfigId,
+			StoryHygieneSprintResult existingResult) {
+
 		String responseContent;
 		try {
 			ChatGenerationResponseDTO chatGenerationResponseDTO =
 					aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 			responseContent =
 					chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
-			if (responseContent == null || responseContent.isBlank()) {
-
-				log.warn(
-						"AI Gateway returned null/blank content for sprint {} ({}); using MOCK hygiene response.",
-						sprintName,
-						sprintId);
-				responseContent = MOCK_HYGIENE_RESPONSE_JSON;
-			}
 		} catch (Exception ex) {
-			responseContent = MOCK_HYGIENE_RESPONSE_JSON;
+			log.error(
+					"AI Gateway call failed for sprint '{}' ({}): {} — returning mock data (not persisted)",
+					sprintName,
+					sprintId,
+					ex.getMessage(),
+					ex);
+			responseContent = null;
 		}
-		List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList = hygieneKpiParser.parse(responseContent);
+
+		if (responseContent == null || responseContent.isBlank()) {
+			log.warn(
+					"AI Gateway returned blank content for sprint '{}' ({}) — returning mock data (not persisted)",
+					sprintName,
+					sprintId);
+			List<HygieneKpiResponseDTO> mockVerdicts = hygieneKpiParser.parse(MOCK_HYGIENE_RESPONSE_JSON);
+			// Throw so the exceptionally handler returns an outcome built from mock — no DB
+			// write
+			throw new MockHygieneResponseException(
+					buildOutcomeFromVerdicts(
+							sprintId, sprintName, projectName, mockVerdicts, sampledCount, totalIssueCount));
+		}
+
+		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
+
+		// Persist only on a real LLM success — upsert in place if a doc already existed
+		// (stale hash)
+		StoryHygieneSprintResult toSave =
+				existingResult != null
+						? existingResult
+						: StoryHygieneSprintResult.builder()
+								.basicProjectConfigId(basicProjectConfigId)
+								.sprintId(sprintId)
+								.build();
+		toSave.setSprintName(sprintName);
+		toSave.setRuleSetHash(ruleSetHash);
+		toSave.setSampledIssueCount(sampledCount);
+		toSave.setTotalIssueCount(totalIssueCount);
+		toSave.setIssueVerdicts(issueVerdicts);
+		toSave.setComputedAt(Instant.now());
+		hygieneResultRepository.save(toSave);
+
+		return buildOutcomeFromVerdicts(
+				sprintId, sprintName, projectName, issueVerdicts, sampledCount, totalIssueCount);
+	}
+
+	/**
+	 * Derives {@link SprintHygieneOutcome} from a list of issue verdicts. Called for both cache-hit
+	 * (from stored {@code issueVerdicts}) and post-LLM paths so the aggregation logic lives in one
+	 * place.
+	 */
+	private SprintHygieneOutcome buildOutcomeFromVerdicts(
+			String sprintId,
+			String sprintName,
+			String projectName,
+			List<HygieneKpiResponseDTO> issueVerdicts,
+			int sampledCount,
+			int totalIssueCount) {
+
+		if (CollectionUtils.isEmpty(issueVerdicts)) {
+			return new SprintHygieneOutcome(
+					emptyDataCount(sprintId, sprintName, projectName), List.of(), 0);
+		}
 
 		List<HygieneKpiResponseDTO.RuleResult> allRuleResults =
-				hygieneKpiResponseDTOList.stream()
+				issueVerdicts.stream()
 						.filter(Objects::nonNull)
 						.map(HygieneKpiResponseDTO::getResults)
 						.filter(Objects::nonNull)
@@ -674,7 +850,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 						.map(HygieneKpiResponseDTO.RuleResult::getRule)
 						.collect(Collectors.toSet());
 
-		long totalIssues = hygieneKpiResponseDTOList.stream().filter(Objects::nonNull).count();
+		long totalIssues = issueVerdicts.stream().filter(Objects::nonNull).count();
 
 		Map<String, Double> rulePassRates = new LinkedHashMap<>();
 		ruleNames.forEach(
@@ -687,6 +863,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					double percentage = totalIssues == 0 ? 0.0 : (passed * 100.0) / totalIssues;
 					rulePassRates.put(rule, Math.round(percentage * 100.0) / 100.0);
 				});
+
 		Map<String, Double> passedPercentageByRule =
 				rulePassRates.entrySet().stream()
 						.sorted(Map.Entry.comparingByKey())
@@ -695,25 +872,17 @@ public class StoryHygieneKpiSlingshotServiceImpl
 										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
 		OptionalDouble sprintScore =
-				hygieneKpiResponseDTOList.stream()
-						.mapToInt(HygieneKpiResponseDTO::getHygieneScore)
-						.average();
+				issueVerdicts.stream().mapToInt(HygieneKpiResponseDTO::getHygieneScore).average();
 		double score = sprintScore.isPresent() ? sprintScore.getAsDouble() : 0d;
 
 		int passedIssues =
 				Math.toIntExact(
-						hygieneKpiResponseDTOList.stream()
+						issueVerdicts.stream()
 								.filter(
-										hygieneKpiResponseDTO ->
-												hygieneKpiResponseDTO.getOverallStatus().equalsIgnoreCase("READY"))
+										dto ->
+												dto.getOverallStatus() != null
+														&& dto.getOverallStatus().equalsIgnoreCase("READY"))
 								.count());
-
-		log.debug(
-				"Hygiene passed-percentage for Sprint {} ({}) : sprintScore={} perRule={}",
-				sprintName,
-				sprintId,
-				score,
-				passedPercentageByRule);
 
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
@@ -724,10 +893,9 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					.put("Issue Count", sampledCount + " of " + totalIssueCount + " (Capped)");
 		}
 
-		// Build one KPIExcelData row per Jira issue for the Excel export.
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateStoryHygieneExcelData(
-				excelRows, sprintName != null ? sprintName : sprintId, hygieneKpiResponseDTOList);
+				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
 
 		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
 	}
@@ -758,84 +926,25 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		return dataCount;
 	}
 
-	/**
-	 * Builds a slim JSON object for one {@link JiraIssue} containing only the fields the LLM needs.
-	 * Anchor fields (from config) are always written first; configured rule fields follow, skipping
-	 * any field name already written by an anchor. Null values are omitted from the output.
-	 */
-	private ObjectNode buildIssueNode(
-			JiraIssue ji,
-			List<String> anchorFieldNames,
-			List<CycleTimeGroup> configuredFields,
-			Map<String, String> labelToFieldName) {
-		ObjectNode node = objectMapper.createObjectNode();
-		Set<String> writtenFields = new HashSet<>();
-
-		if (anchorFieldNames != null) {
-			for (String fieldName : anchorFieldNames) {
-				writtenFields.add(fieldName);
-				Object value = getFieldValue(ji, fieldName);
-				if (value != null) {
-					node.set(fieldName, objectMapper.valueToTree(value));
-				}
-			}
-		}
-
-		if (configuredFields != null) {
-			for (CycleTimeGroup ctg : configuredFields) {
-				if (ctg == null || ctg.getLabel() == null) continue;
-				String fieldName = labelToFieldName != null ? labelToFieldName.get(ctg.getLabel()) : null;
-				if (fieldName == null || writtenFields.contains(fieldName)) continue;
-				Object value = getFieldValue(ji, fieldName);
-				if (value != null) {
-					node.set(ctg.getLabel(), objectMapper.valueToTree(value));
-					writtenFields.add(fieldName);
-				}
-			}
-		}
-		return node;
-	}
-
-	private Object getFieldValue(JiraIssue issue, String fieldName) {
-		try {
-			Field f = findDeclaredField(issue.getClass(), fieldName);
-			if (f != null) {
-				f.setAccessible(true);
-				return f.get(issue);
-			}
-		} catch (IllegalAccessException e) {
-			log.debug("kpi311: could not read field '{}' from JiraIssue", fieldName);
-		}
-		return null;
-	}
-
-	private static Field findDeclaredField(Class<?> clazz, String fieldName) {
-		while (clazz != null && clazz != Object.class) {
-			try {
-				return clazz.getDeclaredField(fieldName);
-			} catch (NoSuchFieldException ignored) {
-				clazz = clazz.getSuperclass();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Maps a Jira priority string to a sort rank (lower = higher priority). Critical/Highest → 0,
-	 * High → 1, Medium → 2, Low/Lowest → 3, unset/unknown → 4.
-	 */
-	private static int priorityRank(String priority) {
-		if (priority == null) return 4;
-		return switch (priority.trim().toLowerCase()) {
-			case "critical", "highest" -> 0;
-			case "high" -> 1;
-			case "medium" -> 2;
-			case "low", "lowest" -> 3;
-			default -> 4;
-		};
-	}
-
-	/** Bundle returned by {@link #computeSprintHygiene} — trend point + excel rows. */
+	/** Bundle returned by the per-sprint pipeline — trend point + excel rows + passed count. */
 	private record SprintHygieneOutcome(
 			DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
+
+	/**
+	 * Thrown by {@link #computeSprintHygiene} when the AI Gateway is unavailable and the mock
+	 * response is used. Carries the pre-built outcome so the {@code exceptionally} handler can return
+	 * it — bypassing the DB persist while still showing data to the user.
+	 */
+	private static final class MockHygieneResponseException extends RuntimeException {
+		private final SprintHygieneOutcome outcome;
+
+		MockHygieneResponseException(SprintHygieneOutcome outcome) {
+			super("AI Gateway unavailable — serving mock hygiene data");
+			this.outcome = outcome;
+		}
+
+		SprintHygieneOutcome outcome() {
+			return outcome;
+		}
+	}
 }

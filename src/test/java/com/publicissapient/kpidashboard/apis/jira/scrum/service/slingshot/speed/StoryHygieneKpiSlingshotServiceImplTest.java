@@ -46,7 +46,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -68,9 +67,11 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.StoryHygieneSprintResultRepository;
 
 /**
  * Tests for {@link StoryHygieneKpiSlingshotServiceImpl}.
@@ -85,6 +86,7 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 
 	@Mock private HygieneKpiParser hygieneKpiParser;
 	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private StoryHygieneSprintResultRepository hygieneResultRepository;
 	@Mock private AiGatewayClient aiGatewayClient;
 	@Mock private SprintDetailsService sprintDetailsService;
 	@Mock private ConfigHelperService configHelperService;
@@ -117,6 +119,13 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
 		injectField(service, "objectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
+		injectField(service, "hygieneResultRepository", hygieneResultRepository);
+
+		// Default: cache miss for all sprints — tests that rely on the LLM path keep
+		// working.
+		lenient()
+				.when(hygieneResultRepository.findByBasicProjectConfigIdAndSprintIdIn(anyString(), any()))
+				.thenReturn(Collections.emptyList());
 
 		projectConfigId = new ObjectId("6335363749794a18e8a4479b");
 
