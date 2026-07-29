@@ -696,7 +696,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 															return new SprintHygieneOutcome(
 																	emptyDataCount(sprintId, sprintName, projectName),
 																	Collections.emptyList(),
-																	0,
 																	0);
 														}
 														log.error(
