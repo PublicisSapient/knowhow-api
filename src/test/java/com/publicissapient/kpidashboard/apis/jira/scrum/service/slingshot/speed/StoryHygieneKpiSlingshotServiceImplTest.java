@@ -674,6 +674,126 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		return count;
 	}
 
+	// ---------------------------------------------------------------------
+	// Rule weighting
+	// ---------------------------------------------------------------------
+
+	/** Runs getKpiData for the given rule set and returns the rules payload sent to the LLM. */
+	private String captureRulesFor(List<CycleTimeGroup> groups) throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(groups));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		return String.valueOf(rulesCaptor.getValue());
+	}
+
+	@Test
+	public void testWeightPrefix_isParsedAndStrippedFromCriteria() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(
+								group("description", "[10]: Acceptance criteria must be present")));
+
+		assertTrue(rules.contains("weight: 10"));
+		assertTrue(rules.contains("criteria: Acceptance criteria must be present"));
+		// The bracket prefix must never leak through to the LLM.
+		assertFalse(rules.contains("[10]"));
+	}
+
+	@Test
+	public void testNullWeight_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(group("priority", "[null]: Priority must be set")));
+
+		assertTrue(rules.contains("weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+		assertFalse(rules.contains("[null]"));
+	}
+
+	@Test
+	public void testMissingWeightPrefix_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+		// Rule sets authored before weighting existed carry no prefix at all.
+		String rules =
+				captureRulesFor(Collections.singletonList(group("priority", "Priority must be set")));
+
+		assertTrue(rules.contains("weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+	}
+
+	@Test
+	public void testMixedWeights_eachRuleKeepsItsOwnWeight() throws ApplicationException {
+		// Two rule sets on the same field with different weights — each must survive
+		// as an independent, individually-weighted rule.
+		String rules =
+				captureRulesFor(
+						Arrays.asList(
+								group("description", "[10]: Acceptance criteria must be present"),
+								group("description", "[null]: A BDD definition must be present")));
+
+		assertTrue(rules.contains("ruleName: description (1)"));
+		assertTrue(rules.contains("ruleName: description (2)"));
+		assertTrue(rules.contains("weight: 10"));
+		assertTrue(rules.contains("weight: 1\n"));
+		assertEquals(2, countOccurrences(rules, "field: description"));
+	}
+
+	@Test
+	public void testDecimalWeight_isPreserved() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(group("priority", "[2.5]: Priority must be set")));
+
+		assertTrue(rules.contains("weight: 2.5"));
+	}
+
+	@Test
+	public void testMalformedWeight_fallsBackToDefaultAndKeepsCriteria() throws ApplicationException {
+		// Non-numeric and non-positive weights must not break rule rendering.
+		String rules =
+				captureRulesFor(
+						Arrays.asList(
+								group("priority", "[abc]: Priority must be set"),
+								group("summary", "[0]: Summary must be meaningful")));
+
+		assertEquals(2, countOccurrences(rules, "weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+		assertTrue(rules.contains("criteria: Summary must be meaningful"));
+	}
+
+	@Test
+	public void testWeightPrefixWithIrregularSpacing_isStillParsed() throws ApplicationException {
+		String rules =
+				captureRulesFor(Collections.singletonList(group("priority", "  [ 7 ] :   Priority set  ")));
+
+		assertTrue(rules.contains("weight: 7"));
+		assertTrue(rules.contains("criteria: Priority set"));
+	}
+
+	@Test
+	public void testCriteriaContainingBrackets_isNotMistakenForAWeight() throws ApplicationException {
+		// Only a LEADING [x]: prefix is a weight — brackets inside the text are safe.
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(
+								group("description", "Must reference [JIRA-123] in the body")));
+
+		assertTrue(rules.contains("weight: 1"));
+		assertTrue(rules.contains("criteria: Must reference [JIRA-123] in the body"));
+	}
+
 	@Test
 	public void testGetKpiData_moreThanTenIssues_truncatedToTen() throws ApplicationException {
 		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
