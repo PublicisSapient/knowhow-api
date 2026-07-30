@@ -525,7 +525,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
 			jiraFields.addAll(anchorFieldNames);
 		}
-		jiraFields.addAll(List.of("sprintID", "priority", "changeDate"));
+		jiraFields.addAll(List.of("sprintID", "priority", "changeDate", "url", "number"));
 
 		List<JiraIssue> jiraIssueList =
 				jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
