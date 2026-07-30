@@ -72,7 +72,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
-	private static final String JIRA_METADATA = "jiraMetadata";
 
 	/**
 	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
@@ -514,20 +513,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		FieldMapping fieldMapping = configHelperService.getFieldMapping(basicProjectConfigId);
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
-		Set<String> fieldNames =
-				cycleTimeGroupList == null
-						? new HashSet<>()
-						: cycleTimeGroupList.stream()
-								.filter(Objects::nonNull)
-								.map(CycleTimeGroup::getLabel)
-								.filter(Objects::nonNull)
-								.collect(Collectors.toSet());
 		Set<String> jiraFields = new HashSet<>();
-		for (String field : fieldNames) {
-			String fieldName = data.get(field);
-			if (StringUtils.isNotEmpty(fieldName)) {
-				jiraFields.add(fieldName);
-			}
+		if (cycleTimeGroupList != null) {
+			cycleTimeGroupList.stream()
+					.filter(ctg -> ctg != null && ctg.getFieldName() != null)
+					.map(CycleTimeGroup::getFieldName)
+					.filter(StringUtils::isNotEmpty)
+					.forEach(jiraFields::add);
 		}
 		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
 		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
@@ -541,7 +533,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 						basicProjectConfigId.toString(),
 						jiraFields);
 
-		resultListMap.put(JIRA_METADATA, data);
 		resultListMap.put(JIRA_ISSUES, jiraIssueList);
 		resultListMap.put(SPRINT_DETAILS, limitedSprintList);
 		return resultListMap;
@@ -556,23 +547,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 				configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId());
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
 
-		Map<String, String> prompts =
-				cycleTimeGroupList == null
-						? new LinkedHashMap<>()
-						: cycleTimeGroupList.stream()
-								.filter(
-										ctg ->
-												ctg != null
-														&& ctg.getLabel() != null
-														&& !ctg.getLabel().isBlank()
-														&& ctg.getPrompt() != null)
-								.collect(
-										Collectors.toMap(
-												CycleTimeGroup::getLabel,
-												CycleTimeGroup::getPrompt,
-												(first, second) -> first,
-												LinkedHashMap::new));
-
 		String ruleSetHash = HygienePromptBuilder.computeRuleSetHash(cycleTimeGroupList, objectMapper);
 
 		long time = System.currentTimeMillis();
@@ -582,8 +556,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.get(JIRA_ISSUES);
 		List<SprintDetails> sprintDetailsList = (List<SprintDetails>) resultMap.get(SPRINT_DETAILS);
-		@SuppressWarnings("unchecked")
-		Map<String, String> metaData = (Map<String, String>) resultMap.get(JIRA_METADATA);
 		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
 
 		// Pre-load all cached results for the sprints in this request (single DB
@@ -657,14 +629,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 													.map(
 															ji ->
 																	HygienePromptBuilder.buildIssueNode(
-																			ji,
-																			anchorFieldNames,
-																			cycleTimeGroupList,
-																			metaData,
-																			objectMapper))
+																			ji, anchorFieldNames, cycleTimeGroupList, objectMapper))
 													.toList();
 									String prompt =
-											HygienePromptBuilder.buildPrompt(prompts, issueNodes, metaData, objectMapper);
+											HygienePromptBuilder.buildPrompt(
+													cycleTimeGroupList, issueNodes, objectMapper);
 									if (prompt == null) {
 										return CompletableFuture.completedFuture(
 												new SprintHygieneOutcome(
@@ -780,6 +749,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 			responseContent =
 					chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
+			log.info(
+					"kpi311 [{}]: responseChars={}",
+					sprintName,
+					responseContent != null ? responseContent.length() : 0);
+			log.debug("kpi311 [{}]: content={}", sprintName, responseContent);
 		} catch (Exception ex) {
 			log.error(
 					"AI Gateway call failed for sprint '{}' ({}): {} — returning mock data (not persisted)",
@@ -895,6 +869,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
+		dataCount.getHoverValue().put("sampledIssueCount", sampledCount);
+		dataCount.getHoverValue().put("passedIssueCount", passedIssues);
 		if (sampledCount < totalIssueCount) {
 			dataCount
 					.getHoverValue()
