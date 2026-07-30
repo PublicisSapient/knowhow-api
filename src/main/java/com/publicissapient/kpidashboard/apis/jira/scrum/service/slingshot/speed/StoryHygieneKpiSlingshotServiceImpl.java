@@ -585,6 +585,14 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 									// ── Cache hit: valid stored result for the current rule-set ──
 									StoryHygieneSprintResult cached = cachedBySprintId.get(sprintId);
+									Map<String, String> issueUrlMap =
+											jiraIssues.stream()
+													.collect(
+															Collectors.toMap(
+																	JiraIssue::getNumber,
+																	ji -> StringUtils.defaultString(ji.getUrl(), ""),
+																	(a, b) -> a));
+
 									if (cached != null && ruleSetHash.equals(cached.getRuleSetHash())) {
 										log.debug(
 												"Story Hygiene (kpi311): cache hit for sprint '{}' — serving from DB",
@@ -596,7 +604,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 														projectName,
 														cached.getIssueVerdicts(),
 														cached.getSampledIssueCount(),
-														cached.getTotalIssueCount()));
+														cached.getTotalIssueCount(),
+														issueUrlMap));
 									}
 
 									// ── Cache miss or stale: run LLM ──
@@ -774,7 +783,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			// write
 			throw new MockHygieneResponseException(
 					buildOutcomeFromVerdicts(
-							sprintId, sprintName, projectName, mockVerdicts, sampledCount, totalIssueCount));
+							sprintId,
+							sprintName,
+							projectName,
+							mockVerdicts,
+							sampledCount,
+							totalIssueCount,
+							issueUrlMap));
 		}
 
 		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
@@ -797,7 +812,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		hygieneResultRepository.save(toSave);
 
 		return buildOutcomeFromVerdicts(
-				sprintId, sprintName, projectName, issueVerdicts, sampledCount, totalIssueCount);
+				sprintId,
+				sprintName,
+				projectName,
+				issueVerdicts,
+				sampledCount,
+				totalIssueCount,
+				issueUrlMap);
 	}
 
 	/**
@@ -811,7 +832,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			String projectName,
 			List<HygieneKpiResponseDTO> issueVerdicts,
 			int sampledCount,
-			int totalIssueCount) {
+			int totalIssueCount,
+			Map<String, String> issueUrlMap) {
 
 		if (CollectionUtils.isEmpty(issueVerdicts)) {
 			return new SprintHygieneOutcome(
@@ -879,7 +901,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateStoryHygieneExcelData(
-				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
+				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts, issueUrlMap);
 
 		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
 	}

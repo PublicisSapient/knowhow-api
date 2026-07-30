@@ -3438,25 +3438,41 @@ public class KPIExcelUtility {
 	public static void populateStoryHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
 			String sprintId,
-			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
+			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList,
+			Map<String, String> issueUrlMap) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
 			return;
 		}
+		// Collect all rule names present across all issues so every row has the same
+		// columns
+		LinkedHashSet<String> allRules =
+				hygieneKpiResponseDTOList.stream()
+						.filter(dto -> dto.getResults() != null)
+						.flatMap(dto -> dto.getResults().stream())
+						.map(HygieneKpiResponseDTO.RuleResult::getRule)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
 		hygieneKpiResponseDTOList.forEach(
 				hygieneKpiResponseDTO -> {
 					LinkedHashMap<String, String> ruleResult =
-							hygieneKpiResponseDTO.getResults().stream()
-									.collect(
-											Collectors.toMap(
-													HygieneKpiResponseDTO.RuleResult::getRule,
-													HygieneKpiResponseDTO.RuleResult::getStatus,
-													(first, second) -> first,
-													LinkedHashMap::new));
+							hygieneKpiResponseDTO.getResults() != null
+									? hygieneKpiResponseDTO.getResults().stream()
+											.collect(
+													Collectors.toMap(
+															HygieneKpiResponseDTO.RuleResult::getRule,
+															HygieneKpiResponseDTO.RuleResult::getStatus,
+															(first, second) -> first,
+															LinkedHashMap::new))
+									: new LinkedHashMap<>();
+					// Fill any rule not returned by the LLM for this issue with N/A
+					allRules.forEach(rule -> ruleResult.putIfAbsent(rule, "N/A"));
+
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setSprintName(sprintId);
 					String issueKey = hygieneKpiResponseDTO.getIssueKey();
 					Map<String, String> issueIdMap = new HashMap<>();
-					issueIdMap.put(issueKey, "");
+					issueIdMap.put(
+							issueKey, issueUrlMap != null ? issueUrlMap.getOrDefault(issueKey, "") : "");
 					excelData.setIssueID(issueIdMap);
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
