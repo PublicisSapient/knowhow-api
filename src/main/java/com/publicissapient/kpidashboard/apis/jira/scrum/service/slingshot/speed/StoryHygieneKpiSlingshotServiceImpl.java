@@ -662,7 +662,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 																	totalIssueCount,
 																	ruleSetHash,
 																	basicProjectConfigId,
-																	cached),
+																	cached,
+																	issueUrlMap),
 													hygieneAiExecutor)
 											.exceptionally(
 													ex -> {
@@ -750,7 +751,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			int totalIssueCount,
 			String ruleSetHash,
 			String basicProjectConfigId,
-			StoryHygieneSprintResult existingResult) {
+			StoryHygieneSprintResult existingResult,
+			Map<String, String> issueUrlMap) {
 
 		String responseContent;
 		try {
