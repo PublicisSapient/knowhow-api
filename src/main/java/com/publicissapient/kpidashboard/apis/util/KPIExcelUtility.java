@@ -43,7 +43,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.CommittmentReliabilityServiceImpl;
@@ -73,6 +72,7 @@ import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
 import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -3426,16 +3426,16 @@ public class KPIExcelUtility {
 	}
 
 	/**
-	 * Populates excel data for the Project Hygiene (Speed) KPI (kpi217).
+	 * Populates excel data for the Story Hygiene (Sandbox) KPI (kpi311).
 	 *
 	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the LLM. Columns
-	 * mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#PROJECT_HYGIENE}.
+	 * mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#STORY_HYGIENE}.
 	 *
 	 * @param kpiExcelData the mutable list to append rows to
 	 * @param sprintId the sprint the batch was evaluated for
 	 * @param hygieneKpiResponseDTOList per-issue hygiene results parsed from the LLM
 	 */
-	public static void populateProjectHygieneExcelData(
+	public static void populateStoryHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
 			String sprintId,
 			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
@@ -3444,17 +3444,26 @@ public class KPIExcelUtility {
 		}
 		hygieneKpiResponseDTOList.forEach(
 				hygieneKpiResponseDTO -> {
+					// The LLM may omit `results` for an issue; treat it as "no rule verdicts"
+					// rather than letting the whole sprint's excel export blow up.
 					LinkedHashMap<String, String> ruleResult =
-							hygieneKpiResponseDTO.getResults().stream()
-									.collect(
-											Collectors.toMap(
-													HygieneKpiResponseDTO.RuleResult::getRule,
-													HygieneKpiResponseDTO.RuleResult::getStatus,
-													(first, second) -> first,
-													LinkedHashMap::new));
+							hygieneKpiResponseDTO.getResults() == null
+									? new LinkedHashMap<>()
+									: hygieneKpiResponseDTO.getResults().stream()
+											.filter(Objects::nonNull)
+											.filter(rr -> rr.getRule() != null)
+											.collect(
+													Collectors.toMap(
+															HygieneKpiResponseDTO.RuleResult::getRule,
+															rr -> rr.getStatus() != null ? rr.getStatus() : "",
+															(first, second) -> first,
+															LinkedHashMap::new));
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setSprintName(sprintId);
-					excelData.setIssueKey(hygieneKpiResponseDTO.getIssueKey());
+					String issueKey = hygieneKpiResponseDTO.getIssueKey();
+					Map<String, String> issueIdMap = new HashMap<>();
+					issueIdMap.put(issueKey, "");
+					excelData.setIssueID(issueIdMap);
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
 					excelData.setGroupMap(ruleResult);

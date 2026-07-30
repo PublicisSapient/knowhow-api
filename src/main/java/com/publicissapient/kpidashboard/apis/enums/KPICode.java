@@ -341,7 +341,7 @@ public enum KPICode {
 	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name()),
 	/** Mean Time to Test Feedback */
 	MEAN_TIME_TO_TEST_FEEDBACK("kpi219", KPISource.JENKINS.name()),
-	PROJECT_HYGIENE("kpi311", KPISource.JIRA.name());
+	STORY_HYGIENE("kpi311", KPISource.JIRA.name());
 
 	// @formatter:on
 

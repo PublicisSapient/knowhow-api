@@ -5677,13 +5677,14 @@
 
   {
     "fieldName" : "jiraFieldsSelectionKPI311",
-    "fieldLabel" : "fields to write prompts",
-    "placeHolderText" : "fields to write prompts",
-    "fieldType" : "text",
+    "fieldLabel" : "Fields to write prompts",
+    "placeHolderText" : "Fields to write prompts",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
     "fieldCategory" : "fields",
     "processorCommon" : false,
     "tooltip" : {
-      "definition" : "fields to write prompts"
+      "definition" : "Fields to write prompts"
     },
     "filterGroup" : [ "CustomField" ],
     "nodeSpecific" : false,

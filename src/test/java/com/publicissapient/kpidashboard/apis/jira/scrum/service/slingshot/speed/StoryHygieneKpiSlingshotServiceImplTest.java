@@ -47,7 +47,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
 import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
 import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
-import com.publicissapient.kpidashboard.apis.ai.dto.response.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.CacheService;
@@ -69,13 +68,15 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.StoryHygieneSprintResultRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 
 /**
- * Tests for {@link ProjectHygieneKpiSlingshotServiceImpl}.
+ * Tests for {@link StoryHygieneKpiSlingshotServiceImpl}.
  *
  * <p>The service fans out per-sprint LLM calls through a Spring-managed executor. To keep the tests
  * deterministic we swap that executor for {@code Runnable::run} (same-thread) via reflection —
@@ -83,10 +84,11 @@ import com.publicissapient.kpidashboard.common.service.recommendation.PromptServ
  * then runs synchronously.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class ProjectHygieneKpiSlingshotServiceImplTest {
+public class StoryHygieneKpiSlingshotServiceImplTest {
 
 	@Mock private HygieneKpiParser hygieneKpiParser;
 	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private StoryHygieneSprintResultRepository hygieneResultRepository;
 	@Mock private AiGatewayClient aiGatewayClient;
 	@Mock private SprintDetailsService sprintDetailsService;
 	@Mock private ConfigHelperService configHelperService;
@@ -96,7 +98,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	@Mock private CustomApiConfig customApiConfig;
 	@Mock private PromptService promptService;
 
-	@InjectMocks private ProjectHygieneKpiSlingshotServiceImpl service;
+	@InjectMocks private StoryHygieneKpiSlingshotServiceImpl service;
 
 	private ObjectId projectConfigId;
 	private KpiRequest kpiRequest;
@@ -119,6 +121,14 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "commonService", commonService);
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
+		injectField(service, "objectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
+		injectField(service, "hygieneResultRepository", hygieneResultRepository);
+
+		// Default: cache miss for all sprints — tests that rely on the LLM path keep
+		// working.
+		lenient()
+				.when(hygieneResultRepository.findByBasicProjectConfigIdAndSprintIdIn(anyString(), any()))
+				.thenReturn(Collections.emptyList());
 		injectField(service, "promptService", promptService);
 
 		// Prompt template now comes from the `prompt_details` collection.
@@ -129,7 +139,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		projectConfigId = new ObjectId("6335363749794a18e8a4479b");
 
 		kpiElement = new KpiElement();
-		kpiElement.setKpiId(KPICode.PROJECT_HYGIENE.getKpiId());
+		kpiElement.setKpiId(KPICode.STORY_HYGIENE.getKpiId());
 
 		kpiRequest = new KpiRequest();
 		kpiRequest.setIds(new String[] {"project1"});
@@ -155,6 +165,15 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		lenient().when(configHelperService.calculateMaturity()).thenReturn(new HashMap<>());
 		lenient().when(configHelperService.loadKpiMaster()).thenReturn(new ArrayList<>());
 		lenient().when(configHelperService.getFieldMappingMap()).thenReturn(new HashMap<>());
+		lenient()
+				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
+				.thenReturn(new FieldMapping());
+
+		lenient().when(customApiConfig.getSlingshotHygieneSprintCount()).thenReturn(5);
+		lenient().when(customApiConfig.getSlingshotHygieneIssueCountPerSprint()).thenReturn(25);
+		lenient()
+				.when(customApiConfig.getSlingshotHygieneAnchorFields())
+				.thenReturn(Arrays.asList("number", "name", "typeName", "status"));
 
 		lenient().when(commonService.sortTrendValueMap(anyMap())).thenAnswer(i -> i.getArgument(0));
 
@@ -187,7 +206,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	}
 
 	private void setSprintIdList(List<String> ids) throws Exception {
-		Field f = ProjectHygieneKpiSlingshotServiceImpl.class.getDeclaredField("sprintIdList");
+		Field f = StoryHygieneKpiSlingshotServiceImpl.class.getDeclaredField("sprintIdList");
 		f.setAccessible(true);
 		f.set(service, ids);
 	}
@@ -273,8 +292,8 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 	// ---------------------------------------------------------------------
 
 	@Test
-	public void testGetQualifierType_isProjectHygiene() {
-		assertEquals(KPICode.PROJECT_HYGIENE.name(), service.getQualifierType());
+	public void testGetQualifierType_isStoryHygiene() {
+		assertEquals(KPICode.STORY_HYGIENE.name(), service.getQualifierType());
 	}
 
 	@Test
@@ -447,7 +466,7 @@ public class ProjectHygieneKpiSlingshotServiceImplTest {
 		assertNotNull(result);
 		assertNotNull(result.getTrendValueList());
 		assertFalse(((List<?>) result.getTrendValueList()).isEmpty());
-		assertEquals(KPIExcelColumn.PROJECT_HYGIENE.getColumns(), result.getExcelColumns());
+		assertEquals(KPIExcelColumn.STORY_HYGIENE.getColumns(), result.getExcelColumns());
 		// Non-EXCEL tracker → no excel rows appended.
 		assertNull(result.getExcelData());
 	}

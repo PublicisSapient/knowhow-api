@@ -1337,11 +1337,11 @@ public enum KPIExcelColumn {
 					"Successful Builds",
 					"Failed Builds",
 					"Avg Duration (Hours)")),
-	PROJECT_HYGIENE(
+	STORY_HYGIENE(
 			"kpi311",
 			Arrays.asList(
 					"Sprint Name",
-					"Issue Key",
+					"Issue Id",
 					"Issue Type",
 					"Assignee",
 					"Hygiene Score",
