@@ -3427,8 +3427,7 @@ public class KPIExcelUtility {
 	public static void populateStoryHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
 			String sprintId,
-			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList,
-			Map<String, String> issueUrlMap) {
+			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
 			return;
 		}
@@ -3461,7 +3460,7 @@ public class KPIExcelUtility {
 					String issueKey = hygieneKpiResponseDTO.getIssueKey();
 					Map<String, String> issueIdMap = new HashMap<>();
 					issueIdMap.put(
-							issueKey, issueUrlMap != null ? issueUrlMap.getOrDefault(issueKey, "") : "");
+							issueKey, StringUtils.defaultString(hygieneKpiResponseDTO.getIssueUrl(), ""));
 					excelData.setIssueID(issueIdMap);
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());

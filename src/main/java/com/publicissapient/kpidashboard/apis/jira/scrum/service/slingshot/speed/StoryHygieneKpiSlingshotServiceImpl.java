@@ -604,8 +604,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 														projectName,
 														cached.getIssueVerdicts(),
 														cached.getSampledIssueCount(),
-														cached.getTotalIssueCount(),
-														issueUrlMap));
+														cached.getTotalIssueCount()));
 									}
 
 									// ── Cache miss or stale: run LLM ──
@@ -781,20 +780,22 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					sprintName,
 					sprintId);
 			List<HygieneKpiResponseDTO> mockVerdicts = hygieneKpiParser.parse(MOCK_HYGIENE_RESPONSE_JSON);
+			// Mock verdicts don't have real URLs — enrich from the live issueUrlMap so
+			// hyperlinks still work if mock issue keys happen to match real ones.
+			mockVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
 			// Throw so the exceptionally handler returns an outcome built from mock — no DB
 			// write
 			throw new MockHygieneResponseException(
 					buildOutcomeFromVerdicts(
-							sprintId,
-							sprintName,
-							projectName,
-							mockVerdicts,
-							sampledCount,
-							totalIssueCount,
-							issueUrlMap));
+							sprintId, sprintName, projectName, mockVerdicts, sampledCount, totalIssueCount));
 		}
 
 		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
+
+		// Embed the issue URL into each verdict so the stored document is
+		// self-contained
+		// for the Excel path — no jira_issues query needed on cache hits.
+		issueVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
 
 		// Persist only on a real LLM success — upsert in place if a doc already existed
 		// (stale hash)
@@ -814,19 +815,14 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		hygieneResultRepository.save(toSave);
 
 		return buildOutcomeFromVerdicts(
-				sprintId,
-				sprintName,
-				projectName,
-				issueVerdicts,
-				sampledCount,
-				totalIssueCount,
-				issueUrlMap);
+				sprintId, sprintName, projectName, issueVerdicts, sampledCount, totalIssueCount);
 	}
 
 	/**
 	 * Derives {@link SprintHygieneOutcome} from a list of issue verdicts. Called for both cache-hit
 	 * (from stored {@code issueVerdicts}) and post-LLM paths so the aggregation logic lives in one
-	 * place.
+	 * place. Issue URLs are read from {@link HygieneKpiResponseDTO#getIssueUrl()} — they are embedded
+	 * at persist time so no extra {@code jira_issues} query is needed.
 	 */
 	private SprintHygieneOutcome buildOutcomeFromVerdicts(
 			String sprintId,
@@ -834,8 +830,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			String projectName,
 			List<HygieneKpiResponseDTO> issueVerdicts,
 			int sampledCount,
-			int totalIssueCount,
-			Map<String, String> issueUrlMap) {
+			int totalIssueCount) {
 
 		if (CollectionUtils.isEmpty(issueVerdicts)) {
 			return new SprintHygieneOutcome(
@@ -903,7 +898,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateStoryHygieneExcelData(
-				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts, issueUrlMap);
+				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
 
 		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
 	}
