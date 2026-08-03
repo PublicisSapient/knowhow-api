@@ -647,6 +647,19 @@ public class KPIExcelData {
 	@JsonProperty("Deployment End Date (UTC)")
 	private String deploymentEndDate;
 
+	// ---- Story Hygiene KPI (kpi311) fields ----
+	@JsonProperty("Issue Key")
+	private String issueKey;
+
+	@JsonProperty("Hygiene Score")
+	private Integer hygieneScore;
+
+	@JsonProperty("Overall Status")
+	private String overallStatus;
+
+	@JsonProperty("Recommendations")
+	private String recommendations;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

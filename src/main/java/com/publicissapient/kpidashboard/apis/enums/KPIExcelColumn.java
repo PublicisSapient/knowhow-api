@@ -1337,6 +1337,16 @@ public enum KPIExcelColumn {
 					"Successful Builds",
 					"Failed Builds",
 					"Avg Duration (Hours)")),
+	STORY_HYGIENE(
+			"kpi311",
+			Arrays.asList(
+					"Sprint Name",
+					"Issue Id",
+					"Issue Type",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
 	;
 
 	// @formatter:on
