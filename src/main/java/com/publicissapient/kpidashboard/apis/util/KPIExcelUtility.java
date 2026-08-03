@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -2984,7 +2985,6 @@ public class KPIExcelUtility {
 	/**
 	 * Method to populate Modal Window of Mean Time to Recover
 	 *
-	 * @param projectName Name of Project
 	 * @param meanTimeRecoverMapTimeWise Map<String, List<MeanTimeRecoverData>>
 	 * @param kpiExcelData List<KPIExcelData>
 	 */
@@ -3442,27 +3442,36 @@ public class KPIExcelUtility {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
 			return;
 		}
+		// Collect all rule names present across all issues so every row has the same
+		// columns
+		LinkedHashSet<String> allRules =
+				hygieneKpiResponseDTOList.stream()
+						.filter(dto -> dto.getResults() != null)
+						.flatMap(dto -> dto.getResults().stream())
+						.map(HygieneKpiResponseDTO.RuleResult::getRule)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
 		hygieneKpiResponseDTOList.forEach(
 				hygieneKpiResponseDTO -> {
-					// The LLM may omit `results` for an issue; treat it as "no rule verdicts"
-					// rather than letting the whole sprint's excel export blow up.
 					LinkedHashMap<String, String> ruleResult =
-							hygieneKpiResponseDTO.getResults() == null
-									? new LinkedHashMap<>()
-									: hygieneKpiResponseDTO.getResults().stream()
-											.filter(Objects::nonNull)
-											.filter(rr -> rr.getRule() != null)
+							hygieneKpiResponseDTO.getResults() != null
+									? hygieneKpiResponseDTO.getResults().stream()
 											.collect(
 													Collectors.toMap(
 															HygieneKpiResponseDTO.RuleResult::getRule,
-															rr -> rr.getStatus() != null ? rr.getStatus() : "",
+															HygieneKpiResponseDTO.RuleResult::getStatus,
 															(first, second) -> first,
-															LinkedHashMap::new));
+															LinkedHashMap::new))
+									: new LinkedHashMap<>();
+					// Fill any rule not returned by the LLM for this issue with N/A
+					allRules.forEach(rule -> ruleResult.putIfAbsent(rule, "N/A"));
+
 					KPIExcelData excelData = new KPIExcelData();
 					excelData.setSprintName(sprintId);
 					String issueKey = hygieneKpiResponseDTO.getIssueKey();
 					Map<String, String> issueIdMap = new HashMap<>();
-					issueIdMap.put(issueKey, "");
+					issueIdMap.put(
+							issueKey, StringUtils.defaultString(hygieneKpiResponseDTO.getIssueUrl(), ""));
 					excelData.setIssueID(issueIdMap);
 					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
 					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());

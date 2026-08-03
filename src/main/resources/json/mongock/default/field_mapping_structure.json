@@ -5419,6 +5419,7 @@
     "fieldLabel": "Escaped defects identification",
     "fieldType": "radiobutton",
     "section": "Defects Mapping",
+    "processorCommon": true,
     "fieldDisplayOrder": 3,
     "sectionOrder": 3,
     "tooltip": {
@@ -5478,6 +5479,7 @@
     "fieldLabel" : "Production incidents identification",
     "fieldType" : "radiobutton",
     "section" : "Defects Mapping",
+    "processorCommon" : true,
     "tooltip" : {
       "definition" : "This field is used to identify if a production incident is raised by third party or client:<br>1. CustomField : If a separate custom field is used<br>2. Labels : If a label is used to identify. Example: PROD_DEFECT (This has to be one value).<hr>"
     },
@@ -5538,7 +5540,7 @@
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "chips",
     "section" : "Custom Fields Mapping",
-    "processorCommon" : false,
+    "processorCommon" : true,
     "tooltip" : {
       "definition" : "Branch name to filter E2E test builds on. Only builds on this branch are counted. e.g. main"
     },

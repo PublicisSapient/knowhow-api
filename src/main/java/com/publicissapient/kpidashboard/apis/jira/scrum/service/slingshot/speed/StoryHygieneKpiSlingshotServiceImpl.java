@@ -73,7 +73,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
-	private static final String JIRA_METADATA = "jiraMetadata";
 
 	/**
 	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
@@ -516,26 +515,19 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		FieldMapping fieldMapping = configHelperService.getFieldMapping(basicProjectConfigId);
 		List<CycleTimeGroup> cycleTimeGroupList = fieldMapping.getJiraFieldsSelectionKPI311();
-		Set<String> fieldNames =
-				cycleTimeGroupList == null
-						? new HashSet<>()
-						: cycleTimeGroupList.stream()
-								.filter(Objects::nonNull)
-								.map(CycleTimeGroup::getLabel)
-								.filter(Objects::nonNull)
-								.collect(Collectors.toSet());
 		Set<String> jiraFields = new HashSet<>();
-		for (String field : fieldNames) {
-			String fieldName = data.get(field);
-			if (StringUtils.isNotEmpty(fieldName)) {
-				jiraFields.add(fieldName);
-			}
+		if (cycleTimeGroupList != null) {
+			cycleTimeGroupList.stream()
+					.filter(ctg -> ctg != null && ctg.getFieldName() != null)
+					.map(CycleTimeGroup::getFieldName)
+					.filter(StringUtils::isNotEmpty)
+					.forEach(jiraFields::add);
 		}
 		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
 		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
 			jiraFields.addAll(anchorFieldNames);
 		}
-		jiraFields.addAll(List.of("sprintID", "priority", "changeDate"));
+		jiraFields.addAll(List.of("sprintID", "priority", "changeDate", "url", "number"));
 
 		List<JiraIssue> jiraIssueList =
 				jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
@@ -543,7 +535,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 						basicProjectConfigId.toString(),
 						jiraFields);
 
-		resultListMap.put(JIRA_METADATA, data);
 		resultListMap.put(JIRA_ISSUES, jiraIssueList);
 		resultListMap.put(SPRINT_DETAILS, limitedSprintList);
 		return resultListMap;
@@ -569,8 +560,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<JiraIssue> jiraIssueList = (List<JiraIssue>) resultMap.get(JIRA_ISSUES);
 		List<SprintDetails> sprintDetailsList = (List<SprintDetails>) resultMap.get(SPRINT_DETAILS);
-		@SuppressWarnings("unchecked")
-		Map<String, String> metaData = (Map<String, String>) resultMap.get(JIRA_METADATA);
 		List<String> anchorFieldNames = customApiConfig.getSlingshotHygieneAnchorFields();
 
 		// Pre-load all cached results for the sprints in this request (single DB
@@ -600,6 +589,14 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 									// ── Cache hit: valid stored result for the current rule-set ──
 									StoryHygieneSprintResult cached = cachedBySprintId.get(sprintId);
+									Map<String, String> issueUrlMap =
+											jiraIssues.stream()
+													.collect(
+															Collectors.toMap(
+																	JiraIssue::getNumber,
+																	ji -> StringUtils.defaultString(ji.getUrl(), ""),
+																	(a, b) -> a));
+
 									if (cached != null && ruleSetHash.equals(cached.getRuleSetHash())) {
 										log.debug(
 												"Story Hygiene (kpi311): cache hit for sprint '{}' — serving from DB",
@@ -644,11 +641,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 													.map(
 															ji ->
 																	HygienePromptBuilder.buildIssueNode(
-																			ji,
-																			anchorFieldNames,
-																			cycleTimeGroupList,
-																			metaData,
-																			objectMapper))
+																			ji, anchorFieldNames, cycleTimeGroupList, objectMapper))
 													.toList();
 									String issuesJson =
 											HygienePromptBuilder.buildIssuesJson(issueNodes, objectMapper);
@@ -660,10 +653,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 														0));
 									}
 
-									// The prompt template is resolved from the `prompt_details`
-									// collection inside the async block, so a missing/failed lookup
-									// degrades this sprint only via the exceptionally handler below
-									// instead of failing the whole KPI.
 									return CompletableFuture.supplyAsync(
 													() ->
 															computeSprintHygiene(
@@ -675,7 +664,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 																	totalIssueCount,
 																	ruleSetHash,
 																	basicProjectConfigId,
-																	cached),
+																	cached,
+																	issueUrlMap),
 													hygieneAiExecutor)
 											.exceptionally(
 													ex -> {
@@ -763,7 +753,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			int totalIssueCount,
 			String ruleSetHash,
 			String basicProjectConfigId,
-			StoryHygieneSprintResult existingResult) {
+			StoryHygieneSprintResult existingResult,
+			Map<String, String> issueUrlMap) {
 
 		String responseContent;
 		try {
@@ -771,6 +762,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					aiGatewayClient.generate(ChatGenerationRequest.builder().prompt(prompt).build());
 			responseContent =
 					chatGenerationResponseDTO == null ? null : chatGenerationResponseDTO.content();
+			log.info(
+					"kpi311 [{}]: responseChars={}",
+					sprintName,
+					responseContent != null ? responseContent.length() : 0);
+			log.debug("kpi311 [{}]: content={}", sprintName, responseContent);
 		} catch (Exception ex) {
 			log.error(
 					"AI Gateway call failed for sprint '{}' ({}): {} — returning mock data (not persisted)",
@@ -787,6 +783,9 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					sprintName,
 					sprintId);
 			List<HygieneKpiResponseDTO> mockVerdicts = hygieneKpiParser.parse(MOCK_HYGIENE_RESPONSE_JSON);
+			// Mock verdicts don't have real URLs — enrich from the live issueUrlMap so
+			// hyperlinks still work if mock issue keys happen to match real ones.
+			mockVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
 			// Throw so the exceptionally handler returns an outcome built from mock — no DB
 			// write
 			throw new MockHygieneResponseException(
@@ -795,6 +794,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		}
 
 		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
+
+		// Embed the issue URL into each verdict so the stored document is
+		// self-contained
+		// for the Excel path — no jira_issues query needed on cache hits.
+		issueVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
 
 		// Persist only on a real LLM success — upsert in place if a doc already existed
 		// (stale hash)
@@ -820,7 +824,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	/**
 	 * Derives {@link SprintHygieneOutcome} from a list of issue verdicts. Called for both cache-hit
 	 * (from stored {@code issueVerdicts}) and post-LLM paths so the aggregation logic lives in one
-	 * place.
+	 * place. Issue URLs are read from {@link HygieneKpiResponseDTO#getIssueUrl()} — they are embedded
+	 * at persist time so no extra {@code jira_issues} query is needed.
 	 */
 	private SprintHygieneOutcome buildOutcomeFromVerdicts(
 			String sprintId,
@@ -870,8 +875,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 								Collectors.toMap(
 										Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-		// hygieneScore is boxed and may be absent for an issue — unboxing it directly
-		// would NPE and discard the whole sprint, so null scores are skipped.
 		OptionalDouble sprintScore =
 				issueVerdicts.stream()
 						.filter(Objects::nonNull)
@@ -893,6 +896,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
+		dataCount.getHoverValue().put("sampledIssueCount", sampledCount);
+		dataCount.getHoverValue().put("passedIssueCount", passedIssues);
 		if (sampledCount < totalIssueCount) {
 			dataCount
 					.getHoverValue()
