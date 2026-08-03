@@ -558,7 +558,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 	private DataCount emptyDataCount(String sprintId, String sprintName, String projectName) {
 		DataCount dc = buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
-		dc.getHoverValue().put("evaluationFailed", true);
+		dc.getHoverValue().put("Evaluation Status", "Failed");
 		return dc;
 	}
 
