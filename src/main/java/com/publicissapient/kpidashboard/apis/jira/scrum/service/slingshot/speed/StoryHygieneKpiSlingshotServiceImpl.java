@@ -16,7 +16,6 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -73,346 +72,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 	private static final String JIRA_ISSUES = "jiraIssues";
 	private static final String SPRINT_DETAILS = "sprintDetails";
-
-	/**
-	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
-	 * persisted.
-	 */
-	static final String MOCK_HYGIENE_RESPONSE_JSON =
-			"""
-			[
-				{
-					"issueKey": "DTS-48971",
-					"issueType": "Story",
-					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-					"assignee": "Raja Kurru",
-					"results": [
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Raja Kurru",
-							"status": "Passed",
-							"reason": "assigneeName is populated with a valid team member name"
-						},
-						{
-							"rule": "Story Points Estimated",
-							"field": "estimate",
-							"observed": "3.0",
-							"status": "Passed",
-							"reason": "estimate is set to 3.0, greater than 0"
-						},
-						{
-							"rule": "Priority Set",
-							"field": "priority",
-							"observed": "P3 - Major",
-							"status": "Passed",
-							"reason": "priority is set to P3 - Major, a recognised priority value"
-						},
-						{
-							"rule": "Sprint Assigned",
-							"field": "sprintID",
-							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-							"status": "Passed",
-							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
-						},
-						{
-							"rule": "Issue Type Valid",
-							"field": "typeName",
-							"observed": "Story",
-							"status": "Passed",
-							"reason": "typeName is Story, a recognised issue type"
-						},
-						{
-							"rule": "Summary Meaningful",
-							"field": "summary",
-							"observed": "FE | Role based access to KH Resources | Move access control from FE to BE",
-							"status": "Passed",
-							"reason": "summary clearly describes the feature scope and the architectural direction of the change"
-						},
-						{
-							"rule": "Acceptance Criteria Defined",
-							"field": "description",
-							"observed": "Given a user with role X / When they navigate to KH Resources / Then access is enforced by BE role rules and the FE reflects the result accordingly",
-							"status": "Passed",
-							"reason": "description contains structured Given-When-Then AC with testable role-based outcomes"
-						}
-					],
-					"totalApplicableRules": 7,
-					"passedRules": 7,
-					"failedRules": 0,
-					"partialRules": 0,
-					"hygieneScore": 100,
-					"hygieneGrade": "GOOD",
-					"overallStatus": "READY",
-					"topFailures": [],
-					"recommendations": "Story is well-defined | Add edge-case AC for users with multiple conflicting roles | Document expected API contract between FE and BE | Add negative scenario for unauthorized access attempt | Consider adding rollback plan for the access migration"
-				},
-				{
-					"issueKey": "DTS-47979",
-					"issueType": "Story",
-					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-					"assignee": "Andrada Mihai",
-					"results": [
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Andrada Mihai",
-							"status": "Passed",
-							"reason": "assigneeName is populated with a valid team member name"
-						},
-						{
-							"rule": "Story Points Estimated",
-							"field": "estimate",
-							"observed": "3.0",
-							"status": "Passed",
-							"reason": "estimate is set to 3.0, greater than 0"
-						},
-						{
-							"rule": "Priority Set",
-							"field": "priority",
-							"observed": "P3 - Major",
-							"status": "Passed",
-							"reason": "priority is set to P3 - Major, a recognised priority value"
-						},
-						{
-							"rule": "Sprint Assigned",
-							"field": "sprintID",
-							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-							"status": "Passed",
-							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
-						},
-						{
-							"rule": "Issue Type Valid",
-							"field": "typeName",
-							"observed": "Story",
-							"status": "Passed",
-							"reason": "typeName is Story, a recognised issue type"
-						},
-						{
-							"rule": "Summary Meaningful",
-							"field": "summary",
-							"observed": "FE | Enhance Retro UI for supporting soft delete/pause",
-							"status": "Passed",
-							"reason": "summary clearly identifies the UI component and the feature being enhanced"
-						},
-						{
-							"rule": "Acceptance Criteria Defined",
-							"field": "description",
-							"observed": "UI should support soft delete and pause. States should be reflected in the list view.",
-							"status": "Partial",
-							"reason": "description outlines expected behaviour but lacks structured format, does not define visual treatment of soft-deleted items, and omits undo/restore scenarios"
-						}
-					],
-					"totalApplicableRules": 7,
-					"passedRules": 6,
-					"failedRules": 0,
-					"partialRules": 1,
-					"hygieneScore": 85,
-					"hygieneGrade": "GOOD",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Acceptance Criteria Defined"],
-					"recommendations": "Rewrite AC in Given-When-Then or checklist format | Add scenario for restoring a soft-deleted item | Define visual treatment of paused vs deleted state | Specify keyboard and screen-reader behaviour for state toggles | Link to Figma designs if available"
-				},
-				{
-					"issueKey": "DTS-50876",
-					"issueType": "Story",
-					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-					"assignee": "Theodor Constantin",
-					"results": [
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Theodor Constantin",
-							"status": "Passed",
-							"reason": "assigneeName is populated with a valid team member name"
-						},
-						{
-							"rule": "Story Points Estimated",
-							"field": "estimate",
-							"observed": "5.0",
-							"status": "Passed",
-							"reason": "estimate is set to 5.0, greater than 0"
-						},
-						{
-							"rule": "Priority Set",
-							"field": "priority",
-							"observed": "P3 - Major",
-							"status": "Passed",
-							"reason": "priority is set to P3 - Major, a recognised priority value"
-						},
-						{
-							"rule": "Sprint Assigned",
-							"field": "sprintID",
-							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-							"status": "Passed",
-							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
-						},
-						{
-							"rule": "Issue Type Valid",
-							"field": "typeName",
-							"observed": "Story",
-							"status": "Passed",
-							"reason": "typeName is Story, a recognised issue type"
-						},
-						{
-							"rule": "Summary Meaningful",
-							"field": "summary",
-							"observed": "BE | Developer KPIs - As a user, I want the system to predict the next KPI value for Quality KPIs so that I can anticipate performance trends and plan corrective actions.",
-							"status": "Passed",
-							"reason": "summary follows user-story format and clearly states the user goal, context, and benefit"
-						},
-						{
-							"rule": "Acceptance Criteria Defined",
-							"field": "description",
-							"observed": "System should predict next sprint KPI value using historical data. Prediction should be visible on the KPI tile.",
-							"status": "Partial",
-							"reason": "description states the high-level expectation but does not define the prediction algorithm, confidence threshold, fallback when history is insufficient, or how the predicted value is visually differentiated from actual"
-						}
-					],
-					"totalApplicableRules": 7,
-					"passedRules": 6,
-					"failedRules": 0,
-					"partialRules": 1,
-					"hygieneScore": 85,
-					"hygieneGrade": "GOOD",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Acceptance Criteria Defined"],
-					"recommendations": "Define minimum sprint history required before prediction activates | Specify visual treatment of predicted vs actual value on the KPI tile | Add AC for fallback when insufficient data is available | Clarify which Quality KPIs are in scope for this iteration | Add non-functional requirement for prediction latency"
-				},
-				{
-					"issueKey": "DTS-50715",
-					"issueType": "Bug",
-					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-					"assignee": "Baldev Krishna",
-					"results": [
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Baldev Krishna",
-							"status": "Passed",
-							"reason": "assigneeName is populated with a valid team member name"
-						},
-						{
-							"rule": "Story Points Estimated",
-							"field": "estimate",
-							"observed": "0",
-							"status": "Failed",
-							"reason": "estimate is 0; bug has not been sized by the team"
-						},
-						{
-							"rule": "Priority Set",
-							"field": "priority",
-							"observed": "P3 - Major",
-							"status": "Passed",
-							"reason": "priority is set to P3 - Major, a recognised priority value"
-						},
-						{
-							"rule": "Sprint Assigned",
-							"field": "sprintID",
-							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-							"status": "Passed",
-							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
-						},
-						{
-							"rule": "Issue Type Valid",
-							"field": "typeName",
-							"observed": "Bug",
-							"status": "Passed",
-							"reason": "typeName is Bug, a recognised issue type"
-						},
-						{
-							"rule": "Summary Meaningful",
-							"field": "summary",
-							"observed": "Regression issue - Jira Configuration Type & Template dropdown showing empty values instead of expected configuration options",
-							"status": "Passed",
-							"reason": "summary clearly describes the regression symptom and the affected UI component"
-						},
-						{
-							"rule": "Acceptance Criteria Defined",
-							"field": "description",
-							"observed": "null",
-							"status": "Failed",
-							"reason": "description field is empty; no reproduction steps, expected behaviour, or fix-verification criteria documented"
-						}
-					],
-					"totalApplicableRules": 7,
-					"passedRules": 5,
-					"failedRules": 2,
-					"partialRules": 0,
-					"hygieneScore": 71,
-					"hygieneGrade": "AVERAGE",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Story Points Estimated", "Acceptance Criteria Defined"],
-					"recommendations": "Add story point estimate to size the fix effort | Document reproduction steps: steps to reproduce, expected vs actual behaviour | Specify affected Jira configuration types and templates | Attach screenshot showing the empty dropdown | Link to related regression test case"
-				},
-				{
-					"issueKey": "DTS-51662",
-					"issueType": "Story",
-					"sprintId": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-					"assignee": "Akshat Shrivastav",
-					"results": [
-						{
-							"rule": "Assignee Set",
-							"field": "assigneeName",
-							"observed": "Akshat Shrivastav",
-							"status": "Passed",
-							"reason": "assigneeName is populated with a valid team member name"
-						},
-						{
-							"rule": "Story Points Estimated",
-							"field": "estimate",
-							"observed": "0",
-							"status": "Failed",
-							"reason": "estimate is 0; story has not been sized by the team"
-						},
-						{
-							"rule": "Priority Set",
-							"field": "priority",
-							"observed": "P3 - Major",
-							"status": "Passed",
-							"reason": "priority is set to P3 - Major, a recognised priority value"
-						},
-						{
-							"rule": "Sprint Assigned",
-							"field": "sprintID",
-							"observed": "55076_a4fbe170-8667-4878-a877-a1b1300d8b16",
-							"status": "Passed",
-							"reason": "sprintID is populated, issue is tagged to KnowHOW | PI_23| ITR_6"
-						},
-						{
-							"rule": "Issue Type Valid",
-							"field": "typeName",
-							"observed": "Story",
-							"status": "Passed",
-							"reason": "typeName is Story, a recognised issue type"
-						},
-						{
-							"rule": "Summary Meaningful",
-							"field": "summary",
-							"observed": "L3 Rollout Support ITR6",
-							"status": "Failed",
-							"reason": "summary is 4 words relying on unexplained acronyms (L3, ITR6); it functions as a label rather than a description of user value or scope"
-						},
-						{
-							"rule": "Acceptance Criteria Defined",
-							"field": "description",
-							"observed": "null",
-							"status": "Failed",
-							"reason": "description field is empty; no acceptance criteria, scope, or deliverables documented"
-						}
-					],
-					"totalApplicableRules": 7,
-					"passedRules": 4,
-					"failedRules": 3,
-					"partialRules": 0,
-					"hygieneScore": 57,
-					"hygieneGrade": "AVERAGE",
-					"overallStatus": "NOT READY",
-					"topFailures": ["Story Points Estimated", "Summary Meaningful", "Acceptance Criteria Defined"],
-					"recommendations": "Replace summary with a meaningful description of the rollout scope and user value | Add story point estimate | Document acceptance criteria: what constitutes a successful L3 rollout for ITR6 | List affected modules and environments | Define exit criteria for rollout completion"
-				}
-			]
-			""";
 
 	@Autowired private HygieneKpiParser hygieneKpiParser;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
@@ -576,7 +235,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 						.filter(ji -> ji.getSprintID() != null)
 						.collect(Collectors.groupingBy(JiraIssue::getSprintID));
 
-		AtomicBoolean mockServed = new AtomicBoolean(false);
 		List<CompletableFuture<SprintHygieneOutcome>> futures =
 				sprintDetailsList.stream()
 						.filter(sd -> !jiraIssuesBySprint.getOrDefault(sd.getSprintID(), List.of()).isEmpty())
@@ -650,6 +308,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 												new SprintHygieneOutcome(
 														emptyDataCount(sprintId, sprintName, projectName),
 														Collections.emptyList(),
+														0,
 														0));
 									}
 
@@ -669,24 +328,16 @@ public class StoryHygieneKpiSlingshotServiceImpl
 													hygieneAiExecutor)
 											.exceptionally(
 													ex -> {
-														Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-														if (cause instanceof MockHygieneResponseException mockEx) {
-															if (mockServed.compareAndSet(false, true)) {
-																return mockEx.outcome();
-															}
-															return new SprintHygieneOutcome(
-																	emptyDataCount(sprintId, sprintName, projectName),
-																	Collections.emptyList(),
-																	0);
-														}
 														log.error(
-																"Hygiene evaluation failed for sprint {}: {}",
+																"Hygiene evaluation failed for sprint '{}'({}): {}",
+																sprintName,
 																sprintId,
 																ex.getMessage(),
 																ex);
 														return new SprintHygieneOutcome(
 																emptyDataCount(sprintId, sprintName, projectName),
 																Collections.emptyList(),
+																0,
 																0);
 													});
 								})
@@ -721,7 +372,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		}
 		kpiElement.setExcelColumns(KPIExcelColumn.STORY_HYGIENE.getColumns());
 
-		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
+		kpiElement.setScoreFactor(
+				outcomes.stream().mapToInt(SprintHygieneOutcome::evaluatedIssueCount).sum());
 		kpiElement.setValidScoreFactor(
 				outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
 
@@ -769,7 +421,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			log.debug("kpi311 [{}]: content={}", sprintName, responseContent);
 		} catch (Exception ex) {
 			log.error(
-					"AI Gateway call failed for sprint '{}' ({}): {} — returning mock data (not persisted)",
+					"AI Gateway call failed for sprint '{}' ({}): {}",
 					sprintName,
 					sprintId,
 					ex.getMessage(),
@@ -779,18 +431,11 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		if (responseContent == null || responseContent.isBlank()) {
 			log.warn(
-					"AI Gateway returned blank content for sprint '{}' ({}) — returning mock data (not persisted)",
+					"AI Gateway returned blank content for sprint '{}' ({}) — skipping sprint (not persisted)",
 					sprintName,
 					sprintId);
-			List<HygieneKpiResponseDTO> mockVerdicts = hygieneKpiParser.parse(MOCK_HYGIENE_RESPONSE_JSON);
-			// Mock verdicts don't have real URLs — enrich from the live issueUrlMap so
-			// hyperlinks still work if mock issue keys happen to match real ones.
-			mockVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
-			// Throw so the exceptionally handler returns an outcome built from mock — no DB
-			// write
-			throw new MockHygieneResponseException(
-					buildOutcomeFromVerdicts(
-							sprintId, sprintName, projectName, mockVerdicts, sampledCount, totalIssueCount));
+			return new SprintHygieneOutcome(
+					emptyDataCount(sprintId, sprintName, projectName), Collections.emptyList(), 0, 0);
 		}
 
 		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
@@ -837,7 +482,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		if (CollectionUtils.isEmpty(issueVerdicts)) {
 			return new SprintHygieneOutcome(
-					emptyDataCount(sprintId, sprintName, projectName), List.of(), 0);
+					emptyDataCount(sprintId, sprintName, projectName), List.of(), 0, 0);
 		}
 
 		List<HygieneKpiResponseDTO.RuleResult> allRuleResults =
@@ -896,8 +541,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
-		dataCount.getHoverValue().put("sampledIssueCount", sampledCount);
-		dataCount.getHoverValue().put("passedIssueCount", passedIssues);
+		dataCount.getHoverValue().put("Sampled Issue Count", sampledCount);
+		dataCount.getHoverValue().put("Passed Issue Count", passedIssues);
 		if (sampledCount < totalIssueCount) {
 			dataCount
 					.getHoverValue()
@@ -908,11 +553,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		KPIExcelUtility.populateStoryHygieneExcelData(
 				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
 
-		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
+		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues, (int) totalIssues);
 	}
 
 	private DataCount emptyDataCount(String sprintId, String sprintName, String projectName) {
-		return buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
+		DataCount dc = buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
+		dc.getHoverValue().put("Evaluation Status", "Failed");
+		return dc;
 	}
 
 	private DataCount buildDataCount(
@@ -937,25 +584,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		return dataCount;
 	}
 
-	/** Bundle returned by the per-sprint pipeline — trend point + excel rows + passed count. */
-	private record SprintHygieneOutcome(
-			DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
-
 	/**
-	 * Thrown by {@link #computeSprintHygiene} when the AI Gateway is unavailable and the mock
-	 * response is used. Carries the pre-built outcome so the {@code exceptionally} handler can return
-	 * it — bypassing the DB persist while still showing data to the user.
+	 * Bundle returned by the per-sprint pipeline — trend point + excel rows + passed/evaluated
+	 * counts.
 	 */
-	private static final class MockHygieneResponseException extends RuntimeException {
-		private final SprintHygieneOutcome outcome;
-
-		MockHygieneResponseException(SprintHygieneOutcome outcome) {
-			super("AI Gateway unavailable — serving mock hygiene data");
-			this.outcome = outcome;
-		}
-
-		SprintHygieneOutcome outcome() {
-			return outcome;
-		}
-	}
+	private record SprintHygieneOutcome(
+			DataCount dataCount,
+			List<KPIExcelData> excelRows,
+			int totalPassedIssues,
+			int evaluatedIssueCount) {}
 }

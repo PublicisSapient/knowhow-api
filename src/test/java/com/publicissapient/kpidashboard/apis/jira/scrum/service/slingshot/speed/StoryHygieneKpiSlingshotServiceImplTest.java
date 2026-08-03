@@ -277,6 +277,12 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		return g;
 	}
 
+	private CycleTimeGroup groupWithWeight(String label, String prompt, Integer weightage) {
+		CycleTimeGroup g = group(label, prompt);
+		g.setWeightage(weightage);
+		return g;
+	}
+
 	private FieldMapping fieldMappingWith(List<CycleTimeGroup> groups) {
 		FieldMapping fm = new FieldMapping();
 		fm.setJiraFieldsSelectionKPI311(groups);
@@ -700,32 +706,29 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testWeightPrefix_isParsedAndStrippedFromCriteria() throws ApplicationException {
+	public void testWeightage_fromField_isRenderedAsWeight() throws ApplicationException {
 		String rules =
 				captureRulesFor(
 						Collections.singletonList(
-								group("description", "[10]: Acceptance criteria must be present")));
+								groupWithWeight("description", "Acceptance criteria must be present", 10)));
 
 		assertTrue(rules.contains("weight: 10"));
 		assertTrue(rules.contains("criteria: Acceptance criteria must be present"));
-		// The bracket prefix must never leak through to the LLM.
-		assertFalse(rules.contains("[10]"));
 	}
 
 	@Test
-	public void testNullWeight_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+	public void testNullWeightage_fallsBackToDefaultWeightOfOne() throws ApplicationException {
 		String rules =
 				captureRulesFor(
-						Collections.singletonList(group("priority", "[null]: Priority must be set")));
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", null)));
 
 		assertTrue(rules.contains("weight: 1"));
 		assertTrue(rules.contains("criteria: Priority must be set"));
-		assertFalse(rules.contains("[null]"));
 	}
 
 	@Test
-	public void testMissingWeightPrefix_fallsBackToDefaultWeightOfOne() throws ApplicationException {
-		// Rule sets authored before weighting existed carry no prefix at all.
+	public void testUnsetWeightage_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+		// weightage not set on the group (null by default) → weight 1.
 		String rules =
 				captureRulesFor(Collections.singletonList(group("priority", "Priority must be set")));
 
@@ -734,14 +737,12 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testMixedWeights_eachRuleKeepsItsOwnWeight() throws ApplicationException {
-		// Two rule sets on the same field with different weights — each must survive
-		// as an independent, individually-weighted rule.
+	public void testMixedWeightages_eachRuleKeepsItsOwnWeight() throws ApplicationException {
 		String rules =
 				captureRulesFor(
 						Arrays.asList(
-								group("description", "[10]: Acceptance criteria must be present"),
-								group("description", "[null]: A BDD definition must be present")));
+								groupWithWeight("description", "Acceptance criteria must be present", 10),
+								groupWithWeight("description", "A BDD definition must be present", null)));
 
 		assertTrue(rules.contains("ruleName: description (1)"));
 		assertTrue(rules.contains("ruleName: description (2)"));
@@ -751,22 +752,22 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testDecimalWeight_isPreserved() throws ApplicationException {
+	public void testLargeWeightage_isRenderedCorrectly() throws ApplicationException {
 		String rules =
 				captureRulesFor(
-						Collections.singletonList(group("priority", "[2.5]: Priority must be set")));
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", 50)));
 
-		assertTrue(rules.contains("weight: 2.5"));
+		assertTrue(rules.contains("weight: 50"));
 	}
 
 	@Test
-	public void testMalformedWeight_fallsBackToDefaultAndKeepsCriteria() throws ApplicationException {
-		// Non-numeric and non-positive weights must not break rule rendering.
+	public void testZeroAndNullWeightage_fallBackToDefault() throws ApplicationException {
+		// Zero and null are both invalid — both must fall back to weight 1.
 		String rules =
 				captureRulesFor(
 						Arrays.asList(
-								group("priority", "[abc]: Priority must be set"),
-								group("summary", "[0]: Summary must be meaningful")));
+								groupWithWeight("priority", "Priority must be set", null),
+								groupWithWeight("summary", "Summary must be meaningful", 0)));
 
 		assertEquals(2, countOccurrences(rules, "weight: 1"));
 		assertTrue(rules.contains("criteria: Priority must be set"));
@@ -774,24 +775,24 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void testWeightPrefixWithIrregularSpacing_isStillParsed() throws ApplicationException {
+	public void testNegativeWeightage_fallsBackToDefault() throws ApplicationException {
 		String rules =
-				captureRulesFor(Collections.singletonList(group("priority", "  [ 7 ] :   Priority set  ")));
+				captureRulesFor(
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", -5)));
 
-		assertTrue(rules.contains("weight: 7"));
-		assertTrue(rules.contains("criteria: Priority set"));
+		assertTrue(rules.contains("weight: 1"));
 	}
 
 	@Test
-	public void testCriteriaContainingBrackets_isNotMistakenForAWeight() throws ApplicationException {
-		// Only a LEADING [x]: prefix is a weight — brackets inside the text are safe.
+	public void testCriteriaText_isPassedThroughAsIs() throws ApplicationException {
+		// Criteria text (including brackets) is handed to the LLM verbatim.
 		String rules =
 				captureRulesFor(
 						Collections.singletonList(
 								group("description", "Must reference [JIRA-123] in the body")));
 
-		assertTrue(rules.contains("weight: 1"));
 		assertTrue(rules.contains("criteria: Must reference [JIRA-123] in the body"));
+		assertTrue(rules.contains("weight: 1"));
 	}
 
 	@Test
@@ -822,32 +823,51 @@ public class StoryHygieneKpiSlingshotServiceImplTest {
 		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
 	}
 
-	// @Test
-	// public void testGetKpiData_aiGatewayThrows_fallbackToEmptyDataCount()
-	// throws ApplicationException {
-	// mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1",
-	// "Prompt1"))));
-	// SprintDetails sd = createSprintDetails("SP1", "Sprint 1",
-	// "2026-01-01T00:00:00Z");
-	// when(sprintDetailsService.getSprintDetailsByIds(any()))
-	// .thenReturn(Collections.singletonList(sd));
-	// when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigId(anySet(),
-	// anyString()))
-	// .thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
-	// when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
-	// .thenThrow(new RuntimeException("boom"));
-	//
-	// KpiElement result =
-	// service.getKpiData(
-	// kpiRequest,
-	// kpiElement,
-	// buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint
-	// 1"))));
-	//
-	// assertNotNull(result);
-	// // Parser must never have been consulted because AI threw before parsing.
-	// verify(hygieneKpiParser, never()).parse(anyString());
-	// }
+	@Test
+	public void testGetKpiData_aiGatewayThrows_fallbackToEmptyDataCount()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenThrow(new RuntimeException("boom"));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(hygieneKpiParser, never()).parse(anyString());
+	}
+
+	@Test
+	public void testGetKpiData_aiGatewayReturnsBlank_fallsBackToEmptyOutcome()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO(""));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(hygieneKpiParser, never()).parse(anyString());
+	}
 
 	@Test
 	public void testGetKpiData_parserThrows_fallbackToEmptyDataCount() throws ApplicationException {
