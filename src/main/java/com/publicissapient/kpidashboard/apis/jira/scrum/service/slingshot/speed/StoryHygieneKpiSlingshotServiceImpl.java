@@ -541,8 +541,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		DataCount dataCount =
 				buildDataCount(sprintId, sprintName, projectName, score, passedPercentageByRule);
 
-		dataCount.getHoverValue().put("sampledIssueCount", sampledCount);
-		dataCount.getHoverValue().put("passedIssueCount", passedIssues);
+		dataCount.getHoverValue().put("Sampled Issue Count", sampledCount);
+		dataCount.getHoverValue().put("Passed Issue Count", passedIssues);
 		if (sampledCount < totalIssueCount) {
 			dataCount
 					.getHoverValue()
