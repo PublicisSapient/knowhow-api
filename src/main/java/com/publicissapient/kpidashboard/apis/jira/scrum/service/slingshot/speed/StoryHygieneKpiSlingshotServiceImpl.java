@@ -308,6 +308,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 												new SprintHygieneOutcome(
 														emptyDataCount(sprintId, sprintName, projectName),
 														Collections.emptyList(),
+														0,
 														0));
 									}
 
@@ -336,6 +337,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 														return new SprintHygieneOutcome(
 																emptyDataCount(sprintId, sprintName, projectName),
 																Collections.emptyList(),
+																0,
 																0);
 													});
 								})
@@ -370,7 +372,8 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		}
 		kpiElement.setExcelColumns(KPIExcelColumn.STORY_HYGIENE.getColumns());
 
-		kpiElement.setScoreFactor(jiraIssuesBySprint.values().stream().mapToInt(List::size).sum());
+		kpiElement.setScoreFactor(
+				outcomes.stream().mapToInt(SprintHygieneOutcome::evaluatedIssueCount).sum());
 		kpiElement.setValidScoreFactor(
 				outcomes.stream().mapToInt(SprintHygieneOutcome::totalPassedIssues).sum());
 
@@ -432,7 +435,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 					sprintName,
 					sprintId);
 			return new SprintHygieneOutcome(
-					emptyDataCount(sprintId, sprintName, projectName), Collections.emptyList(), 0);
+					emptyDataCount(sprintId, sprintName, projectName), Collections.emptyList(), 0, 0);
 		}
 
 		List<HygieneKpiResponseDTO> issueVerdicts = hygieneKpiParser.parse(responseContent);
@@ -479,7 +482,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		if (CollectionUtils.isEmpty(issueVerdicts)) {
 			return new SprintHygieneOutcome(
-					emptyDataCount(sprintId, sprintName, projectName), List.of(), 0);
+					emptyDataCount(sprintId, sprintName, projectName), List.of(), 0, 0);
 		}
 
 		List<HygieneKpiResponseDTO.RuleResult> allRuleResults =
@@ -550,11 +553,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		KPIExcelUtility.populateStoryHygieneExcelData(
 				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
 
-		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues);
+		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues, (int) totalIssues);
 	}
 
 	private DataCount emptyDataCount(String sprintId, String sprintName, String projectName) {
-		return buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
+		DataCount dc = buildDataCount(sprintId, sprintName, projectName, 0.0, new HashMap<>());
+		dc.getHoverValue().put("evaluationFailed", true);
+		return dc;
 	}
 
 	private DataCount buildDataCount(
@@ -579,7 +584,13 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		return dataCount;
 	}
 
-	/** Bundle returned by the per-sprint pipeline — trend point + excel rows + passed count. */
+	/**
+	 * Bundle returned by the per-sprint pipeline — trend point + excel rows + passed/evaluated
+	 * counts.
+	 */
 	private record SprintHygieneOutcome(
-			DataCount dataCount, List<KPIExcelData> excelRows, int totalPassedIssues) {}
+			DataCount dataCount,
+			List<KPIExcelData> excelRows,
+			int totalPassedIssues,
+			int evaluatedIssueCount) {}
 }
