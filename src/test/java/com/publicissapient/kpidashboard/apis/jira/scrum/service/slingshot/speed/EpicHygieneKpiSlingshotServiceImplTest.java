@@ -76,8 +76,9 @@ import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
  *
  * <p>The service fans batches of Epics out to the LLM through a Spring-managed executor. To keep
  * the tests deterministic that executor is swapped for {@code Runnable::run} (same-thread) via
- * reflection, so {@link java.util.concurrent.CompletableFuture#supplyAsync(java.util.function.Supplier,
- * Executor)} runs synchronously.
+ * reflection, so {@link
+ * java.util.concurrent.CompletableFuture#supplyAsync(java.util.function.Supplier, Executor)} runs
+ * synchronously.
  *
  * <p>The real {@link EpicHygieneKpiParser} is used rather than a mock: the parser is pure and its
  * arithmetic is exactly what the score factors are asserted against.
@@ -122,7 +123,8 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "customApiConfig", customApiConfig);
 		injectField(service, "cacheService", cacheService);
 
-		// Most assertions below are about the drill-down rows, which only the Excel path
+		// Most assertions below are about the drill-down rows, which only the Excel
+		// path
 		// produces — so default the request tracker to an Excel one. See
 		// getKpiData_dashboardRequest_doesNotBuildExcelRows for the other branch.
 		useTracker(EXCEL_TRACKER_ID);
@@ -149,9 +151,13 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		lenient()
 				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
 				.thenReturn(fieldMappingWith(defaultDimensions()));
-		lenient().when(promptService.getEpicHygienePrompt(any(), any())).thenReturn("epic-hygiene-prompt");
 		lenient()
-				.when(epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(anyString(), anyList()))
+				.when(promptService.getEpicHygienePrompt(any(), any()))
+				.thenReturn("epic-hygiene-prompt");
+		lenient()
+				.when(
+						epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(
+								anyString(), anyList()))
 				.thenReturn(Collections.emptyList());
 
 		ruleSetHash = HygienePromptBuilder.computeRuleSetHash(defaultDimensions(), new ObjectMapper());
@@ -276,7 +282,8 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		return "[" + elements + "]";
 	}
 
-	private EpicHygieneResult cachedResult(String epicKey, String hash, String changeDate, int score) {
+	private EpicHygieneResult cachedResult(
+			String epicKey, String hash, String changeDate, int score) {
 		EpicHygieneResult result =
 				EpicHygieneResult.builder()
 						.basicProjectConfigId(PROJECT_CONFIG_ID)
@@ -320,19 +327,18 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 				(List<JiraIssue>) result.get(EpicHygieneKpiSlingshotServiceImpl.EPIC_ISSUES);
 		assertEquals(1, epics.size());
 
-		ArgumentCaptor<java.util.Set<String>> typesCaptor = ArgumentCaptor.forClass(java.util.Set.class);
-		ArgumentCaptor<java.util.Set<String>> fieldsCaptor = ArgumentCaptor.forClass(java.util.Set.class);
+		ArgumentCaptor<java.util.Set<String>> typesCaptor =
+				ArgumentCaptor.forClass(java.util.Set.class);
+		ArgumentCaptor<java.util.Set<String>> fieldsCaptor =
+				ArgumentCaptor.forClass(java.util.Set.class);
 		verify(jiraIssueRepository)
 				.findByTypeNameInAndBasicProjectConfigIdAndCreatedDateBetweenWithFields(
-						typesCaptor.capture(),
-						anyString(),
-						anyString(),
-						anyString(),
-						fieldsCaptor.capture());
+						typesCaptor.capture(), anyString(), anyString(), anyString(), fieldsCaptor.capture());
 
 		assertTrue(typesCaptor.getValue().contains("Epic"));
 		// Anchor fields, the fields the dimensions reference and the always-on columns
-		assertTrue(fieldsCaptor.getValue().containsAll(List.of("number", "name", "typeName", "status")));
+		assertTrue(
+				fieldsCaptor.getValue().containsAll(List.of("number", "name", "typeName", "status")));
 		assertTrue(fieldsCaptor.getValue().contains("description"));
 		assertTrue(fieldsCaptor.getValue().contains("assigneeName"));
 		assertTrue(fieldsCaptor.getValue().containsAll(List.of("url", "changeDate", "createdDate")));
@@ -678,4 +684,3 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		verify(epicHygieneResultRepository, never()).saveAll(anyList());
 	}
 }
-

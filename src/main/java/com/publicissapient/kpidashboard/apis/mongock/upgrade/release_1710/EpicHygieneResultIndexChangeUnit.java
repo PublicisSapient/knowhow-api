@@ -32,7 +32,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * (basicProjectConfigId, epicKey) is enforced here so the application-level upsert-by-key pattern
  * cannot produce duplicates when several batches persist concurrently.
  */
-@ChangeUnit(id = "epic_hygiene_result_index", order = "17176", author = "kunkambl", systemVersion = "17.1.0")
+@ChangeUnit(
+		id = "epic_hygiene_result_index",
+		order = "17176",
+		author = "kunkambl",
+		systemVersion = "17.1.0")
 public class EpicHygieneResultIndexChangeUnit {
 
 	private static final String COLLECTION = "epic_hygiene_results";
@@ -55,4 +59,3 @@ public class EpicHygieneResultIndexChangeUnit {
 		}
 	}
 }
-

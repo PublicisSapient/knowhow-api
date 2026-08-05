@@ -277,7 +277,8 @@ public class EpicHygieneKpiParserTest {
 
 	@Test
 	public void parse_malformedJson_returnsEmptyList() {
-		// Looks like an array (so it gets past the bracket sniffing) but Jackson cannot read it.
+		// Looks like an array (so it gets past the bracket sniffing) but Jackson cannot
+		// read it.
 		assertTrue(parser.parse("[ { \"epicKey\": \"EPIC-11\" ").isEmpty());
 		assertTrue(parser.parse("[ { \"epicKey\": \"EPIC-11\" ]").isEmpty());
 	}
@@ -293,5 +294,3 @@ public class EpicHygieneKpiParserTest {
 				+ " } ] } ]";
 	}
 }
-
-

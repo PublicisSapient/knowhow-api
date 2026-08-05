@@ -116,10 +116,8 @@ public class HygieneKpiConfigurationTest {
 			for (String field : kpi.getFields()) {
 				String historyField = FieldMappingHelper.HISTORY + field;
 				Field declared = historyClass.getDeclaredField(historyField);
-				assertNotNull(
-						kpi.name() + " is missing audit field '" + historyField + "'", declared);
+				assertNotNull(kpi.name() + " is missing audit field '" + historyField + "'", declared);
 			}
 		}
 	}
 }
-

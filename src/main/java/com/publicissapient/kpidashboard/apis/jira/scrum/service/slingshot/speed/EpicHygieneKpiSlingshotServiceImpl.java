@@ -303,7 +303,15 @@ public class EpicHygieneKpiSlingshotServiceImpl
 			jiraFields.addAll(anchorFieldNames);
 		}
 		jiraFields.addAll(
-				List.of("number", "name", "typeName", "status", "priority", "changeDate", "createdDate", "url"));
+				List.of(
+						"number",
+						"name",
+						"typeName",
+						"status",
+						"priority",
+						"changeDate",
+						"createdDate",
+						"url"));
 
 		String windowStart = StringUtils.defaultIfEmpty(startDate, defaultWindowStart());
 		String windowEnd = StringUtils.defaultIfEmpty(endDate, defaultWindowEnd());
@@ -338,11 +346,14 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		long startedAt = System.currentTimeMillis();
 		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(node), null, null, kpiRequest);
 		log.info(
-				"Epic Hygiene (kpi312): fetchKPIDataFromDb took {} ms", System.currentTimeMillis() - startedAt);
+				"Epic Hygiene (kpi312): fetchKPIDataFromDb took {} ms",
+				System.currentTimeMillis() - startedAt);
 
 		List<JiraIssue> epicIssues = (List<JiraIssue>) resultMap.get(EPIC_ISSUES);
 		if (CollectionUtils.isEmpty(epicIssues)) {
-			log.info("Epic Hygiene (kpi312): no Epics found in the configured window for {}", basicProjectConfigId);
+			log.info(
+					"Epic Hygiene (kpi312): no Epics found in the configured window for {}",
+					basicProjectConfigId);
 			publish(kpiElement, List.of(), 0);
 			return;
 		}
@@ -351,7 +362,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		Map<String, JiraIssue> epicByKey =
 				sampledEpics.stream()
 						.filter(epic -> epic.getNumber() != null)
-						.collect(Collectors.toMap(JiraIssue::getNumber, epic -> epic, (first, second) -> first));
+						.collect(
+								Collectors.toMap(JiraIssue::getNumber, epic -> epic, (first, second) -> first));
 
 		Map<String, EpicHygieneResult> cachedByEpicKey =
 				epicHygieneResultRepository
@@ -359,7 +371,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 								basicProjectConfigId, new ArrayList<>(epicByKey.keySet()))
 						.stream()
 						.filter(result -> result.getEpicKey() != null)
-						.collect(Collectors.toMap(EpicHygieneResult::getEpicKey, result -> result, (a, b) -> a));
+						.collect(
+								Collectors.toMap(EpicHygieneResult::getEpicKey, result -> result, (a, b) -> a));
 
 		List<EpicHygieneResponseDTO> verdicts = new ArrayList<>();
 		List<JiraIssue> staleEpics = new ArrayList<>();
@@ -582,7 +595,6 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		return List.of();
 	}
 
-
 	/**
 	 * Writes the Excel rows and the project level score factors onto the {@link KpiElement}. {@code
 	 * scoreFactor} is the number of Epics evaluated, {@code validScoreFactor} the number that came
@@ -592,7 +604,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 			KpiElement kpiElement, List<EpicHygieneResponseDTO> verdicts, int totalEpicsConsidered) {
 
 		// This KPI has no trend line, so the drill-down rows ARE its payload: they are
-		// published on every request (not just the Excel one) and surfaced on /jira/kpi.
+		// published on every request (not just the Excel one) and surfaced on
+		// /jira/kpi.
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateEpicHygieneExcelData(excelRows, verdicts);
 		kpiElement.setExcelData(excelRows);
@@ -683,7 +696,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 
 	/** Mock verdicts are shown but never persisted — they carry no real evidence. */
 	private List<EpicHygieneResponseDTO> mockVerdicts(Map<String, JiraIssue> batchByKey) {
-		List<EpicHygieneResponseDTO> mocks = epicHygieneKpiParser.parse(MOCK_EPIC_HYGIENE_RESPONSE_JSON);
+		List<EpicHygieneResponseDTO> mocks =
+				epicHygieneKpiParser.parse(MOCK_EPIC_HYGIENE_RESPONSE_JSON);
 		mocks.forEach(
 				mock -> {
 					JiraIssue epic = batchByKey.get(mock.getEpicKey());
@@ -726,12 +740,3 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		}
 	}
 }
-
-
-
-
-
-
-
-
-

@@ -1979,7 +1979,8 @@ public class KPIExcelUtilityTest {
 						epicVerdict("EPIC-2", 40, "NOT READY", epicDimension("Business Clarity", 40))));
 
 		assertEquals(2, excelData.size());
-		// The dimension only the first Epic was graded on still exists as a column on the second
+		// The dimension only the first Epic was graded on still exists as a column on
+		// the second
 		assertEquals("N/A", excelData.get(1).getGroupMap().get("Risk Readiness"));
 		assertEquals("40", excelData.get(1).getGroupMap().get("Business Clarity"));
 	}

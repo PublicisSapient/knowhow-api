@@ -179,7 +179,3 @@ public class EpicHygieneKpiParser implements ParserStategy<List<EpicHygieneRespo
 		return Math.max(MIN_SCORE, Math.min(MAX_SCORE, score));
 	}
 }
-
-
-
-
