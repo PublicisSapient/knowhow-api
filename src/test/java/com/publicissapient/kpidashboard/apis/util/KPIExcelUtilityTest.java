@@ -1931,4 +1931,119 @@ public class KPIExcelUtilityTest {
 		dataCountGroup.setValue(dataCountList);
 		return dataCountGroup;
 	}
+
+	// ---------------------------------------------------------------------
+	// Epic Hygiene (kpi312)
+	// ---------------------------------------------------------------------
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_mapsEveryFixedColumnAndDimensionScores() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(
+				excelData,
+				Collections.singletonList(
+						epicVerdict(
+								"EPIC-1",
+								82,
+								"READY",
+								epicDimension("Business Clarity", 80),
+								epicDimension("Scope Definition", 84))));
+
+		assertEquals(1, excelData.size());
+		KPIExcelData row = excelData.get(0);
+		assertEquals("https://jira/browse/EPIC-1", row.getEpicID().get("EPIC-1"));
+		assertEquals("EPIC-1 name", row.getEpicName());
+		assertEquals("Construction Ready", row.getStatus());
+		assertEquals("Ada", row.getAssignee());
+		assertEquals(Integer.valueOf(82), row.getHygieneScore());
+		assertEquals("READY", row.getOverallStatus());
+		assertEquals("do a | do b", row.getRecommendations());
+		assertEquals("80", row.getGroupMap().get("Business Clarity"));
+		assertEquals("84", row.getGroupMap().get("Scope Definition"));
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_alignsColumnsAcrossEpicsWithNotApplicable() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(
+				excelData,
+				Arrays.asList(
+						epicVerdict(
+								"EPIC-1",
+								80,
+								"READY",
+								epicDimension("Business Clarity", 80),
+								epicDimension("Risk Readiness", 80)),
+						epicVerdict("EPIC-2", 40, "NOT READY", epicDimension("Business Clarity", 40))));
+
+		assertEquals(2, excelData.size());
+		// The dimension only the first Epic was graded on still exists as a column on the second
+		assertEquals("N/A", excelData.get(1).getGroupMap().get("Risk Readiness"));
+		assertEquals("40", excelData.get(1).getGroupMap().get("Business Clarity"));
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_nullDimensionScoreRendersAsNotApplicable() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(
+				excelData,
+				Collections.singletonList(
+						epicVerdict("EPIC-1", 0, "NOT READY", epicDimension("Business Clarity", null))));
+
+		assertEquals("N/A", excelData.get(0).getGroupMap().get("Business Clarity"));
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_nullOrEmptyInputAddsNoRows() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, null);
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, new ArrayList<>());
+
+		assertTrue(excelData.isEmpty());
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_missingResultsListDoesNotBlowUp() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+		EpicHygieneResponseDTO verdict = epicVerdict("EPIC-1", 0, "NOT READY");
+		verdict.setResults(null);
+		verdict.setEpicUrl(null);
+
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, Collections.singletonList(verdict));
+
+		assertEquals(1, excelData.size());
+		assertEquals("", excelData.get(0).getEpicID().get("EPIC-1"));
+		assertTrue(excelData.get(0).getGroupMap().isEmpty());
+	}
+
+	private EpicHygieneResponseDTO.DimensionResult epicDimension(String dimension, Integer score) {
+		EpicHygieneResponseDTO.DimensionResult result = new EpicHygieneResponseDTO.DimensionResult();
+		result.setDimension(dimension);
+		result.setField("description");
+		result.setWeight(1d);
+		result.setScore(score);
+		return result;
+	}
+
+	private EpicHygieneResponseDTO epicVerdict(
+			String epicKey,
+			Integer readinessScore,
+			String overallStatus,
+			EpicHygieneResponseDTO.DimensionResult... dimensions) {
+		EpicHygieneResponseDTO verdict = new EpicHygieneResponseDTO();
+		verdict.setEpicKey(epicKey);
+		verdict.setEpicUrl("https://jira/browse/" + epicKey);
+		verdict.setEpicName(epicKey + " name");
+		verdict.setStatus("Construction Ready");
+		verdict.setAssignee("Ada");
+		verdict.setResults(new ArrayList<>(Arrays.asList(dimensions)));
+		verdict.setReadinessScore(readinessScore);
+		verdict.setOverallStatus(overallStatus);
+		verdict.setRecommendations("do a | do b");
+		return verdict;
+	}
 }

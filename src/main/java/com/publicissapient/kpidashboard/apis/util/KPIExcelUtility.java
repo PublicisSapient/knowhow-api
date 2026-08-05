@@ -72,6 +72,7 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
 import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
 import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
@@ -3481,5 +3482,70 @@ public class KPIExcelUtility {
 					excelData.setRecommendations(hygieneKpiResponseDTO.getRecommendations());
 					kpiExcelData.add(excelData);
 				});
+	}
+
+	/**
+	 * Populates excel data for the Epic Hygiene (Sandbox) KPI (kpi312).
+	 *
+	 * <p>Each row corresponds to ONE Jira Epic's readiness evaluation returned by the LLM. The fixed
+	 * columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#EPIC_HYGIENE};
+	 * one additional dynamic column per configured readiness dimension is appended through {@code
+	 * groupMap}, carrying that dimension's 0-100 score.
+	 *
+	 * @param kpiExcelData the mutable list to append rows to
+	 * @param epicVerdicts per-Epic readiness results parsed from the LLM
+	 */
+	public static void populateEpicHygieneExcelData(
+			List<KPIExcelData> kpiExcelData, List<EpicHygieneResponseDTO> epicVerdicts) {
+		if (CollectionUtils.isEmpty(epicVerdicts)) {
+			return;
+		}
+		final String notApplicable = "N/A";
+		// Collect every dimension seen across all Epics so all rows share the same
+		// column set even when the LLM omits a dimension for one Epic.
+		LinkedHashSet<String> allDimensions =
+				epicVerdicts.stream()
+						.filter(Objects::nonNull)
+						.filter(dto -> dto.getResults() != null)
+						.flatMap(dto -> dto.getResults().stream())
+						.filter(Objects::nonNull)
+						.map(EpicHygieneResponseDTO.DimensionResult::getDimension)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
+		epicVerdicts.stream()
+				.filter(Objects::nonNull)
+				.forEach(
+						epicVerdict -> {
+							LinkedHashMap<String, String> dimensionScores = new LinkedHashMap<>();
+							if (epicVerdict.getResults() != null) {
+								epicVerdict.getResults().stream()
+										.filter(dr -> dr != null && dr.getDimension() != null)
+										.forEach(
+												dr ->
+														dimensionScores.putIfAbsent(
+																dr.getDimension(),
+																dr.getScore() == null
+																		? notApplicable
+																		: String.valueOf(dr.getScore())));
+							}
+							// Fill any dimension not returned by the LLM for this Epic with N/A
+							allDimensions.forEach(
+									dimension -> dimensionScores.putIfAbsent(dimension, notApplicable));
+
+							KPIExcelData excelData = new KPIExcelData();
+							Map<String, String> epicIdMap = new HashMap<>();
+							epicIdMap.put(
+									epicVerdict.getEpicKey(), Objects.toString(epicVerdict.getEpicUrl(), ""));
+							excelData.setEpicID(epicIdMap);
+							excelData.setEpicName(epicVerdict.getEpicName());
+							excelData.setStatus(epicVerdict.getStatus());
+							excelData.setAssignee(epicVerdict.getAssignee());
+							excelData.setGroupMap(dimensionScores);
+							excelData.setHygieneScore(epicVerdict.getReadinessScore());
+							excelData.setOverallStatus(epicVerdict.getOverallStatus());
+							excelData.setRecommendations(epicVerdict.getRecommendations());
+							kpiExcelData.add(excelData);
+						});
 	}
 }

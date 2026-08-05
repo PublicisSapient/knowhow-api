@@ -1347,6 +1347,16 @@ public enum KPIExcelColumn {
 					"Hygiene Score",
 					"Overall Status",
 					"Recommendations")),
+	EPIC_HYGIENE(
+			"kpi312",
+			Arrays.asList(
+					"Epic ID",
+					"Epic Name",
+					"Status",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
 	;
 
 	// @formatter:on
