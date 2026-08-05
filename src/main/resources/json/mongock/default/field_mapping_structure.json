@@ -5696,5 +5696,41 @@
     "sectionOrder" : 3,
     "mandatory" : false,
     "readOnly" : null
+  },
+
+  {
+    "fieldName" : "thresholdValueKPI312",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target readiness score (0-100) the project should maintain for its Epics. If the threshold is empty, a common target KPI line will be shown."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+
+  {
+    "fieldName" : "jiraFieldsSelectionKPI312",
+    "fieldLabel" : "Epic readiness dimensions",
+    "placeHolderText" : "Epic readiness dimensions",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
+    "fieldCategory" : "fields",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "One entry per readiness dimension: pick the Jira field carrying the evidence and describe the 0-100 scoring criteria in the prompt. Prefix the prompt with [weight]: to make a dimension count more heavily than the others."
+    },
+    "filterGroup" : [ "CustomField" ],
+    "nodeSpecific" : false,
+    "fieldDisplayOrder" : 4,
+    "toggleLabelLeft" : null,
+    "toggleLabelRight" : null,
+    "sectionOrder" : 3,
+    "mandatory" : false,
+    "readOnly" : null
   }
 ]

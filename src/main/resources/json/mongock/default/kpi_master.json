@@ -5921,5 +5921,36 @@
     "isAdditionalFilterSupport" : false,
     "combinedKpiSource" : "Jira/Azure Boards/Rally",
     "forecastModel" : "thetaMethod"
+  },
+  {
+    "kpiId" : "kpi312",
+    "kpiName" : "Epic Hygiene",
+    "isDeleted" : "False",
+    "defaultOrder" : 2,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Sandbox",
+    "kpiUnit" : "%",
+    "chartType" : "",
+    "xAxisLabel" : "",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : false,
+    "isPositiveTrend" : true,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "0-20", "20-40", "40-60", "60-80", "80-" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jira",
+    "maxValue" : 100,
+    "thresholdValue" : 70,
+    "upperThresholdBG" : "white",
+    "lowerThresholdBG" : "red",
+    "kanban" : false,
+    "groupId" : 312,
+    "kpiInfo" : {
+      "definition" : "AI-driven readiness score (0-100) that grades every Epic created in the last six months against the configured readiness dimensions (business clarity, scope definition, solution readiness, dependency readiness, delivery readiness and risk readiness). Each dimension is scored purely on evidence found in the Epic's own Jira fields; the Epic score is the weighted average of its dimensions."
+    },
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jira/Azure Boards/Rally"
   }
 ]
