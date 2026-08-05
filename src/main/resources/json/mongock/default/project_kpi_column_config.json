@@ -4611,6 +4611,18 @@
       { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
       { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
     ]
+  },
+  {
+    "kpiId": "kpi312",
+    "kpiColumnDetails": [
+      { "columnName": "Epic ID",         "order": 1, "isShown": true,  "isDefault": true  },
+      { "columnName": "Epic Name",       "order": 2, "isShown": true,  "isDefault": true  },
+      { "columnName": "Status",          "order": 3, "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",        "order": 4, "isShown": true,  "isDefault": true  },
+      { "columnName": "Hygiene Score",   "order": 5, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
+    ]
   }
 ]
 
