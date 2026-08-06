@@ -341,6 +341,8 @@ public enum KPICode {
 	E2E_TEST_PASS_RATE("kpi218", KPISource.JENKINS.name()),
 	/** Mean Time to Test Feedback */
 	MEAN_TIME_TO_TEST_FEEDBACK("kpi219", KPISource.JENKINS.name()),
+	/** Flaky Test Rate */
+	FLAKY_TEST_RATE("kpi220", KPISource.JENKINS.name()),
 	STORY_HYGIENE("kpi311", KPISource.JIRA.name()),
 	/** Epic Hygiene / Readiness */
 	EPIC_HYGIENE("kpi312", KPISource.JIRA.name());

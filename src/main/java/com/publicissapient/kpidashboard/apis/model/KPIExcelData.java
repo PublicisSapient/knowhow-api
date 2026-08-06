@@ -467,6 +467,18 @@ public class KPIExcelData {
 	@JsonProperty("Failed Builds")
 	private String failedBuilds;
 
+	@JsonProperty("Passing Runs")
+	private String passingRuns;
+
+	@JsonProperty("Failing Runs")
+	private String failingRuns;
+
+	@JsonProperty("Flaky")
+	private String flaky;
+
+	@JsonProperty("Flaky Rate %")
+	private String flakyRate;
+
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
 
