@@ -5592,6 +5592,34 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "e2eTestBranchKPI220",
+    "fieldLabel" : "Test Branch",
+    "fieldType" : "chips",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : true,
+    "tooltip" : {
+      "definition" : "Branch name(s) to filter test suite executions on. Only builds on these branches are evaluated for flakiness. Leave blank to auto-detect from SCM tool connections. e.g. main"
+    },
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
+    "fieldName" : "thresholdValueKPI220",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target flaky test rate (%). Shown as a reference line on the chart. Leave empty to use the default maturity line."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "jiraIssueStatusGroupByCategoryKPI206",
     "fieldLabel" : "Workfow groups",
     "fieldType" : "chips",

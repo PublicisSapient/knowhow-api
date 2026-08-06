@@ -5890,6 +5890,37 @@
     "forecastModel" : "thetaMethod"
   },
   {
+    "kpiId" : "kpi220",
+    "kpiName" : "Flaky Test Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 6,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "-20", "10-20", "5-10", "2-5", "2-" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "kanban" : false,
+    "groupId" : 72,
+    "kpiInfo" : {
+      "definition" : "Percentage of test suites that both passed and failed in the same week. Healthy: <2%. Above 5% silently undermines other metrics. Lower is better."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
+    "upperThresholdBG" : "white",
+    "lowerThresholdBG" : "red",
+    "forecastModel" : "thetaMethod"
+  },
+  {
     "kpiId" : "kpi311",
     "kpiName" : "Story Hygiene",
     "isDeleted" : "False",

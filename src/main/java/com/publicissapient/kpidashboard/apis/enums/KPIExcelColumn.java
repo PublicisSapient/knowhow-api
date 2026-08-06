@@ -1337,6 +1337,18 @@ public enum KPIExcelColumn {
 					"Successful Builds",
 					"Failed Builds",
 					"Avg Duration (Hours)")),
+	FLAKY_TEST_RATE(
+			"kpi220",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Branch",
+					"Suite Name",
+					"Total Builds",
+					"Passing Runs",
+					"Failing Runs",
+					"Flaky",
+					"Flaky Rate %")),
 	STORY_HYGIENE(
 			"kpi311",
 			Arrays.asList(
