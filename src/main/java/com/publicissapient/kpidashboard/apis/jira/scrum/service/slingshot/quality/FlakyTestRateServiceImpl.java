@@ -221,11 +221,11 @@ public class FlakyTestRateServiceImpl
 			for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
 				String[] meta = keyMetadata.getOrDefault(entry.getKey(), new String[] {entry.getKey(), ""});
 				DataCount dc = entry.getValue().get(weekIdx);
-				Map<String, Object> hover = dc.getHoverValue();
-				if (hover == null) continue;
+				Map<String, Object> extras = dc.getSubfilterValues();
+				if (extras == null) continue;
 				@SuppressWarnings("unchecked")
 				Map<String, String> suiteDetail =
-						(Map<String, String>) hover.getOrDefault(SUITES, Collections.emptyMap());
+						(Map<String, String>) extras.getOrDefault(SUITES, Collections.emptyMap());
 				for (Map.Entry<String, String> suiteEntry : suiteDetail.entrySet()) {
 					String[] parts = suiteEntry.getValue().split(" / ");
 					String passingStr = parts.length > 0 ? parts[0].replace(" pass", "").trim() : "0";
@@ -280,7 +280,54 @@ public class FlakyTestRateServiceImpl
 													&& r.getBuildTimestamp() < weekEnd)
 							.collect(Collectors.toList());
 
-			double flakyRate = computeFlakyRate(weekRecords);
+			// Compute bySuite once — used for rate, hover scalars, and suite detail
+			Map<String, List<TestSuiteExecution>> bySuite =
+					weekRecords.stream()
+							.filter(r -> r.getSuiteName() != null)
+							.collect(Collectors.groupingBy(TestSuiteExecution::getSuiteName));
+
+			int suitesWithEnoughRuns = 0;
+			int flakySuitesCount = 0;
+			Map<String, String> suiteDetail = new LinkedHashMap<>();
+
+			for (Map.Entry<String, List<TestSuiteExecution>> e : bySuite.entrySet()) {
+				List<TestSuiteExecution> runs = e.getValue();
+				long passing =
+						runs.stream()
+								.filter(r -> r.getFailedTests() != null && r.getFailedTests() == 0)
+								.count();
+				long failing =
+						runs.stream().filter(r -> r.getFailedTests() != null && r.getFailedTests() > 0).count();
+				suiteDetail.put(e.getKey(), passing + " pass / " + failing + " fail");
+
+				if (runs.size() < 2) continue;
+				suitesWithEnoughRuns++;
+				boolean hasPass =
+						runs.stream()
+								.anyMatch(
+										r ->
+												r.getFailedTests() != null
+														&& r.getFailedTests() == 0
+														&& r.getPassedTests() != null
+														&& r.getPassedTests() > 0);
+				boolean hasFail =
+						runs.stream().anyMatch(r -> r.getFailedTests() != null && r.getFailedTests() > 0);
+				if (hasPass && hasFail) flakySuitesCount++;
+			}
+
+			double rate =
+					suitesWithEnoughRuns > 0 ? ((double) flakySuitesCount / suitesWithEnoughRuns) * 100 : 0.0;
+			double flakyRate = Math.round(rate * 100.0) / 100.0;
+
+			// Hover contains only scalar values — nested Maps show as "Object" in the UI
+			Map<String, Object> hover = new LinkedHashMap<>();
+			hover.put(TOTAL_SUITES, bySuite.size());
+			hover.put(FLAKY_SUITES, flakySuitesCount);
+
+			// Suite-level detail is Excel-only; store separately so it doesn't reach the
+			// tooltip
+			Map<String, Object> extras = new LinkedHashMap<>();
+			extras.put(SUITES, suiteDetail);
 
 			aggDataMap.putIfAbsent(key, new ArrayList<>());
 			DataCount dc = new DataCount();
@@ -288,90 +335,12 @@ public class FlakyTestRateServiceImpl
 			dc.setSProjectName(trendLineName);
 			dc.setDate(dateLabel);
 			dc.setValue(flakyRate);
-			dc.setHoverValue(buildHoverMap(weekRecords));
+			dc.setHoverValue(hover);
+			dc.setSubfilterValues(extras);
 			aggDataMap.get(key).add(dc);
 
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
 		}
-	}
-
-	private double computeFlakyRate(List<TestSuiteExecution> weekRecords) {
-		if (weekRecords.isEmpty()) return 0.0;
-
-		Map<String, List<TestSuiteExecution>> bySuite =
-				weekRecords.stream()
-						.filter(r -> r.getSuiteName() != null)
-						.collect(Collectors.groupingBy(TestSuiteExecution::getSuiteName));
-
-		int suitesWithEnoughRuns = 0;
-		int flakySuites = 0;
-
-		for (List<TestSuiteExecution> suiteRuns : bySuite.values()) {
-			if (suiteRuns.size() < 2) continue;
-			suitesWithEnoughRuns++;
-
-			boolean hasPass =
-					suiteRuns.stream()
-							.anyMatch(
-									r ->
-											r.getFailedTests() != null
-													&& r.getFailedTests() == 0
-													&& r.getPassedTests() != null
-													&& r.getPassedTests() > 0);
-			boolean hasFail =
-					suiteRuns.stream().anyMatch(r -> r.getFailedTests() != null && r.getFailedTests() > 0);
-
-			if (hasPass && hasFail) flakySuites++;
-		}
-
-		if (suitesWithEnoughRuns == 0) return 0.0;
-		double rate = ((double) flakySuites / suitesWithEnoughRuns) * 100;
-		return Math.round(rate * 100.0) / 100.0;
-	}
-
-	private Map<String, Object> buildHoverMap(List<TestSuiteExecution> weekRecords) {
-		Map<String, Object> hover = new LinkedHashMap<>();
-
-		Map<String, List<TestSuiteExecution>> bySuite =
-				weekRecords.stream()
-						.filter(r -> r.getSuiteName() != null)
-						.collect(Collectors.groupingBy(TestSuiteExecution::getSuiteName));
-
-		hover.put(TOTAL_SUITES, bySuite.size());
-
-		long flakySuites =
-				bySuite.entrySet().stream()
-						.filter(e -> e.getValue().size() >= 2)
-						.filter(
-								e -> {
-									List<TestSuiteExecution> runs = e.getValue();
-									boolean hasPass =
-											runs.stream()
-													.anyMatch(
-															r ->
-																	r.getFailedTests() != null
-																			&& r.getFailedTests() == 0
-																			&& r.getPassedTests() != null
-																			&& r.getPassedTests() > 0);
-									boolean hasFail =
-											runs.stream()
-													.anyMatch(r -> r.getFailedTests() != null && r.getFailedTests() > 0);
-									return hasPass && hasFail;
-								})
-						.count();
-		hover.put(FLAKY_SUITES, (int) flakySuites);
-
-		Map<String, String> detail = new LinkedHashMap<>();
-		for (Map.Entry<String, List<TestSuiteExecution>> e : bySuite.entrySet()) {
-			List<TestSuiteExecution> runs = e.getValue();
-			long passing =
-					runs.stream().filter(r -> r.getFailedTests() != null && r.getFailedTests() == 0).count();
-			long failing =
-					runs.stream().filter(r -> r.getFailedTests() != null && r.getFailedTests() > 0).count();
-			detail.put(e.getKey(), passing + " pass / " + failing + " fail");
-		}
-		hover.put(SUITES, detail);
-		return hover;
 	}
 
 	private int parseSafe(String s) {
