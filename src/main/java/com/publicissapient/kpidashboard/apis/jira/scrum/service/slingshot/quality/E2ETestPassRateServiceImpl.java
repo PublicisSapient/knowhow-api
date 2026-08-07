@@ -65,8 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 public class E2ETestPassRateServiceImpl
 		extends JenkinsKPIService<Double, List<Object>, Map<String, List<Object>>> {
 
-	private static final String BUILDS_IN_WEEK = "Builds in Week";
-	private static final String AVG_TESTS_PER_BUILD = "Avg Tests/Build";
+	private static final String TOTAL_BUILDS = "Total Builds";
 	private static final String AVG_PASSED = "Avg Passed";
 	private static final String AVG_FAILED = "Avg Failed";
 	private static final String PASS_RATE = "Pass Rate %";
@@ -170,35 +169,56 @@ public class E2ETestPassRateServiceImpl
 		String trendLineName = projectLeafNode.getProjectFilter().getName();
 		Map<String, List<DataCount>> aggDataMap = new LinkedHashMap<>();
 
+		// keyMetadata maps the filter-visible display label → [workflow, suite, branch]
+		Map<String, String[]> keyMetadata = new LinkedHashMap<>();
+
 		Map<String, List<TestSuiteExecution>> bySuite =
 				allRecords.stream()
-						.collect(Collectors.groupingBy(r -> r.getJobName() + "#" + r.getSuiteName()));
+						.collect(
+								Collectors.groupingBy(
+										r -> r.getJobName() + "#" + r.getSuiteName() + "#" + r.getBuildBranch()));
 
 		for (Map.Entry<String, List<TestSuiteExecution>> entry : bySuite.entrySet()) {
-			prepareInfoForSuites(trendLineName, entry.getKey(), entry.getValue(), aggDataMap);
+			String rawKey = entry.getKey();
+			int sep1 = rawKey.indexOf('#');
+			int sep2 = rawKey.lastIndexOf('#');
+			String workflow = sep1 >= 0 ? rawKey.substring(0, sep1) : rawKey;
+			String suite = (sep1 >= 0 && sep2 > sep1) ? rawKey.substring(sep1 + 1, sep2) : rawKey;
+			String branch = sep2 > sep1 ? rawKey.substring(sep2 + 1) : "";
+			// filter1 = workflow (first dropdown), filter2 = "suiteName (branch)" (second)
+			// prepareDataCountGroups splits on first "#" to produce the two filter values
+			String displayKey = workflow + "#" + suite + " (" + branch + ")";
+			keyMetadata.put(displayKey, new String[] {workflow, suite, branch});
+			prepareInfoForSuites(trendLineName, displayKey, entry.getValue(), aggDataMap);
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
-			String key = entry.getKey();
-			int sep = key.indexOf('#');
-			String displayWorkflow = sep >= 0 ? key.substring(0, sep) : key;
-			String displaySuite = sep >= 0 ? key.substring(sep + 1) : key;
+			String[] meta =
+					keyMetadata.getOrDefault(entry.getKey(), new String[] {"", entry.getKey(), ""});
 			for (DataCount dc : entry.getValue()) {
 				Map<String, Object> hover = dc.getHoverValue();
 				if (hover == null) continue;
-				int builds = (Integer) hover.getOrDefault(BUILDS_IN_WEEK, 0);
+				int builds = (Integer) hover.getOrDefault(TOTAL_BUILDS, 0);
 				if (builds == 0) continue;
+				Map<String, Object> extras =
+						dc.getSubfilterValues() != null ? dc.getSubfilterValues() : Map.of();
+				int totalTests = (Integer) extras.getOrDefault("totalTests", 0);
+				int totalSkipped = (Integer) extras.getOrDefault("totalSkipped", 0);
 				KPIExcelData row = new KPIExcelData();
 				row.setDaysWeeks(dc.getDate());
-				row.setWorkflow(displayWorkflow);
-				row.setSuiteName(displaySuite);
-				row.setBuildsInWeek(String.valueOf(builds));
-				row.setAvgTestsPerBuild(String.valueOf(hover.getOrDefault(AVG_TESTS_PER_BUILD, 0)));
+				row.setWorkflow(meta[0]);
+				row.setSuiteName(meta[1]);
+				row.setBranch(meta[2]);
+				row.setTotalBuilds(String.valueOf(builds));
+				row.setAvgTestsPerBuild(
+						builds > 0 ? String.valueOf((int) Math.round((double) totalTests / builds)) : "0");
 				row.setAvgPassedTests(String.valueOf(hover.getOrDefault(AVG_PASSED, 0)));
 				row.setAvgFailedTests(String.valueOf(hover.getOrDefault(AVG_FAILED, 0)));
+				row.setAvgSkippedTests(
+						builds > 0 ? String.valueOf((int) Math.round((double) totalSkipped / builds)) : "0");
 				row.setPassRatePercentage((String) hover.getOrDefault(PASS_RATE, "0.0%"));
 				excelData.add(row);
 			}
@@ -251,22 +271,23 @@ public class E2ETestPassRateServiceImpl
 
 			aggDataMap.putIfAbsent(suiteName, new ArrayList<>());
 			DataCount dataCount = new DataCount();
-			dataCount.setData(String.valueOf(passRate));
+			dataCount.setData(String.format("%.2f", passRate));
 			dataCount.setSProjectName(trendLineName);
 			dataCount.setDate(dateLabel);
-			dataCount.setValue(passRate);
+			dataCount.setValue(Math.round(passRate * 100.0) / 100.0);
 
 			Map<String, Object> hoverMap = new HashMap<>();
-			hoverMap.put(BUILDS_IN_WEEK, buildCount);
-			hoverMap.put(
-					AVG_TESTS_PER_BUILD,
-					buildCount > 0
-							? Math.round((double) (totalPassed + totalFailed + totalSkipped) / buildCount)
-							: 0);
+			hoverMap.put(TOTAL_BUILDS, buildCount);
 			hoverMap.put(AVG_PASSED, buildCount > 0 ? Math.round((double) totalPassed / buildCount) : 0);
 			hoverMap.put(AVG_FAILED, buildCount > 0 ? Math.round((double) totalFailed / buildCount) : 0);
-			hoverMap.put(PASS_RATE, String.format("%.1f%%", passRate));
+			hoverMap.put(PASS_RATE, String.format("%.2f%%", passRate));
 			dataCount.setHoverValue(hoverMap);
+
+			// Store raw totals for Excel-only columns (not displayed in tooltip)
+			Map<String, Object> excelExtras = new HashMap<>();
+			excelExtras.put("totalTests", totalPassed + totalFailed + totalSkipped);
+			excelExtras.put("totalSkipped", totalSkipped);
+			dataCount.setSubfilterValues(excelExtras);
 
 			aggDataMap.get(suiteName).add(dataCount);
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);

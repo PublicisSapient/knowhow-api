@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,7 +72,9 @@ import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.LeadTimeData;
 import com.publicissapient.kpidashboard.common.model.application.ProjectVersion;
 import com.publicissapient.kpidashboard.common.model.application.ResolutionTimeValidation;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.HappinessKpiData;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.IssueDetails;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
@@ -2983,7 +2986,6 @@ public class KPIExcelUtility {
 	/**
 	 * Method to populate Modal Window of Mean Time to Recover
 	 *
-	 * @param projectName Name of Project
 	 * @param meanTimeRecoverMapTimeWise Map<String, List<MeanTimeRecoverData>>
 	 * @param kpiExcelData List<KPIExcelData>
 	 */
@@ -3422,5 +3424,128 @@ public class KPIExcelUtility {
 			log.warn("Failed to extract value for dataType: {} - {}", dataType, e.getMessage());
 			return 0.0;
 		}
+	}
+
+	/**
+	 * Populates excel data for the Story Hygiene (Sandbox) KPI (kpi311).
+	 *
+	 * <p>Each row corresponds to ONE Jira issue's hygiene evaluation returned by the LLM. Columns
+	 * mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#STORY_HYGIENE}.
+	 *
+	 * @param kpiExcelData the mutable list to append rows to
+	 * @param sprintId the sprint the batch was evaluated for
+	 * @param hygieneKpiResponseDTOList per-issue hygiene results parsed from the LLM
+	 */
+	public static void populateStoryHygieneExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String sprintId,
+			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
+		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
+			return;
+		}
+		// Collect all rule names present across all issues so every row has the same
+		// columns
+		LinkedHashSet<String> allRules =
+				hygieneKpiResponseDTOList.stream()
+						.filter(dto -> dto.getResults() != null)
+						.flatMap(dto -> dto.getResults().stream())
+						.map(HygieneKpiResponseDTO.RuleResult::getRule)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
+		hygieneKpiResponseDTOList.forEach(
+				hygieneKpiResponseDTO -> {
+					LinkedHashMap<String, String> ruleResult =
+							hygieneKpiResponseDTO.getResults() != null
+									? hygieneKpiResponseDTO.getResults().stream()
+											.collect(
+													Collectors.toMap(
+															HygieneKpiResponseDTO.RuleResult::getRule,
+															HygieneKpiResponseDTO.RuleResult::getStatus,
+															(first, second) -> first,
+															LinkedHashMap::new))
+									: new LinkedHashMap<>();
+					// Fill any rule not returned by the LLM for this issue with N/A
+					allRules.forEach(rule -> ruleResult.putIfAbsent(rule, "N/A"));
+
+					KPIExcelData excelData = new KPIExcelData();
+					excelData.setSprintName(sprintId);
+					String issueKey = hygieneKpiResponseDTO.getIssueKey();
+					Map<String, String> issueIdMap = new HashMap<>();
+					issueIdMap.put(
+							issueKey, StringUtils.defaultString(hygieneKpiResponseDTO.getIssueUrl(), ""));
+					excelData.setIssueID(issueIdMap);
+					excelData.setIssueType(hygieneKpiResponseDTO.getIssueType());
+					excelData.setAssignee(hygieneKpiResponseDTO.getAssignee());
+					excelData.setGroupMap(ruleResult);
+					excelData.setHygieneScore(hygieneKpiResponseDTO.getHygieneScore());
+					excelData.setOverallStatus(hygieneKpiResponseDTO.getOverallStatus());
+					excelData.setRecommendations(hygieneKpiResponseDTO.getRecommendations());
+					kpiExcelData.add(excelData);
+				});
+	}
+
+	/**
+	 * Populates excel data for the Epic Hygiene (Sandbox) KPI (kpi312).
+	 *
+	 * <p>Each row corresponds to ONE Jira Epic's readiness evaluation returned by the LLM. The fixed
+	 * columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#EPIC_HYGIENE};
+	 * one additional dynamic column per configured readiness dimension is appended through {@code
+	 * groupMap}, carrying that dimension's 0-100 score.
+	 *
+	 * @param kpiExcelData the mutable list to append rows to
+	 * @param epicVerdicts per-Epic readiness results parsed from the LLM
+	 */
+	public static void populateEpicHygieneExcelData(
+			List<KPIExcelData> kpiExcelData, List<EpicHygieneResponseDTO> epicVerdicts) {
+		if (CollectionUtils.isEmpty(epicVerdicts)) {
+			return;
+		}
+		final String notApplicable = "N/A";
+		// Collect every dimension seen across all Epics so all rows share the same
+		// column set even when the LLM omits a dimension for one Epic.
+		LinkedHashSet<String> allDimensions =
+				epicVerdicts.stream()
+						.filter(Objects::nonNull)
+						.filter(dto -> dto.getResults() != null)
+						.flatMap(dto -> dto.getResults().stream())
+						.filter(Objects::nonNull)
+						.map(EpicHygieneResponseDTO.DimensionResult::getDimension)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
+		epicVerdicts.stream()
+				.filter(Objects::nonNull)
+				.forEach(
+						epicVerdict -> {
+							LinkedHashMap<String, String> dimensionScores = new LinkedHashMap<>();
+							if (epicVerdict.getResults() != null) {
+								epicVerdict.getResults().stream()
+										.filter(dr -> dr != null && dr.getDimension() != null)
+										.forEach(
+												dr ->
+														dimensionScores.putIfAbsent(
+																dr.getDimension(),
+																dr.getScore() == null
+																		? notApplicable
+																		: String.valueOf(dr.getScore())));
+							}
+							// Fill any dimension not returned by the LLM for this Epic with N/A
+							allDimensions.forEach(
+									dimension -> dimensionScores.putIfAbsent(dimension, notApplicable));
+
+							KPIExcelData excelData = new KPIExcelData();
+							Map<String, String> epicIdMap = new HashMap<>();
+							epicIdMap.put(
+									epicVerdict.getEpicKey(), Objects.toString(epicVerdict.getEpicUrl(), ""));
+							excelData.setEpicID(epicIdMap);
+							excelData.setEpicName(epicVerdict.getEpicName());
+							excelData.setStatus(epicVerdict.getStatus());
+							excelData.setAssignee(epicVerdict.getAssignee());
+							excelData.setGroupMap(dimensionScores);
+							excelData.setHygieneScore(epicVerdict.getReadinessScore());
+							excelData.setOverallStatus(epicVerdict.getOverallStatus());
+							excelData.setRecommendations(epicVerdict.getRecommendations());
+							kpiExcelData.add(excelData);
+						});
 	}
 }

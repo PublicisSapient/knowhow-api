@@ -4251,38 +4251,164 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Suite Name",
+        "columnName" : "Workflow",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Builds in Week",
+        "columnName" : "Branch",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Tests/Build",
+        "columnName" : "Suite Name",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Passed",
+        "columnName" : "Total Builds",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Avg Failed",
+        "columnName" : "Avg Tests/Build",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Pass Rate %",
+        "columnName" : "Avg Passed",
         "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Failed",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Skipped",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Pass Rate %",
+        "order" : 10,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi219",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Workflow",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Branch",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Builds",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Successful Builds",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Failed Builds",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Avg Duration (Hours)",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
+    "kpiId" : "kpi220",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Workflow",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Branch",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Suite Name",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Builds",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Passing Runs",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Failing Runs",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Flaky",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Flaky Rate %",
+        "order" : 9,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4532,6 +4658,30 @@
         "isShown" : true,
         "isDefault" : true
       }
+    ]
+  },
+  {
+    "kpiId": "kpi311",
+    "kpiColumnDetails": [
+      { "columnName": "Sprint Name",     "order": 1, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue ID",        "order": 2, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue Type",      "order": 3, "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",        "order": 4, "isShown": true,  "isDefault": true  },
+      { "columnName": "Hygiene Score",   "order": 5, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
+    ]
+  },
+  {
+    "kpiId": "kpi312",
+    "kpiColumnDetails": [
+      { "columnName": "Epic ID",         "order": 1, "isShown": true,  "isDefault": true  },
+      { "columnName": "Epic Name",       "order": 2, "isShown": true,  "isDefault": true  },
+      { "columnName": "Status",          "order": 3, "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",        "order": 4, "isShown": true,  "isDefault": true  },
+      { "columnName": "Hygiene Score",   "order": 5, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
     ]
   }
 ]

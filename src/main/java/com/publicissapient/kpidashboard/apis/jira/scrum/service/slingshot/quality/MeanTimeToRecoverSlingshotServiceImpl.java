@@ -342,33 +342,28 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 			String trendLineName,
 			String weekOrMonthName,
 			List<MeanTimeRecoverData> meanTimeRecoverListCurrentTime) {
-		List<Double> sortedTimes =
+		List<Double> times =
 				meanTimeRecoverListCurrentTime.stream()
 						.filter(data -> data.getTimeToRecover() != null)
 						.map(data -> Double.parseDouble(data.getTimeToRecover()))
-						.sorted()
 						.collect(Collectors.toList());
-		double medianTime = computeMedian(sortedTimes);
+		double meanTime = Math.round(computeMean(times) * 100.0) / 100.0;
 
 		DataCount dataCount = new DataCount();
 		dataCount.setSProjectName(trendLineName);
-		dataCount.setData(String.valueOf(medianTime));
+		dataCount.setData(String.format("%.2f", meanTime));
 		dataCount.setDate(weekOrMonthName);
-		dataCount.setValue(medianTime);
+		dataCount.setValue(meanTime);
 		Map<String, Object> hoverMap = new HashMap<>();
-		hoverMap.put("Issue Count", (long) sortedTimes.size());
-		hoverMap.put("Median Time (Hrs)", medianTime);
+		hoverMap.put("Issue Count", (long) times.size());
+		hoverMap.put("Mean Time (Hrs)", meanTime);
 		dataCount.setHoverValue(hoverMap);
 		return dataCount;
 	}
 
-	private double computeMedian(List<Double> sortedValues) {
-		if (sortedValues.isEmpty()) return 0.0;
-		int n = sortedValues.size();
-		int mid = n / 2;
-		return n % 2 == 0
-				? (sortedValues.get(mid - 1) + sortedValues.get(mid)) / 2.0
-				: sortedValues.get(mid);
+	private double computeMean(List<Double> values) {
+		if (values.isEmpty()) return 0.0;
+		return values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
 	}
 
 	private void computeMeanTimeToRecover(

@@ -1,21 +1,3 @@
-/*******************************************************************************
- * Copyright 2014 CapitalOne, LLC.
- * Further development Copyright 2022 Sapient Corporation.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
-
 package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
 
 import java.util.Arrays;
@@ -28,13 +10,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 @ChangeUnit(
-		id = "e2e_test_pass_rate_kpi_insert",
-		order = "17164",
+		id = "story_hygiene_slingshot_kpi_insert",
+		order = "17143",
 		author = "knowhow",
 		systemVersion = "17.1.0")
-public class E2ETestPassRateKpiChangeUnit {
+public class StoryHygieneSlingshotChangeUnit {
 
-	private static final String KPI_ID = "kpi218";
+	private static final String KPI_ID = "kpi311";
 	private static final String KPI_ID_FIELD = "kpiId";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
@@ -45,66 +27,65 @@ public class E2ETestPassRateKpiChangeUnit {
 	private static final String IS_DEFAULT = "isDefault";
 	private static final String FIELD_NAME = "fieldName";
 	private static final String DEFINITION = "definition";
+	private static final String THRESHOLD_FIELD = "thresholdValueKPI311";
+	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI311";
+	private static final String FIELDS_TO_WRITE_PROMPT = "Fields to write prompts";
 
+	// ...existing code...
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
 		insertKpiMaster(mongoTemplate);
 		insertKpiColumnConfig(mongoTemplate);
 		insertFieldMappingStructure(mongoTemplate);
-		// Safety cleanup: remove e2eTestJobNameKPI218 if present from a prior partial
-		// deploy
-		mongoTemplate
-				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteOne(new Document(FIELD_NAME, "e2eTestJobNameKPI218"));
-		mongoTemplate
-				.getCollection("field_mapping")
-				.updateMany(
-						new Document("e2eTestJobNameKPI218", new Document("$exists", true)),
-						new Document("$unset", new Document("e2eTestJobNameKPI218", "")));
 	}
 
+	// ...existing code...
 	public void insertKpiMaster(MongoTemplate mongoTemplate) {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "E2E Test Pass Rate")
+						.append("kpiName", "Story Hygiene")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 4)
+						.append("defaultOrder", 1)
 						.append("kpiCategory", "Slingshot")
-						.append("kpiSubCategory", "Quality")
+						.append("kpiSubCategory", "Sandbox")
 						.append("kpiUnit", "%")
 						.append("chartType", "line")
-						.append("xAxisLabel", "Weeks")
+						.append("xAxisLabel", "Sprints")
 						.append("yAxisLabel", "Percentage")
 						.append("showTrend", true)
 						.append("isPositiveTrend", true)
 						.append("calculateMaturity", true)
-						.append("maturityRange", Arrays.asList("-60", "60-79", "80-89", "90-94", "95-"))
+						.append("maturityRange", Arrays.asList("0-20", "20-40", "40-60", "60-80", "80-"))
 						.append("hideOverallFilter", true)
-						.append("kpiSource", "Jenkins")
+						.append("kpiSource", "Jira")
+						.append("maxValue", 100)
+						.append("thresholdValue", 80.0)
+						.append("upperThresholdBG", "white")
+						.append("lowerThresholdBG", "red")
 						.append("kanban", false)
-						.append("groupId", 70)
+						.append("groupId", 311)
 						.append(
 								"kpiInfo",
 								new Document()
-										.append(DEFINITION, "% of automated end-to-end tests passing on main branch."))
+										.append(
+												DEFINITION,
+												"AI-driven hygiene score (0-100) that evaluates every Jira issue in a sprint against a Definition-of-Ready style checklist (story points, summary, priority, assignee, labels, sprint, epic link, resolution, worklog, staleness, etc.) and reports the percentage of applicable rules passed."))
 						.append("kpiFilter", "dropDown")
 						.append("aggregationCriteria", "average")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
-						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity")
-						.append("upperThresholdBG", "white")
-						.append("lowerThresholdBG", "red")
+						.append("combinedKpiSource", "Jira/Azure Boards/Rally")
 						.append("forecastModel", "thetaMethod");
-
 		mongoTemplate
 				.getCollection(KPI_MASTER_COLLECTION)
 				.replaceOne(
-						new Document(KPI_ID_FIELD, KPI_ID),
+						new Document("kpiId", KPI_ID),
 						kpiMaster,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
+	// ...existing code...
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
 		Document columnConfig =
 				new Document()
@@ -114,77 +95,53 @@ public class E2ETestPassRateKpiChangeUnit {
 								"kpiColumnDetails",
 								Arrays.asList(
 										new Document()
-												.append(COLUMN_NAME, "Days/Weeks")
+												.append(COLUMN_NAME, "Sprint Name")
 												.append(ORDER, 1)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Workflow")
+												.append(COLUMN_NAME, "Issue ID")
 												.append(ORDER, 2)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Suite Name")
+												.append(COLUMN_NAME, "Issue Type")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Total Builds")
+												.append(COLUMN_NAME, "Assignee")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Avg Tests/Build")
+												.append(COLUMN_NAME, "Hygiene Score")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Avg Passed")
+												.append(COLUMN_NAME, "Overall Status")
 												.append(ORDER, 6)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Avg Failed")
+												.append(COLUMN_NAME, "Recommendations")
 												.append(ORDER, 7)
-												.append(IS_SHOWN, true)
-												.append(IS_DEFAULT, true),
-										new Document()
-												.append(COLUMN_NAME, "Pass Rate %")
-												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
 				.replaceOne(
-						new Document(KPI_ID_FIELD, KPI_ID),
+						new Document("kpiId", KPI_ID),
 						columnConfig,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
 	public void insertFieldMappingStructure(MongoTemplate mongoTemplate) {
-		Document branchMapping =
+		Document thresholdStructure =
 				new Document()
-						.append(FIELD_NAME, "e2eTestBranchKPI218")
-						.append("fieldLabel", "E2E Test Branch")
-						.append("fieldType", "text")
-						.append("section", "Custom Fields Mapping")
-						.append("processorCommon", false)
-						.append(
-								"tooltip",
-								new Document()
-										.append(
-												DEFINITION,
-												"Branch name to filter E2E test builds on. "
-														+ "Only builds on this branch are counted. e.g. main"))
-						.append("fieldDisplayOrder", 2)
-						.append("sectionOrder", 5)
-						.append("mandatory", false)
-						.append("nodeSpecific", false);
-
-		Document thresholdMapping =
-				new Document()
-						.append(FIELD_NAME, "thresholdValueKPI218")
+						.append(FIELD_NAME, THRESHOLD_FIELD)
 						.append("fieldLabel", "Target KPI Value")
 						.append("fieldType", "number")
 						.append("section", "Project Level Threshold")
@@ -194,24 +151,42 @@ public class E2ETestPassRateKpiChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"Target pass rate (%). Shown as a reference line on the chart. "
-														+ "Leave empty to use the default maturity line."))
+												"Target hygiene score (0-100) the project should maintain. If the threshold is empty, a common target KPI line will be shown."))
 						.append("fieldDisplayOrder", 1)
 						.append("sectionOrder", 6)
 						.append("mandatory", false)
 						.append("nodeSpecific", false);
 
+		Document jiraFieldsSelectionStructure =
+				new Document()
+						.append(FIELD_NAME, JIRA_FIELDS_SELECTION_FIELD)
+						.append("fieldLabel", FIELDS_TO_WRITE_PROMPT)
+						.append("placeHolderText", FIELDS_TO_WRITE_PROMPT)
+						.append("fieldType", "chips")
+						.append("section", "Custom Fields Mapping")
+						.append("fieldCategory", "fields")
+						.append("processorCommon", false)
+						.append("tooltip", new Document().append(DEFINITION, FIELDS_TO_WRITE_PROMPT))
+						.append("filterGroup", java.util.List.of("CustomField"))
+						.append("nodeSpecific", false)
+						.append("fieldDisplayOrder", 3)
+						.append("toggleLabelLeft", null)
+						.append("toggleLabelRight", null)
+						.append("sectionOrder", 3)
+						.append("mandatory", false)
+						.append("readOnly", null);
+
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "e2eTestBranchKPI218"),
-						branchMapping,
+						new Document("fieldName", THRESHOLD_FIELD),
+						thresholdStructure,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
 				.replaceOne(
-						new Document(FIELD_NAME, "thresholdValueKPI218"),
-						thresholdMapping,
+						new Document("fieldName", JIRA_FIELDS_SELECTION_FIELD),
+						jiraFieldsSelectionStructure,
 						new com.mongodb.client.model.ReplaceOptions().upsert(true));
 	}
 
@@ -228,6 +203,6 @@ public class E2ETestPassRateKpiChangeUnit {
 				.deleteMany(
 						new Document(
 								FIELD_NAME,
-								new Document("$in", Arrays.asList("e2eTestBranchKPI218", "thresholdValueKPI218"))));
+								new Document("$in", Arrays.asList(THRESHOLD_FIELD, JIRA_FIELDS_SELECTION_FIELD))));
 	}
 }

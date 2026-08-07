@@ -125,9 +125,9 @@ public class KpiIntegrationServiceImplTest {
 		OrganizationHierarchy organizationHierarchy = new OrganizationHierarchy();
 		organizationHierarchy.setNodeId("123");
 		organizationHierarchy.setNodeName("DTS");
-		when(organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(
+		when(organizationHierarchyRepository.findAllByNodeNameAndHierarchyLevelId(
 						anyString(), anyString()))
-				.thenReturn(organizationHierarchy);
+				.thenReturn(List.of(organizationHierarchy));
 	}
 
 	@Test

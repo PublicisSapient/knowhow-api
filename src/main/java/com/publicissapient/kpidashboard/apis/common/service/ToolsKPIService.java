@@ -71,7 +71,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.PRODUCTION_ISSUES_BY_PRIORITY_AND_AGING.name(),
 							KPICode.OPEN_TICKET_AGING_BY_PRIORITY.name(),
 							KPICode.PI_PREDICTABILITY.name(),
-							KPICode.MEAN_TIME_TO_RECOVER_SLINGSHOT.name()));
+							KPICode.MEAN_TIME_TO_RECOVER_SLINGSHOT.name(),
+							KPICode.STORY_HYGIENE.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(
@@ -1130,10 +1131,10 @@ public abstract class ToolsKPIService<R, S> {
 						.toList();
 		if (CollectionUtils.isNotEmpty(valueMap)) {
 			S aggValue = calculateMapKpiMaturity(valueMap, kpiName);
+			String aggStr = aggValue != null ? String.valueOf(aggValue) : null;
 			maturityValue =
-					calculateMaturity(
-							configHelperService.calculateMaturity().get(kpiId), kpiId, String.valueOf(aggValue));
-			aggregateValue = String.valueOf(aggValue);
+					calculateMaturity(configHelperService.calculateMaturity().get(kpiId), kpiId, aggStr);
+			aggregateValue = aggStr;
 		}
 		if (CollectionUtils.isEmpty(valueMap)) {
 			values =
@@ -1146,20 +1147,21 @@ public abstract class ToolsKPIService<R, S> {
 			}
 			R aggValue = null;
 			if (kpiId.equalsIgnoreCase(KPICode.SPRINT_VELOCITY.getKpiId())) {
+				Integer velocityMaturity =
+						collectValuesForMaturityForVelocity(
+								Lists.reverse(values.stream().map(Double.class::cast).toList()));
 				maturityValue =
 						calculateMaturity(
 								configHelperService.calculateMaturity().get(kpiId),
 								kpiId,
-								String.valueOf(
-										collectValuesForMaturityForVelocity(
-												Lists.reverse(values.stream().map(Double.class::cast).toList()))));
+								velocityMaturity != null ? String.valueOf(velocityMaturity) : null);
 			} else {
 				aggValue = calculateAggValue(kpiName, dataCounts, values, kpiId);
 				maturityValue =
 						calculateMaturity(
 								configHelperService.calculateMaturity().get(kpiId),
 								kpiId,
-								String.valueOf(aggValue));
+								aggValue != null ? String.valueOf(aggValue) : null);
 			}
 			aggregateValue = aggValue != null ? String.valueOf(aggValue) : null;
 		}
