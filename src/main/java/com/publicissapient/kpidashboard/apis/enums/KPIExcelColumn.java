@@ -1336,6 +1336,8 @@ public enum KPIExcelColumn {
 					"Total Builds",
 					"Successful Builds",
 					"Failed Builds",
+					"Builds Skipped",
+					"PRs in Window",
 					"Avg Duration (Hours)")),
 	FLAKY_TEST_RATE(
 			"kpi220",

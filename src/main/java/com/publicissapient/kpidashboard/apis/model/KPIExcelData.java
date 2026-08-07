@@ -467,6 +467,12 @@ public class KPIExcelData {
 	@JsonProperty("Failed Builds")
 	private String failedBuilds;
 
+	@JsonProperty("Builds Skipped")
+	private String buildsSkipped;
+
+	@JsonProperty("PRs in Window")
+	private String prsInWindow;
+
 	@JsonProperty("Passing Runs")
 	private String passingRuns;
 
