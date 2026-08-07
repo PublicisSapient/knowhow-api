@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -324,13 +325,15 @@ public class KpiIntegrationServiceImpl {
 		}
 		String[] hierarchyIdList;
 		if (kpiRequest.getHierarchyName() != null) {
-			OrganizationHierarchy byNodeNameAndHierarchyLevelId =
-					organizationHierarchyRepository.findByNodeNameAndHierarchyLevelId(
+			List<OrganizationHierarchy> matches =
+					organizationHierarchyRepository.findAllByNodeNameAndHierarchyLevelId(
 							kpiRequest.getHierarchyName(), hierarchyLevel.getHierarchyLevelId());
-			if (byNodeNameAndHierarchyLevelId != null
-					&& byNodeNameAndHierarchyLevelId.getNodeId() != null) {
-				String nodeId = byNodeNameAndHierarchyLevelId.getNodeId();
-				hierarchyIdList = new String[] {nodeId};
+			if (CollectionUtils.isNotEmpty(matches)) {
+				hierarchyIdList =
+						matches.stream()
+								.map(OrganizationHierarchy::getNodeId)
+								.filter(Objects::nonNull)
+								.toArray(String[]::new);
 			} else {
 				throw new IllegalArgumentException("No hierarchy data found for given name/level");
 			}

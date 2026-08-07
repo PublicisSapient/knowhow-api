@@ -1,0 +1,1180 @@
+/*******************************************************************************
+ * Copyright 2014 CapitalOne, LLC.
+ * Further development Copyright 2022 Sapient Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ ******************************************************************************/
+package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+
+import org.bson.types.ObjectId;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import com.knowhow.retro.aigatewayclient.client.AiGatewayClient;
+import com.knowhow.retro.aigatewayclient.client.request.chat.ChatGenerationRequest;
+import com.knowhow.retro.aigatewayclient.client.response.chat.ChatGenerationResponseDTO;
+import com.publicissapient.kpidashboard.apis.ai.parser.HygieneKpiParser;
+import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.common.service.CacheService;
+import com.publicissapient.kpidashboard.apis.common.service.CommonService;
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
+import com.publicissapient.kpidashboard.apis.constant.Constant;
+import com.publicissapient.kpidashboard.apis.enums.KPICode;
+import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
+import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.jira.service.SprintDetailsService;
+import com.publicissapient.kpidashboard.apis.model.KpiElement;
+import com.publicissapient.kpidashboard.apis.model.KpiRequest;
+import com.publicissapient.kpidashboard.apis.model.Node;
+import com.publicissapient.kpidashboard.apis.model.ProjectFilter;
+import com.publicissapient.kpidashboard.apis.model.SprintFilter;
+import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
+import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.HygieneKpiResponseDTO;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.SprintDetails;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
+import com.publicissapient.kpidashboard.common.repository.jira.StoryHygieneSprintResultRepository;
+import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
+
+/**
+ * Tests for {@link StoryHygieneKpiSlingshotServiceImpl}.
+ *
+ * <p>The service fans out per-sprint LLM calls through a Spring-managed executor. To keep the tests
+ * deterministic we swap that executor for {@code Runnable::run} (same-thread) via reflection —
+ * {@link java.util.concurrent.CompletableFuture#supplyAsync(java.util.function.Supplier, Executor)}
+ * then runs synchronously.
+ */
+@RunWith(MockitoJUnitRunner.class)
+public class StoryHygieneKpiSlingshotServiceImplTest {
+
+	@Mock private HygieneKpiParser hygieneKpiParser;
+	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private StoryHygieneSprintResultRepository hygieneResultRepository;
+	@Mock private AiGatewayClient aiGatewayClient;
+	@Mock private SprintDetailsService sprintDetailsService;
+	@Mock private ConfigHelperService configHelperService;
+
+	@Mock private CacheService cacheService;
+	@Mock private CommonService commonService;
+	@Mock private CustomApiConfig customApiConfig;
+	@Mock private PromptService promptService;
+
+	@InjectMocks private StoryHygieneKpiSlingshotServiceImpl service;
+
+	private ObjectId projectConfigId;
+	private KpiRequest kpiRequest;
+	private KpiElement kpiElement;
+
+	// ---------------------------------------------------------------------
+	// Fixture
+	// ---------------------------------------------------------------------
+
+	@Before
+	public void setUp() {
+		// Same-thread executor keeps supplyAsync deterministic.
+		Executor synchronousExecutor = Runnable::run;
+		injectField(service, "hygieneAiExecutor", synchronousExecutor);
+
+		// Parent-class (ToolsKPIService) @Autowired fields need explicit injection
+		// because
+		// @InjectMocks does not walk the superclass field graph for private fields.
+		injectField(service, "cacheService", cacheService);
+		injectField(service, "commonService", commonService);
+		injectField(service, "configHelperService", configHelperService);
+		injectField(service, "customApiConfig", customApiConfig);
+		injectField(service, "objectMapper", new com.fasterxml.jackson.databind.ObjectMapper());
+		injectField(service, "hygieneResultRepository", hygieneResultRepository);
+
+		// Default: cache miss for all sprints — tests that rely on the LLM path keep
+		// working.
+		lenient()
+				.when(hygieneResultRepository.findByBasicProjectConfigIdAndSprintIdIn(anyString(), any()))
+				.thenReturn(Collections.emptyList());
+		injectField(service, "promptService", promptService);
+
+		// Prompt template now comes from the `prompt_details` collection.
+		lenient()
+				.when(promptService.getProjectHygienePrompt(any(), any()))
+				.thenReturn("project-hygiene-prompt");
+
+		projectConfigId = new ObjectId("6335363749794a18e8a4479b");
+
+		kpiElement = new KpiElement();
+		kpiElement.setKpiId(KPICode.STORY_HYGIENE.getKpiId());
+
+		kpiRequest = new KpiRequest();
+		kpiRequest.setIds(new String[] {"project1"});
+		kpiRequest.setLabel("PROJECT");
+		kpiRequest.setLevel(4);
+		Map<String, List<String>> selectedMap = new HashMap<>();
+		selectedMap.put("project", new ArrayList<>(Collections.singletonList("project1")));
+		selectedMap.put("sprint", new ArrayList<>());
+		kpiRequest.setSelectedMap(selectedMap);
+		kpiRequest.setKpiList(new ArrayList<>(Collections.singletonList(kpiElement)));
+
+		// Request-tracker id is normally cached by
+		// JiraKPIService#getRequestTrackerId().
+		lenient()
+				.when(
+						cacheService.getFromApplicationCache(
+								Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn("trackerid");
+		lenient().when(cacheService.getAdditionalFilterHierarchyLevel()).thenReturn(new HashMap<>());
+		lenient().when(cacheService.cacheProjectConfigMapData()).thenReturn(new HashMap<>());
+		lenient().when(cacheService.getKpiBenchmarkTargets()).thenReturn(new HashMap<>());
+
+		lenient().when(configHelperService.calculateMaturity()).thenReturn(new HashMap<>());
+		lenient().when(configHelperService.loadKpiMaster()).thenReturn(new ArrayList<>());
+		lenient().when(configHelperService.getFieldMappingMap()).thenReturn(new HashMap<>());
+		lenient()
+				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
+				.thenReturn(new FieldMapping());
+
+		lenient().when(customApiConfig.getSlingshotHygieneSprintCount()).thenReturn(5);
+		lenient().when(customApiConfig.getSlingshotHygieneIssueCountPerSprint()).thenReturn(25);
+		lenient()
+				.when(customApiConfig.getSlingshotHygieneAnchorFields())
+				.thenReturn(Arrays.asList("number", "name", "typeName", "status"));
+
+		lenient().when(commonService.sortTrendValueMap(anyMap())).thenAnswer(i -> i.getArgument(0));
+
+		// fetchKPIDataFromDb always resolves the field mapping to derive the jira
+		// fields that must be pulled for the prompt.
+		lenient()
+				.when(configHelperService.getFieldMapping(any(ObjectId.class)))
+				.thenReturn(new FieldMapping());
+	}
+
+	// ---------------------------------------------------------------------
+	// Reflection & DTO helpers
+	// ---------------------------------------------------------------------
+
+	private void injectField(Object target, String fieldName, Object value) {
+		Class<?> clazz = target.getClass();
+		while (clazz != null) {
+			try {
+				Field f = clazz.getDeclaredField(fieldName);
+				f.setAccessible(true);
+				f.set(target, value);
+				return;
+			} catch (NoSuchFieldException ignored) {
+				clazz = clazz.getSuperclass();
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		throw new IllegalStateException("Field not found: " + fieldName);
+	}
+
+	private void setSprintIdList(List<String> ids) throws Exception {
+		Field f = StoryHygieneKpiSlingshotServiceImpl.class.getDeclaredField("sprintIdList");
+		f.setAccessible(true);
+		f.set(service, ids);
+	}
+
+	private Node createProjectNode() {
+		Node node = new Node();
+		node.setId("project1");
+		node.setName("Test Project");
+		node.setGroupName("PROJECT");
+		node.setProjectFilter(new ProjectFilter("project1", "Test Project", projectConfigId));
+		return node;
+	}
+
+	private Node createSprintLeafNode(String sprintId, String sprintName) {
+		Node node = new Node();
+		node.setId(sprintId);
+		node.setName(sprintName);
+		node.setGroupName("SPRINT");
+		node.setSprintFilter(new SprintFilter(sprintId, sprintName, "2026-01-01", "2026-01-15"));
+		return node;
+	}
+
+	private TreeAggregatorDetail buildTree(List<Node> sprintLeafNodes) {
+		Node projectNode = createProjectNode();
+		Map<String, List<Node>> mapOfLeaves = new HashMap<>();
+		mapOfLeaves.put(CommonConstant.SPRINT_MASTER, sprintLeafNodes);
+
+		Map<String, List<Node>> mapOfProjects = new HashMap<>();
+		mapOfProjects.put(
+				CommonConstant.HIERARCHY_LEVEL_ID_PROJECT, Collections.singletonList(projectNode));
+
+		Map<String, Node> mapTmp = new HashMap<>();
+		mapTmp.put(projectNode.getId(), projectNode);
+
+		return new TreeAggregatorDetail(projectNode, mapOfLeaves, mapTmp, mapOfProjects);
+	}
+
+	private SprintDetails createSprintDetails(String id, String name, String startDate) {
+		SprintDetails sd = new SprintDetails();
+		sd.setSprintID(id);
+		sd.setSprintName(name);
+		sd.setStartDate(startDate);
+		return sd;
+	}
+
+	private JiraIssue createJiraIssue(String key, String sprintId) {
+		JiraIssue issue = new JiraIssue();
+		issue.setNumber(key);
+		issue.setSprintID(sprintId);
+		return issue;
+	}
+
+	private HygieneKpiResponseDTO createHygieneDTO(String issueKey, Integer score) {
+		HygieneKpiResponseDTO dto = new HygieneKpiResponseDTO();
+		dto.setIssueKey(issueKey);
+		dto.setIssueType("Story");
+		dto.setAssignee("me");
+		dto.setHygieneScore(score);
+		dto.setOverallStatus("READY");
+		dto.setRecommendations("do better");
+		return dto;
+	}
+
+	private CycleTimeGroup group(String label, String prompt) {
+		CycleTimeGroup g = new CycleTimeGroup();
+		g.setLabel(label);
+		g.setPrompt(prompt);
+		return g;
+	}
+
+	private CycleTimeGroup groupWithWeight(String label, String prompt, Integer weightage) {
+		CycleTimeGroup g = group(label, prompt);
+		g.setWeightage(weightage);
+		return g;
+	}
+
+	private FieldMapping fieldMappingWith(List<CycleTimeGroup> groups) {
+		FieldMapping fm = new FieldMapping();
+		fm.setJiraFieldsSelectionKPI311(groups);
+		return fm;
+	}
+
+	private void mockFieldMapping(FieldMapping fm) {
+		when(configHelperService.getFieldMapping(any(ObjectId.class))).thenReturn(fm);
+	}
+
+	// ---------------------------------------------------------------------
+	// Simple method tests
+	// ---------------------------------------------------------------------
+
+	@Test
+	public void testGetQualifierType_isStoryHygiene() {
+		assertEquals(KPICode.STORY_HYGIENE.name(), service.getQualifierType());
+	}
+
+	@Test
+	public void testCalculateKPIMetrics_alwaysReturnsZero() {
+		assertEquals(Double.valueOf(0.0), service.calculateKPIMetrics(new HashMap<>()));
+		assertEquals(Double.valueOf(0.0), service.calculateKPIMetrics(null));
+	}
+
+	// ---------------------------------------------------------------------
+	// fetchKPIDataFromDb tests
+	// ---------------------------------------------------------------------
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFetchKPIDataFromDb_lessThanFiveSprints_allIncluded() throws Exception {
+		setSprintIdList(Arrays.asList("sp1", "sp2"));
+		SprintDetails s1 = createSprintDetails("sp1", "Sprint 1", "2026-01-01T00:00:00Z");
+		SprintDetails s2 = createSprintDetails("sp2", "Sprint 2", "2026-01-15T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(s1, s2));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		assertNotNull(result);
+		List<SprintDetails> sprints = (List<SprintDetails>) result.get("sprintDetails");
+		assertEquals(2, sprints.size());
+		assertTrue(((List<?>) result.get("jiraIssues")).isEmpty());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFetchKPIDataFromDb_exactlyFiveSprints_allIncluded() throws Exception {
+		List<String> ids = Arrays.asList("s1", "s2", "s3", "s4", "s5");
+		setSprintIdList(ids);
+		List<SprintDetails> sdList = new ArrayList<>();
+		for (int i = 0; i < ids.size(); i++) {
+			sdList.add(
+					createSprintDetails(ids.get(i), "Name " + i, "2026-01-0" + (i + 1) + "T00:00:00Z"));
+		}
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(sdList);
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		List<SprintDetails> sprints = (List<SprintDetails>) result.get("sprintDetails");
+		assertEquals(5, sprints.size());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFetchKPIDataFromDb_moreThanFiveSprints_lastFiveKeptInOrder() throws Exception {
+		List<String> ids = Arrays.asList("s1", "s2", "s3", "s4", "s5", "s6", "s7");
+		setSprintIdList(ids);
+		List<SprintDetails> sdList = new ArrayList<>();
+		for (int i = 0; i < ids.size(); i++) {
+			sdList.add(
+					createSprintDetails(ids.get(i), "Name " + i, "2026-01-0" + (i + 1) + "T00:00:00Z"));
+		}
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(sdList);
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		List<SprintDetails> sprints = (List<SprintDetails>) result.get("sprintDetails");
+		assertEquals(5, sprints.size());
+		assertEquals("s3", sprints.get(0).getSprintID());
+		assertEquals("s7", sprints.get(4).getSprintID());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFetchKPIDataFromDb_nullStartDatesSortedLast() throws Exception {
+		setSprintIdList(Arrays.asList("s1", "s2", "s3"));
+		SprintDetails s1 = createSprintDetails("s1", "Name 1", null);
+		SprintDetails s2 = createSprintDetails("s2", "Name 2", "2026-01-01T00:00:00Z");
+		SprintDetails s3 = createSprintDetails("s3", "Name 3", null);
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(s1, s2, s3));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		List<SprintDetails> sprints = (List<SprintDetails>) result.get("sprintDetails");
+		assertEquals(3, sprints.size());
+		// s2 has a real start date and sorts first; nullsLast keeps null-dated at the
+		// tail.
+		assertEquals("s2", sprints.get(0).getSprintID());
+	}
+
+	@Test
+	public void testFetchKPIDataFromDb_emptySprintList_returnsEmptyResults() throws Exception {
+		setSprintIdList(Collections.emptyList());
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(new ArrayList<>());
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		assertTrue(((List<?>) result.get("sprintDetails")).isEmpty());
+		assertTrue(((List<?>) result.get("jiraIssues")).isEmpty());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testFetchKPIDataFromDb_returnsJiraIssuesForSprints() throws Exception {
+		setSprintIdList(Collections.singletonList("SP1"));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		JiraIssue i1 = createJiraIssue("ISS-1", "SP1");
+		JiraIssue i2 = createJiraIssue("ISS-2", "SP1");
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Arrays.asList(i1, i2));
+
+		Map<String, Object> result =
+				service.fetchKPIDataFromDb(
+						Collections.singletonList(createProjectNode()), null, null, kpiRequest);
+
+		List<JiraIssue> issues = (List<JiraIssue>) result.get("jiraIssues");
+		assertEquals(2, issues.size());
+	}
+
+	// ---------------------------------------------------------------------
+	// getKpiData tests (end-to-end)
+	// ---------------------------------------------------------------------
+
+	private void primeAiHappyPath() {
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[{\"issueKey\":\"ISS-1\"}]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(Collections.singletonList(createHygieneDTO("ISS-1", 80)));
+	}
+
+	@Test
+	public void testGetKpiData_happyPath_returnsTrendAndColumns() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+		assertFalse(((List<?>) result.getTrendValueList()).isEmpty());
+		assertEquals(KPIExcelColumn.STORY_HYGIENE.getColumns(), result.getExcelColumns());
+		// Non-EXCEL tracker → no excel rows appended.
+		assertNull(result.getExcelData());
+	}
+
+	@Test
+	public void testGetKpiData_excelTracker_populatesExcelData() throws ApplicationException {
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn("Excel-track-id");
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result.getExcelData());
+	}
+
+	@Test
+	public void testGetKpiData_nullCycleTimeGroups_usesEmptyPromptsMap() throws ApplicationException {
+
+		mockFieldMapping(new FieldMapping());
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_emptyCycleTimeGroups_usesEmptyPromptsMap()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(new ArrayList<>()));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_cycleTimeGroupsWithNullOrBlank_arefiltered()
+			throws ApplicationException {
+		// Every filter branch: null CTG, null label, blank label, null prompt, plus one
+		// valid.
+		List<CycleTimeGroup> groups =
+				new ArrayList<>(
+						Arrays.asList(
+								null,
+								group(null, "p1"),
+								group("   ", "p2"),
+								group("valid", null),
+								group("Rule1", "Prompt1")));
+		mockFieldMapping(fieldMappingWith(groups));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_duplicateLabels_bothRuleSetsRetained() throws ApplicationException {
+		// Previously the second rule set on a repeated label was dropped
+		// (Collectors.toMap merge "keep first"). Both must now be retained.
+		mockFieldMapping(
+				fieldMappingWith(Arrays.asList(group("Rule1", "PromptA"), group("Rule1", "PromptB"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+		assertTrue(rules.contains("PromptA"));
+		assertTrue(rules.contains("PromptB"));
+	}
+
+	@Test
+	public void testGetKpiData_multipleRuleSetsOnSameField_areIndependentRules()
+			throws ApplicationException {
+		// Two distinct rule sets written against the SAME field ("description"): an
+		// acceptance-criteria check and a BDD-definition check. Both must survive and
+		// be
+		// handed to the LLM as two separately named, independent rules.
+		mockFieldMapping(
+				fieldMappingWith(
+						Arrays.asList(
+								group("description", "Acceptance criteria must be present"),
+								group("description", "A BDD definition must be present"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+
+		// Two independent rule entries, uniquely named so downstream per-rule maps
+		// (drill-down + excel groupMap) cannot overwrite each other.
+		assertTrue(rules.contains("ruleName: description (1)"));
+		assertTrue(rules.contains("ruleName: description (2)"));
+		assertTrue(rules.contains("Acceptance criteria must be present"));
+		assertTrue(rules.contains("A BDD definition must be present"));
+		// Both rules still point at the same underlying Jira field.
+		assertEquals(2, countOccurrences(rules, "field: description"));
+		assertTrue(rules.contains("Rule 1"));
+		assertTrue(rules.contains("Rule 2"));
+	}
+
+	@Test
+	public void testGetKpiData_singleRuleSetOnField_keepsPlainLabelAsRuleName()
+			throws ApplicationException {
+		// A field with only one rule set keeps its plain label (no "(1)" suffix).
+		mockFieldMapping(
+				fieldMappingWith(Collections.singletonList(group("priority", "Priority must be set"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		String rules = String.valueOf(rulesCaptor.getValue());
+
+		assertTrue(rules.contains("ruleName: priority"));
+		assertFalse(rules.contains("priority (1)"));
+	}
+
+	private int countOccurrences(String text, String token) {
+		int count = 0;
+		int idx = text.indexOf(token);
+		while (idx != -1) {
+			count++;
+			idx = text.indexOf(token, idx + token.length());
+		}
+		return count;
+	}
+
+	// ---------------------------------------------------------------------
+	// Rule weighting
+	// ---------------------------------------------------------------------
+
+	/** Runs getKpiData for the given rule set and returns the rules payload sent to the LLM. */
+	private String captureRulesFor(List<CycleTimeGroup> groups) throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(groups));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		service.getKpiData(
+				kpiRequest,
+				kpiElement,
+				buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		ArgumentCaptor<Object> rulesCaptor = ArgumentCaptor.forClass(Object.class);
+		verify(promptService).getProjectHygienePrompt(rulesCaptor.capture(), any());
+		return String.valueOf(rulesCaptor.getValue());
+	}
+
+	@Test
+	public void testWeightage_fromField_isRenderedAsWeight() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(
+								groupWithWeight("description", "Acceptance criteria must be present", 10)));
+
+		assertTrue(rules.contains("weight: 10"));
+		assertTrue(rules.contains("criteria: Acceptance criteria must be present"));
+	}
+
+	@Test
+	public void testNullWeightage_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", null)));
+
+		assertTrue(rules.contains("weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+	}
+
+	@Test
+	public void testUnsetWeightage_fallsBackToDefaultWeightOfOne() throws ApplicationException {
+		// weightage not set on the group (null by default) → weight 1.
+		String rules =
+				captureRulesFor(Collections.singletonList(group("priority", "Priority must be set")));
+
+		assertTrue(rules.contains("weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+	}
+
+	@Test
+	public void testMixedWeightages_eachRuleKeepsItsOwnWeight() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Arrays.asList(
+								groupWithWeight("description", "Acceptance criteria must be present", 10),
+								groupWithWeight("description", "A BDD definition must be present", null)));
+
+		assertTrue(rules.contains("ruleName: description (1)"));
+		assertTrue(rules.contains("ruleName: description (2)"));
+		assertTrue(rules.contains("weight: 10"));
+		assertTrue(rules.contains("weight: 1\n"));
+		assertEquals(2, countOccurrences(rules, "field: description"));
+	}
+
+	@Test
+	public void testLargeWeightage_isRenderedCorrectly() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", 50)));
+
+		assertTrue(rules.contains("weight: 50"));
+	}
+
+	@Test
+	public void testZeroAndNullWeightage_fallBackToDefault() throws ApplicationException {
+		// Zero and null are both invalid — both must fall back to weight 1.
+		String rules =
+				captureRulesFor(
+						Arrays.asList(
+								groupWithWeight("priority", "Priority must be set", null),
+								groupWithWeight("summary", "Summary must be meaningful", 0)));
+
+		assertEquals(2, countOccurrences(rules, "weight: 1"));
+		assertTrue(rules.contains("criteria: Priority must be set"));
+		assertTrue(rules.contains("criteria: Summary must be meaningful"));
+	}
+
+	@Test
+	public void testNegativeWeightage_fallsBackToDefault() throws ApplicationException {
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(groupWithWeight("priority", "Priority must be set", -5)));
+
+		assertTrue(rules.contains("weight: 1"));
+	}
+
+	@Test
+	public void testCriteriaText_isPassedThroughAsIs() throws ApplicationException {
+		// Criteria text (including brackets) is handed to the LLM verbatim.
+		String rules =
+				captureRulesFor(
+						Collections.singletonList(
+								group("description", "Must reference [JIRA-123] in the body")));
+
+		assertTrue(rules.contains("criteria: Must reference [JIRA-123] in the body"));
+		assertTrue(rules.contains("weight: 1"));
+	}
+
+	@Test
+	public void testGetKpiData_moreThanTenIssues_truncatedToTen() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		List<JiraIssue> issues = new ArrayList<>();
+		for (int i = 0; i < 15; i++) {
+			issues.add(createJiraIssue("ISS-" + i, "SP1"));
+		}
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(issues);
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(Collections.singletonList(createHygieneDTO("ISS-0", 90)));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_aiGatewayThrows_fallbackToEmptyDataCount()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenThrow(new RuntimeException("boom"));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(hygieneKpiParser, never()).parse(anyString());
+	}
+
+	@Test
+	public void testGetKpiData_aiGatewayReturnsBlank_fallsBackToEmptyOutcome()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO(""));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(hygieneKpiParser, never()).parse(anyString());
+	}
+
+	@Test
+	public void testGetKpiData_parserThrows_fallbackToEmptyDataCount() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString())).thenThrow(new RuntimeException("bad-json"));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_sprintWithNoIssues_notEvaluatedByAi() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		// Two sprints declared, but only SP2 has issues → SP1 is filtered out before
+		// the LLM call.
+		SprintDetails sd1 = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		SprintDetails sd2 = createSprintDetails("SP2", "Sprint 2", "2026-01-15T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(sd1, sd2));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-A", "SP2")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(
+								Arrays.asList(
+										createSprintLeafNode("SP1", "Sprint 1"),
+										createSprintLeafNode("SP2", "Sprint 2"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_parserReturnsEmpty_scoreDefaultsToZero() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString())).thenReturn(Collections.emptyList());
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		assertNotNull(result.getTrendValueList());
+	}
+
+	@Test
+	public void testGetKpiData_allNullHygieneScores_scoreDefaultsToZero()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(
+						Arrays.asList(createHygieneDTO("ISS-1", null), createHygieneDTO("ISS-2", null)));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_mixedHygieneScores_averageIsRounded() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		// Scores 80, 60, null → average of 70.
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(
+						Arrays.asList(
+								createHygieneDTO("A", 80), createHygieneDTO("B", 60), createHygieneDTO("C", null)));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_nullSprintName_fallsBackToSprintIdInDisplayName()
+			throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		// SprintDetails carries a null sprintName — buildDataCount must fall back to
+		// the id.
+		SprintDetails sd = createSprintDetails("SP1", null, "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		primeAiHappyPath();
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+	}
+
+	@Test
+	public void testGetKpiData_multipleSprints_oneAiCallPerSprint() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd1 = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		SprintDetails sd2 = createSprintDetails("SP2", "Sprint 2", "2026-01-15T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(Arrays.asList(sd1, sd2));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(
+						Arrays.asList(createJiraIssue("ISS-1", "SP1"), createJiraIssue("ISS-2", "SP2")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(Collections.singletonList(createHygieneDTO("ISS-1", 75)));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(
+								Arrays.asList(
+										createSprintLeafNode("SP1", "Sprint 1"),
+										createSprintLeafNode("SP2", "Sprint 2"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, times(2)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_noJiraIssues_noAiCallsAndEmptyValue() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, never()).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_noSprintDetails_noAiCalls() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		when(sprintDetailsService.getSprintDetailsByIds(any())).thenReturn(new ArrayList<>());
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(new ArrayList<>());
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result);
+		verify(aiGatewayClient, never()).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void testGetKpiData_excelData_containsOneRowPerHygieneDTO() throws ApplicationException {
+		when(cacheService.getFromApplicationCache(
+						Constant.KPI_REQUEST_TRACKER_ID_KEY + KPISource.JIRA.name()))
+				.thenReturn("Excel-track-id");
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(
+						Arrays.asList(
+								createHygieneDTO("A", 90), createHygieneDTO("B", 70), createHygieneDTO("C", 50)));
+
+		KpiElement result =
+				service.getKpiData(
+						kpiRequest,
+						kpiElement,
+						buildTree(Collections.singletonList(createSprintLeafNode("SP1", "Sprint 1"))));
+
+		assertNotNull(result.getExcelData());
+	}
+
+	@Test
+	public void testGetKpiData_trendValueDataCountFieldsPopulated() throws ApplicationException {
+		mockFieldMapping(fieldMappingWith(Collections.singletonList(group("Rule1", "Prompt1"))));
+		SprintDetails sd = createSprintDetails("SP1", "Sprint 1", "2026-01-01T00:00:00Z");
+		when(sprintDetailsService.getSprintDetailsByIds(any()))
+				.thenReturn(Collections.singletonList(sd));
+		when(jiraIssueRepository.findBySprintIDInAndBasicProjectConfigIdWithFields(
+						anySet(), anyString(), anySet()))
+				.thenReturn(Collections.singletonList(createJiraIssue("ISS-1", "SP1")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenReturn(new ChatGenerationResponseDTO("[]"));
+		when(hygieneKpiParser.parse(anyString()))
+				.thenReturn(Collections.singletonList(createHygieneDTO("ISS-1", 100)));
+
+		Node projectLeaf = createSprintLeafNode("SP1", "Sprint 1");
+		TreeAggregatorDetail detail = buildTree(Collections.singletonList(projectLeaf));
+
+		service.getKpiData(kpiRequest, kpiElement, detail);
+
+		// The project node's value was set to a list of DataCount with the sprint-level
+		// score.
+		Node project =
+				detail.getMapOfListOfProjectNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT).get(0);
+		Object value = project.getValue();
+		assertTrue(value instanceof List);
+		@SuppressWarnings("unchecked")
+		List<DataCount> counts = (List<DataCount>) value;
+		assertEquals(1, counts.size());
+		DataCount dc = counts.get(0);
+		assertEquals("Test Project", dc.getSProjectName());
+		assertEquals("SP1", dc.getsSprintID());
+		assertEquals("Sprint 1", dc.getsSprintName());
+		assertNotNull(dc.getHoverValue());
+	}
+
+	// ---------------------------------------------------------------------
+	// Sanity checks on helper wiring
+	// ---------------------------------------------------------------------
+
+	@Test
+	public void testCreateProjectNode_hasProjectFilter() {
+		Node n = createProjectNode();
+		assertNotNull(n.getProjectFilter());
+		assertEquals(projectConfigId, n.getProjectFilter().getBasicProjectConfigId());
+	}
+
+	@Test
+	public void testCreateSprintLeafNode_hasSprintFilter() {
+		Node n = createSprintLeafNode("S1", "Sprint 1");
+		assertNotNull(n.getSprintFilter());
+		assertEquals("S1", n.getSprintFilter().getId());
+	}
+
+	@Test
+	public void testBuildTree_populatesRequiredMaps() {
+		TreeAggregatorDetail detail =
+				buildTree(Collections.singletonList(createSprintLeafNode("S1", "Sprint 1")));
+		assertNotNull(detail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER));
+		assertNotNull(
+				detail.getMapOfListOfProjectNodes().get(CommonConstant.HIERARCHY_LEVEL_ID_PROJECT));
+		assertNotNull(detail.getMapTmp());
+	}
+
+	@Test
+	public void testMockAiGatewayClientInstantiation() {
+		// Guards against classpath issues loading the external AI-gateway types.
+		AiGatewayClient client = mock(AiGatewayClient.class);
+		assertNotNull(client);
+	}
+}

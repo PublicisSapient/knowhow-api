@@ -27,6 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumnInfo;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
@@ -84,6 +85,10 @@ public class KpiElement implements Serializable { // NOPMD
 
 	private boolean kpiSprintSwitch;
 	private String labelXAxis;
+
+	@Getter @Setter private Double projectScore;
+	@Getter @Setter private Integer scoreFactor;
+	@Getter @Setter private Integer validScoreFactor;
 
 	public String getLabelXAxis() {
 		return labelXAxis;
@@ -143,7 +148,9 @@ public class KpiElement implements Serializable { // NOPMD
 	@Getter @Setter private String sprintId;
 	private List<String> modalHeads;
 
-	@JsonIgnore private transient List<KPIExcelData> excelData;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private transient List<KPIExcelData> excelData;
+
 	@JsonIgnore private transient List<String> excelColumns;
 	// For Excel column Info
 	private List<KPIExcelColumnInfo> excelColumnInfo;
@@ -866,6 +873,7 @@ public class KpiElement implements Serializable { // NOPMD
 		this.modalHeads = modalHeads;
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public List<KPIExcelData> getExcelData() {
 		return excelData;
 	}

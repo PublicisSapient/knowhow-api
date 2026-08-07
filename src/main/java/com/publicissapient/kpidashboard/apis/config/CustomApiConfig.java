@@ -366,6 +366,51 @@ public class CustomApiConfig { // NOPMD
 	@Setter
 	private boolean slingshotFlowLoadMultiFilter;
 
+	@Value("${slingshotHygieneSprintCount:5}")
+	@Getter
+	@Setter
+	private int slingshotHygieneSprintCount;
+
+	@Value("${slingshotHygieneIssueCountPerSprint:25}")
+	@Getter
+	@Setter
+	private int slingshotHygieneIssueCountPerSprint;
+
+	@Value("${slingshotHygieneAnchorFields:number,name,typeName,status}")
+	@Getter
+	@Setter
+	private List<String> slingshotHygieneAnchorFields;
+
+	/** Trailing window, in months, of Epics graded by the Epic Hygiene KPI (kpi312). */
+	@Value("${slingshotEpicHygieneMonths:6}")
+	@Getter
+	@Setter
+	private int slingshotEpicHygieneMonths;
+
+	/** Hard cap on the number of Epics sent to the LLM in a single kpi312 request. */
+	@Value("${slingshotEpicHygieneEpicCount:50}")
+	@Getter
+	@Setter
+	private int slingshotEpicHygieneEpicCount;
+
+	/** Number of Epics packed into one LLM call; batches are evaluated concurrently. */
+	@Value("${slingshotEpicHygieneBatchSize:10}")
+	@Getter
+	@Setter
+	private int slingshotEpicHygieneBatchSize;
+
+	/** Jira issue types treated as Epics when collecting kpi312 input. */
+	@Value("${slingshotEpicHygieneIssueTypes:Epic}")
+	@Getter
+	@Setter
+	private List<String> slingshotEpicHygieneIssueTypes;
+
+	/** Fields always written into the kpi312 prompt, regardless of the configured dimensions. */
+	@Value("${slingshotEpicHygieneAnchorFields:number,name,typeName,status,assigneeName}")
+	@Getter
+	@Setter
+	private List<String> slingshotEpicHygieneAnchorFields;
+
 	public String getDefectRateUrl() {
 		return defectRateUrl;
 	}

@@ -1319,12 +1319,58 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Workflow",
+					"Branch",
 					"Suite Name",
-					"Builds in Week",
+					"Total Builds",
 					"Avg Tests/Build",
 					"Avg Passed",
 					"Avg Failed",
+					"Avg Skipped",
 					"Pass Rate %")),
+	MEAN_TIME_TO_TEST_FEEDBACK(
+			"kpi219",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Branch",
+					"Total Builds",
+					"Successful Builds",
+					"Failed Builds",
+					"Builds Skipped",
+					"PRs in Window",
+					"Avg Duration (Hours)")),
+	FLAKY_TEST_RATE(
+			"kpi220",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Branch",
+					"Suite Name",
+					"Total Builds",
+					"Passing Runs",
+					"Failing Runs",
+					"Flaky",
+					"Flaky Rate %")),
+	STORY_HYGIENE(
+			"kpi311",
+			Arrays.asList(
+					"Sprint Name",
+					"Issue Id",
+					"Issue Type",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
+	EPIC_HYGIENE(
+			"kpi312",
+			Arrays.asList(
+					"Epic ID",
+					"Epic Name",
+					"Status",
+					"Assignee",
+					"Hygiene Score",
+					"Overall Status",
+					"Recommendations")),
 	;
 
 	// @formatter:on

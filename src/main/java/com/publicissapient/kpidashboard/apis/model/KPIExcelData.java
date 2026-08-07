@@ -449,8 +449,41 @@ public class KPIExcelData {
 	@JsonProperty("Avg Failed")
 	private String avgFailedTests;
 
+	@JsonProperty("Avg Skipped")
+	private String avgSkippedTests;
+
 	@JsonProperty("Pass Rate %")
 	private String passRatePercentage;
+
+	@JsonProperty("Total Builds")
+	private String totalBuilds;
+
+	@JsonProperty("Avg Duration (Hours)")
+	private String avgDuration;
+
+	@JsonProperty("Successful Builds")
+	private String successfulBuilds;
+
+	@JsonProperty("Failed Builds")
+	private String failedBuilds;
+
+	@JsonProperty("Builds Skipped")
+	private String buildsSkipped;
+
+	@JsonProperty("PRs in Window")
+	private String prsInWindow;
+
+	@JsonProperty("Passing Runs")
+	private String passingRuns;
+
+	@JsonProperty("Failing Runs")
+	private String failingRuns;
+
+	@JsonProperty("Flaky")
+	private String flaky;
+
+	@JsonProperty("Flaky Rate %")
+	private String flakyRate;
 
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
@@ -631,6 +664,19 @@ public class KPIExcelData {
 
 	@JsonProperty("Deployment End Date (UTC)")
 	private String deploymentEndDate;
+
+	// ---- Story Hygiene KPI (kpi311) fields ----
+	@JsonProperty("Issue Key")
+	private String issueKey;
+
+	@JsonProperty("Hygiene Score")
+	private Integer hygieneScore;
+
+	@JsonProperty("Overall Status")
+	private String overallStatus;
+
+	@JsonProperty("Recommendations")
+	private String recommendations;
 
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
