@@ -5578,6 +5578,24 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "calculationStrategyKPI219",
+    "fieldLabel" : "Calculation Strategy",
+    "fieldType" : "radiobutton",
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Choose how Mean Time to Test Feedback is calculated. <br><b>Build</b>: uses the CI build duration directly (default). <br><b>Commit</b>: measures from the earliest commit in the window before a build to the build completion time, showing true feedback lag from code push to test result. <hr>"
+    },
+    "options" : [
+      { "label" : "Build",  "value" : "BUILD"  },
+      { "label" : "Commit", "value" : "COMMIT" }
+    ],
+    "fieldDisplayOrder" : 3,
+    "sectionOrder" : 5,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "thresholdValueKPI219",
     "fieldLabel" : "Target KPI Value",
     "fieldType" : "number",

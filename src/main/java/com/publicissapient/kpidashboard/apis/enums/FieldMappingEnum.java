@@ -924,7 +924,7 @@ public enum FieldMappingEnum {
 	KPI219(
 			"Mean Time to Test Feedback",
 			KPISource.JENKINS.name(),
-			List.of("e2eTestBranchKPI219", "thresholdValueKPI219")),
+			List.of("e2eTestBranchKPI219", "thresholdValueKPI219", "calculationStrategyKPI219")),
 
 	KPI220(
 			"Flaky Test Rate",

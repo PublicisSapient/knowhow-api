@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -40,6 +41,7 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
+import com.publicissapient.kpidashboard.apis.bitbucket.service.scm.ScmKpiHelperService;
 import com.publicissapient.kpidashboard.apis.common.service.impl.KpiHelperService;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
@@ -58,6 +60,8 @@ import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Build;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.scm.ScmCommits;
+import com.publicissapient.kpidashboard.common.model.scm.ScmMergeRequests;
 import com.publicissapient.kpidashboard.common.repository.application.BuildRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
@@ -71,9 +75,12 @@ public class MeanTimeToTestFeedbackServiceImpl
 		extends JenkinsKPIService<Double, List<Object>, Map<String, List<Object>>> {
 
 	private static final String TOTAL_BUILDS = "Total Builds";
+	private static final String STRATEGY_BUILD = "BUILD";
+	private static final String STRATEGY_COMMIT = "COMMIT";
 
 	private final BuildRepository buildRepository;
 	private final ConfigHelperService configHelperService;
+	private final ScmKpiHelperService scmKpiHelperService;
 
 	@Override
 	public String getQualifierType() {
@@ -144,6 +151,13 @@ public class MeanTimeToTestFeedbackServiceImpl
 				fieldMapping.getThresholdValueKPI219(), KPICode.MEAN_TIME_TO_TEST_FEEDBACK.getKpiId());
 	}
 
+	String resolveCalculationStrategy(ObjectId basicProjectConfigId) {
+		FieldMapping fieldMapping = configHelperService.getFieldMappingMap().get(basicProjectConfigId);
+		if (fieldMapping == null) return STRATEGY_BUILD;
+		String strategy = fieldMapping.getCalculationStrategyKPI219();
+		return STRATEGY_COMMIT.equalsIgnoreCase(strategy) ? STRATEGY_COMMIT : STRATEGY_BUILD;
+	}
+
 	private void calculateProjectKpiTrendData(
 			KpiElement kpiElement,
 			Map<String, Node> mapTmp,
@@ -192,9 +206,20 @@ public class MeanTimeToTestFeedbackServiceImpl
 			return;
 		}
 
-		// keyMetadata maps the filter-visible display label → [workflow, branch]
-		Map<String, String[]> keyMetadata = new LinkedHashMap<>();
+		String strategy = resolveCalculationStrategy(basicProjectConfigId);
+		boolean isCommitStrategy = STRATEGY_COMMIT.equals(strategy);
 
+		List<ScmCommits> commits = Collections.emptyList();
+		List<ScmMergeRequests> mergeRequests = Collections.emptyList();
+		if (isCommitStrategy) {
+			CustomDateRange dateRange = new CustomDateRange();
+			dateRange.setStartDate(LocalDate.now().minusWeeks(12));
+			dateRange.setEndDate(LocalDate.now().plusDays(1));
+			commits = scmKpiHelperService.getCommitDetails(basicProjectConfigId, dateRange);
+			mergeRequests = scmKpiHelperService.getMergeRequests(basicProjectConfigId, dateRange);
+		}
+
+		Map<String, String[]> keyMetadata = new LinkedHashMap<>();
 		Map<String, List<Build>> byWorkflow =
 				filtered.stream()
 						.collect(Collectors.groupingBy(b -> b.getBuildJob() + "#" + b.getBuildBranch()));
@@ -207,18 +232,20 @@ public class MeanTimeToTestFeedbackServiceImpl
 			int sep = rawKey.indexOf('#');
 			String workflow = sep >= 0 ? rawKey.substring(0, sep) : rawKey;
 			String branch = sep >= 0 ? rawKey.substring(sep + 1) : "";
-			// filter1 = workflow, filter2 = branch — two independent filter dropdowns
 			String displayKey = workflow + "#" + branch;
 			keyMetadata.put(displayKey, new String[] {workflow, branch});
-			prepareInfoForWorkflow(trendLineName, displayKey, entry.getValue(), aggDataMap);
+
+			if (isCommitStrategy) {
+				prepareInfoForWorkflowCommit(
+						trendLineName, displayKey, entry.getValue(), aggDataMap, commits, mergeRequests);
+			} else {
+				prepareInfoForWorkflow(trendLineName, displayKey, entry.getValue(), aggDataMap);
+			}
 		}
 
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
 
-		// Excel: date-first ordering (oldest week first), all workflows per week
-		// together.
-		// aggDataMap lists are newest-first (index 0 = this week), so read from the
-		// tail.
+		// Excel — oldest week first
 		List<KPIExcelData> excelData = new ArrayList<>();
 		int weekCount = aggDataMap.isEmpty() ? 0 : aggDataMap.values().iterator().next().size();
 		for (int weekIdx = weekCount - 1; weekIdx >= 0; weekIdx--) {
@@ -231,14 +258,18 @@ public class MeanTimeToTestFeedbackServiceImpl
 				if (builds == 0) continue;
 				Map<String, Object> extras =
 						dc.getSubfilterValues() != null ? dc.getSubfilterValues() : Map.of();
+
 				KPIExcelData row = new KPIExcelData();
 				row.setDaysWeeks(dc.getDate());
 				row.setWorkflow(meta[0]);
 				row.setBranch(meta[1]);
 				row.setTotalBuilds(String.valueOf(builds));
+				row.setAvgDuration(dc.getData());
+
 				row.setSuccessfulBuilds(String.valueOf(extras.getOrDefault("successCount", 0)));
 				row.setFailedBuilds(String.valueOf(extras.getOrDefault("failCount", 0)));
-				row.setAvgDuration(dc.getData()); // plain hours value; column header carries the unit
+				row.setBuildsSkipped(String.valueOf(extras.getOrDefault("skippedCount", 0)));
+				row.setPrsInWindow(String.valueOf(extras.getOrDefault("prsInWindow", "")));
 				excelData.add(row);
 			}
 		}
@@ -252,8 +283,6 @@ public class MeanTimeToTestFeedbackServiceImpl
 			List<Build> builds,
 			Map<String, List<DataCount>> aggDataMap) {
 
-		// Build newest-first so the chart framework's internal reversal yields
-		// oldest-left.
 		LocalDateTime currentDate = DateUtil.getTodayTime();
 
 		for (int i = 0; i < 12; i++) {
@@ -285,7 +314,6 @@ public class MeanTimeToTestFeedbackServiceImpl
 			}
 
 			double avgMinutes = buildCount > 0 ? (totalMs / (double) buildCount) / 60_000.0 : 0.0;
-			// Chart value always in hours (kpiUnit = "Hours"); tooltip stays adaptive.
 			double avgHours = Math.round((avgMinutes / 60.0) * 100.0) / 100.0;
 			String tooltipDisplay =
 					avgMinutes >= 60.0
@@ -304,14 +332,170 @@ public class MeanTimeToTestFeedbackServiceImpl
 			hover.put("Avg Duration", tooltipDisplay);
 			dc.setHoverValue(hover);
 
-			// Store for Excel-only columns (not displayed in tooltip)
 			Map<String, Object> excelExtras = new HashMap<>();
 			excelExtras.put("successCount", successCount);
 			excelExtras.put("failCount", failCount);
+			excelExtras.put("skippedCount", 0);
+			excelExtras.put("prsInWindow", "");
 			dc.setSubfilterValues(excelExtras);
 
 			aggDataMap.get(workflowName).add(dc);
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
 		}
+	}
+
+	private void prepareInfoForWorkflowCommit(
+			String trendLineName,
+			String workflowName,
+			List<Build> builds,
+			Map<String, List<DataCount>> aggDataMap,
+			List<ScmCommits> allCommits,
+			List<ScmMergeRequests> allMergeRequests) {
+
+		// Sort all builds for this workflow+branch oldest-first for window computation
+		List<Build> sorted =
+				builds.stream()
+						.sorted(Comparator.comparingLong(Build::getStartTime))
+						.collect(Collectors.toList());
+
+		// Pre-compute per-build result: null = skipped, non-null = [durationHours]
+		List<double[]> durationPerBuild = new ArrayList<>(sorted.size());
+		List<String> prsPerBuild = new ArrayList<>(sorted.size());
+
+		for (int i = 0; i < sorted.size(); i++) {
+			Build build = sorted.get(i);
+			long windowStart = i == 0 ? 0L : sorted.get(i - 1).getStartTime();
+			long windowEnd = build.getStartTime();
+			String buildBranch = build.getBuildBranch();
+
+			List<ScmCommits> commitsInWindow =
+					allCommits.stream()
+							.filter(
+									c ->
+											c.getCommitTimestamp() != null
+													&& c.getCommitTimestamp() > windowStart
+													&& c.getCommitTimestamp() < windowEnd
+													&& matchesBranch(c, buildBranch))
+							.collect(Collectors.toList());
+
+			if (commitsInWindow.isEmpty()) {
+				durationPerBuild.add(null);
+				prsPerBuild.add(null);
+				continue;
+			}
+
+			long earliestCommitMs =
+					commitsInWindow.stream().mapToLong(ScmCommits::getCommitTimestamp).min().getAsLong();
+			long buildEndMs = build.getStartTime() + build.getDuration();
+			double hours = (buildEndMs - earliestCommitMs) / 3_600_000.0;
+			if (hours < 0) {
+				durationPerBuild.add(null);
+				prsPerBuild.add(null);
+				continue;
+			}
+			durationPerBuild.add(new double[] {Math.round(hours * 100.0) / 100.0});
+
+			String prStr =
+					allMergeRequests.stream()
+							.filter(
+									mr ->
+											mr.getMergedAt() != null
+													&& mr.getToBranch() != null
+													&& mr.getToBranch().equalsIgnoreCase(buildBranch))
+							.filter(
+									mr -> {
+										long mergedMs =
+												mr.getMergedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+										return mergedMs > windowStart && mergedMs < windowEnd;
+									})
+							.map(mr -> "#" + mr.getExternalId())
+							.collect(Collectors.joining(", "));
+			prsPerBuild.add(prStr);
+		}
+
+		// Bucket by week (newest-first, matching the BUILD path ordering)
+		LocalDateTime currentDate = DateUtil.getTodayTime();
+		aggDataMap.putIfAbsent(workflowName, new ArrayList<>());
+
+		for (int i = 0; i < 12; i++) {
+			CustomDateRange range =
+					KpiDataHelper.getStartAndEndDateTimeForDataFiltering(currentDate, CommonConstant.WEEK);
+			LocalDate monday = range.getStartDate();
+			LocalDate sunday = range.getEndDate();
+			String dateLabel = KpiHelperService.getDateRange(range, CommonConstant.WEEK);
+
+			int buildsWithCommits = 0;
+			int buildsSkipped = 0;
+			int successCount = 0;
+			int failCount = 0;
+			double totalHours = 0.0;
+			StringBuilder prsBuilder = new StringBuilder();
+
+			for (int j = 0; j < sorted.size(); j++) {
+				LocalDate buildDate =
+						Instant.ofEpochMilli(sorted.get(j).getStartTime())
+								.atZone(ZoneId.systemDefault())
+								.toLocalDate();
+				boolean inRange =
+						(buildDate.isAfter(monday) || buildDate.isEqual(monday))
+								&& (buildDate.isBefore(sunday) || buildDate.isEqual(sunday));
+				if (!inRange) continue;
+
+				if (durationPerBuild.get(j) == null) {
+					buildsSkipped++;
+				} else {
+					buildsWithCommits++;
+					totalHours += durationPerBuild.get(j)[0];
+					if (BuildStatus.SUCCESS == sorted.get(j).getBuildStatus()) {
+						successCount++;
+					} else {
+						failCount++;
+					}
+					String prs = prsPerBuild.get(j);
+					if (prs != null && !prs.isEmpty()) {
+						if (prsBuilder.length() > 0) prsBuilder.append(", ");
+						prsBuilder.append(prs);
+					}
+				}
+			}
+
+			int totalBuilds = buildsWithCommits + buildsSkipped;
+			double avgHours =
+					buildsWithCommits > 0
+							? Math.round((totalHours / buildsWithCommits) * 100.0) / 100.0
+							: 0.0;
+			double avgMinutes = avgHours * 60.0;
+			String tooltipDisplay =
+					avgMinutes >= 60.0
+							? String.format("%.2f Hrs", avgHours)
+							: String.format("%.2f Mins", Math.round(avgMinutes * 100.0) / 100.0);
+
+			DataCount dc = new DataCount();
+			dc.setData(String.format("%.2f", avgHours));
+			dc.setSProjectName(trendLineName);
+			dc.setDate(dateLabel);
+			dc.setValue(avgHours);
+
+			Map<String, Object> hover = new HashMap<>();
+			hover.put(TOTAL_BUILDS, totalBuilds);
+			hover.put("Avg Duration", tooltipDisplay);
+			dc.setHoverValue(hover);
+
+			Map<String, Object> excelExtras = new HashMap<>();
+			excelExtras.put("successCount", successCount);
+			excelExtras.put("failCount", failCount);
+			excelExtras.put("skippedCount", buildsSkipped);
+			excelExtras.put("prsInWindow", prsBuilder.toString());
+			dc.setSubfilterValues(excelExtras);
+
+			aggDataMap.get(workflowName).add(dc);
+			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
+		}
+	}
+
+	private boolean matchesBranch(ScmCommits commit, String buildBranch) {
+		if (buildBranch == null || buildBranch.isEmpty()) return false;
+		return (commit.getBranchName() != null && commit.getBranchName().equalsIgnoreCase(buildBranch))
+				|| (commit.getBranch() != null && commit.getBranch().equalsIgnoreCase(buildBranch));
 	}
 }
