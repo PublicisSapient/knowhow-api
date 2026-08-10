@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -610,14 +611,13 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		KPIExcelUtility.populateEpicHygieneExcelData(excelRows, verdicts);
 		kpiElement.setExcelData(excelRows);
 		kpiElement.setExcelColumns(KPIExcelColumn.EPIC_HYGIENE.getColumns());
+		List<IterationKpiData> kpiDataList = new ArrayList<>();
 
 		int readyEpics =
 				(int)
 						verdicts.stream()
 								.filter(verdict -> READY.equalsIgnoreCase(verdict.getOverallStatus()))
 								.count();
-		kpiElement.setScoreFactor(totalEpicsConsidered);
-		kpiElement.setValidScoreFactor(readyEpics);
 
 		OptionalDouble averageReadiness =
 				verdicts.stream()
@@ -625,10 +625,16 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						.filter(Objects::nonNull)
 						.mapToInt(Integer::intValue)
 						.average();
-		double projectScore =
-				averageReadiness.isPresent() ? roundToTwoDecimals(averageReadiness.getAsDouble()) : 0d;
-		kpiElement.setProjectScore(projectScore);
-		kpiElement.setValue(projectScore);
+		long atRisked =
+				verdicts.stream()
+						.map(EpicHygieneResponseDTO::getReadinessScore)
+						.filter(score -> score != null && score<50)
+						.count();
+		kpiDataList.add(IterationKpiData.builder().label("Total Active Epics").value((double) totalEpicsConsidered).build());
+		kpiDataList.add(IterationKpiData.builder().label("Construction Ready").value((double) readyEpics).build());
+		kpiDataList.add(IterationKpiData.builder().label("At Risk / Blocked").value((double) atRisked).labelInfo("Readiness < 50%").build());
+		kpiDataList.add(IterationKpiData.builder().label("Avg Readiness Score").value(averageReadiness.isPresent() ? roundToTwoDecimals(averageReadiness.getAsDouble()) : 0d).build());
+		kpiElement.setTrendValueList(kpiDataList);
 	}
 
 	/** A cached verdict survives only while both the rule-set and the Epic itself are unchanged. */

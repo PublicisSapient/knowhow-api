@@ -3542,7 +3542,7 @@ public class KPIExcelUtility {
 							excelData.setStatus(epicVerdict.getStatus());
 							excelData.setAssignee(epicVerdict.getAssignee());
 							excelData.setGroupMap(dimensionScores);
-							excelData.setHygieneScore(epicVerdict.getReadinessScore());
+							excelData.setReadinessScore(epicVerdict.getReadinessScore());
 							excelData.setOverallStatus(epicVerdict.getOverallStatus());
 							excelData.setRecommendations(epicVerdict.getRecommendations());
 							kpiExcelData.add(excelData);
