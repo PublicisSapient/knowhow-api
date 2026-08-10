@@ -30,7 +30,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
@@ -51,6 +50,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -628,12 +628,29 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		long atRisked =
 				verdicts.stream()
 						.map(EpicHygieneResponseDTO::getReadinessScore)
-						.filter(score -> score != null && score<50)
+						.filter(score -> score != null && score < 50)
 						.count();
-		kpiDataList.add(IterationKpiData.builder().label("Total Active Epics").value((double) totalEpicsConsidered).build());
-		kpiDataList.add(IterationKpiData.builder().label("Construction Ready").value((double) readyEpics).build());
-		kpiDataList.add(IterationKpiData.builder().label("At Risk / Blocked").value((double) atRisked).labelInfo("Readiness < 50%").build());
-		kpiDataList.add(IterationKpiData.builder().label("Avg Readiness Score").value(averageReadiness.isPresent() ? roundToTwoDecimals(averageReadiness.getAsDouble()) : 0d).build());
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("Total Active Epics")
+						.value((double) totalEpicsConsidered)
+						.build());
+		kpiDataList.add(
+				IterationKpiData.builder().label("Construction Ready").value((double) readyEpics).build());
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("At Risk / Blocked")
+						.value((double) atRisked)
+						.labelInfo("Readiness < 50%")
+						.build());
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("Avg Readiness Score")
+						.value(
+								averageReadiness.isPresent()
+										? roundToTwoDecimals(averageReadiness.getAsDouble())
+										: 0d)
+						.build());
 		kpiElement.setTrendValueList(kpiDataList);
 	}
 
