@@ -69,7 +69,7 @@ public class HygieneKpiConfigurationTest {
 						"Epic Name",
 						"Status",
 						"Assignee",
-						"Hygiene Score",
+						"Readiness Score",
 						"Overall Status",
 						"Recommendations"),
 				KPIExcelColumn.EPIC_HYGIENE.getColumns());

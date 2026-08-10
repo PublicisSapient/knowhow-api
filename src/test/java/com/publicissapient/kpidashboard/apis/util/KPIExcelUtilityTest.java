@@ -1956,7 +1956,7 @@ public class KPIExcelUtilityTest {
 		assertEquals("EPIC-1 name", row.getEpicName());
 		assertEquals("Construction Ready", row.getStatus());
 		assertEquals("Ada", row.getAssignee());
-		assertEquals(Integer.valueOf(82), row.getHygieneScore());
+		assertEquals(Integer.valueOf(82), row.getReadinessScore());
 		assertEquals("READY", row.getOverallStatus());
 		assertEquals("do a | do b", row.getRecommendations());
 		assertEquals("80", row.getGroupMap().get("Business Clarity"));
