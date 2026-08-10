@@ -1368,7 +1368,7 @@ public enum KPIExcelColumn {
 					"Epic Name",
 					"Status",
 					"Assignee",
-					"Hygiene Score",
+					"Readiness Score",
 					"Overall Status",
 					"Recommendations")),
 	;

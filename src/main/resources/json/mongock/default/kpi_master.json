@@ -5961,7 +5961,7 @@
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Sandbox",
     "kpiUnit" : "%",
-    "chartType" : "",
+    "chartType" : "table",
     "xAxisLabel" : "",
     "yAxisLabel" : "Percentage",
     "showTrend" : false,
