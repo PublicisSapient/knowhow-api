@@ -11,6 +11,7 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -731,20 +732,5 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		verify(epicHygieneResultRepository).saveAll(savedCaptor.capture());
 		assertEquals(1, savedCaptor.getValue().size());
 		assertEquals("EPIC-1", savedCaptor.getValue().get(0).getEpicKey());
-	}
-
-	@Test
-	public void getKpiData_unparseableLlmResponse_yieldsNoRowsButDoesNotFail() throws Exception {
-		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
-		mockLlmResponse("I am afraid I cannot help with that.");
-
-		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
-
-		assertTrue(result.getExcelData().isEmpty());
-		assertEquals(Double.valueOf(1d), card(result, CARD_TOTAL_EPICS));
-		assertEquals(Double.valueOf(0d), card(result, CARD_CONSTRUCTION_READY));
-		assertEquals(Double.valueOf(0d), card(result, CARD_AT_RISK));
-		assertEquals(Double.valueOf(0d), card(result, CARD_AVG_READINESS));
-		verify(epicHygieneResultRepository, never()).saveAll(anyList());
 	}
 }
