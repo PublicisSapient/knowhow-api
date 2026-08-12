@@ -770,7 +770,13 @@ public class KPIExcelDataService {
 		}
 
 		for (String key : categoryKeys) {
-			result.add(new KpiColumnDetails(key, ++maxOrder, true, true));
+			// A KPI with a FIXED group map (e.g. the Epic Hygiene readiness dimensions)
+			// already declares its columns in the saved configuration - appending them
+			// again would duplicate the column and push it out of its configured order.
+			if (!existingNames.contains(key)) {
+				result.add(new KpiColumnDetails(key, ++maxOrder, true, true));
+				existingNames.add(key);
+			}
 		}
 
 		for (String key : countKeys) {

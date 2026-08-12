@@ -49,6 +49,7 @@ import com.publicissapient.kpidashboard.common.model.application.*;
 import com.publicissapient.kpidashboard.common.model.jira.*;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseExecutionData;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KPIExcelUtilityTest {
@@ -2018,7 +2019,51 @@ public class KPIExcelUtilityTest {
 
 		assertEquals(1, excelData.size());
 		assertEquals("", excelData.get(0).getEpicID().get("EPIC-1"));
-		assertTrue(excelData.get(0).getGroupMap().isEmpty());
+		// The five fixed columns are always emitted, all of them N/A
+		assertEquals(
+				EpicReadinessDimension.displayNames(),
+				new ArrayList<>(excelData.get(0).getGroupMap().keySet()));
+		excelData.get(0).getGroupMap().values().forEach(score -> assertEquals("N/A", score));
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_alwaysEmitsTheFiveFixedDimensionsInOrder() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(
+				excelData,
+				Collections.singletonList(
+						epicVerdict(
+								"EPIC-1",
+								70,
+								"READY",
+								epicDimension("Risk Readiness", 70),
+								epicDimension("Business Clarity", 70))));
+
+		// Fixed order, never the order the LLM returned
+		assertEquals(
+				EpicReadinessDimension.displayNames(),
+				new ArrayList<>(excelData.get(0).getGroupMap().keySet()));
+	}
+
+	@Test
+	public void testPopulateEpicHygieneExcelData_dimensionOutsideTheFixedSetIsNotAColumn() {
+		List<KPIExcelData> excelData = new ArrayList<>();
+
+		KPIExcelUtility.populateEpicHygieneExcelData(
+				excelData,
+				Collections.singletonList(
+						epicVerdict(
+								"EPIC-1",
+								80,
+								"READY",
+								epicDimension("Business Clarity", 80),
+								epicDimension("Delivery Readiness", 80))));
+
+		assertEquals(
+				EpicReadinessDimension.displayNames().size(), excelData.get(0).getGroupMap().size());
+		assertNull(excelData.get(0).getGroupMap().get("Delivery Readiness"));
+		assertEquals("80", excelData.get(0).getGroupMap().get("Business Clarity"));
 	}
 
 	private EpicHygieneResponseDTO.DimensionResult epicDimension(String dimension, Integer score) {
