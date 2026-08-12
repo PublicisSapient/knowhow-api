@@ -37,9 +37,12 @@ import io.mongock.api.annotations.RollbackExecution;
  * the trailing six months, so it publishes no trend line and is rendered purely from its drill-down
  * table plus the project level readiness score.
  *
- * <p>{@code jiraFieldsSelectionKPI312} carries the readiness dimensions. Each configured entry
- * supplies a dimension label, the Jira field holding the evidence and the scoring criteria - the
- * dimensions are therefore fully data-driven and can be re-worded per project without a release.
+ * <p>{@code jiraFieldsSelectionKPI312} carries the scoring rules. The readiness dimensions
+ * themselves are FIXED (Business Clarity, Scope Definition, Solution Readiness, Dependency
+ * Readiness, Risk Readiness) so every project reports the same comparable columns; each configured
+ * entry only supplies the Jira field holding the evidence and the rule to check for the dimension
+ * its label names. A dimension with no configured entry falls back to the shipped
+ * Definition-of-Ready criteria.
  */
 @ChangeUnit(
 		id = "epic_hygiene_slingshot_kpi_insert",
@@ -63,7 +66,7 @@ public class EpicHygieneSlingshotChangeUnit {
 
 	private static final String THRESHOLD_FIELD = "thresholdValueKPI312";
 	private static final String JIRA_FIELDS_SELECTION_FIELD = "jiraFieldsSelectionKPI312";
-	private static final String READINESS_DIMENSIONS_LABEL = "Epic readiness dimensions";
+	private static final String READINESS_DIMENSIONS_LABEL = "Epic readiness rules";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
@@ -103,9 +106,9 @@ public class EpicHygieneSlingshotChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"AI-driven readiness score (0-100) that grades every Epic created in the last six months against the configured readiness dimensions "
-														+ "(business clarity, scope definition, solution readiness, dependency readiness, delivery readiness and risk readiness). "
-														+ "Each dimension is scored purely on evidence found in the Epic's own Jira fields; the Epic score is the weighted average of its dimensions."))
+												"AI-driven readiness score (0-100) that grades every Epic created in the last six months on five fixed readiness dimensions "
+														+ "(Business Clarity, Scope Definition, Solution Readiness, Dependency Readiness and Risk Readiness). "
+														+ "Each dimension is scored purely on evidence found in the Epic's own Jira fields; the Readiness Score is the weighted average of the five."))
 						.append("aggregationCriteria", "average")
 						.append("isTrendCalculative", false)
 						.append("isAdditionalFilterSupport", false)
@@ -118,8 +121,9 @@ public class EpicHygieneSlingshotChangeUnit {
 	}
 
 	/**
-	 * Upserts the drill-down column layout. The per-dimension score columns are appended dynamically
-	 * at runtime, so only the fixed columns are declared here.
+	 * Upserts the drill-down column layout: the identity columns, one column per FIXED readiness
+	 * dimension and the derived verdict columns. The dimensions are not configurable, so nothing is
+	 * appended dynamically at runtime any more.
 	 */
 	public void insertKpiColumnConfig(MongoTemplate mongoTemplate) {
 		Document columnConfig =
@@ -133,9 +137,14 @@ public class EpicHygieneSlingshotChangeUnit {
 										column("Epic Name", 2),
 										column("Status", 3),
 										column("Assignee", 4),
-										column("Hygiene Score", 5),
-										column("Overall Status", 6),
-										column("Recommendations", 7)));
+										column("Business Clarity", 5),
+										column("Scope Definition", 6),
+										column("Solution Readiness", 7),
+										column("Dependency Readiness", 8),
+										column("Risk Readiness", 9),
+										column("Readiness Score", 10),
+										column("Overall Status", 11),
+										column("Recommendations", 12)));
 
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
@@ -177,7 +186,9 @@ public class EpicHygieneSlingshotChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"One entry per readiness dimension: pick the Jira field carrying the evidence and describe the 0-100 scoring criteria in the prompt. "
+												"Rules used to score the five fixed readiness dimensions - Business Clarity, Scope Definition, Solution Readiness, Dependency Readiness and Risk Readiness. "
+														+ "Name the entry after the dimension it scores, pick the Jira field carrying the evidence and describe the check in the prompt; several entries may target the same dimension. "
+														+ "A dimension left unconfigured is scored with the standard Definition-of-Ready criteria. "
 														+ "Prefix the prompt with [weight]: to make a dimension count more heavily than the others."))
 						.append("filterGroup", List.of("CustomField"))
 						.append("nodeSpecific", false)

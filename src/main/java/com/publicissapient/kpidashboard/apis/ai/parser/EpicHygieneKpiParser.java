@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO.DimensionResult;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +39,11 @@ import lombok.extern.slf4j.Slf4j;
  * Parses the Epic readiness JSON array produced by the LLM for KPI312.
  *
  * <p>Everything numeric that the dashboard relies on is <b>recomputed here</b> rather than trusted
- * from the model: dimension scores are clamped to 0-100, the overall readiness score is derived as
- * a weight-based average of the applicable dimensions, and grade / status / top gaps follow
- * deterministically. The LLM therefore only has to do what it is good at — judging evidence — while
- * arithmetic stays reproducible.
+ * from the model: dimension names are snapped onto the fixed {@link EpicReadinessDimension} set,
+ * dimension scores are clamped to 0-100, the overall readiness score is derived as a weight-based
+ * average of the applicable dimensions, and grade / status / top gaps follow deterministically. The
+ * LLM therefore only has to do what it is good at — judging evidence — while arithmetic stays
+ * reproducible.
  */
 @Slf4j
 @Component("epicHygieneParser")
@@ -111,6 +113,9 @@ public class EpicHygieneKpiParser implements ParserStategy<List<EpicHygieneRespo
 
 		List<DimensionResult> applicable = new ArrayList<>();
 		for (DimensionResult dimension : dimensions) {
+			// The Excel sheet has one fixed column per readiness dimension, so a slightly
+			// re-worded name coming back from the model is snapped onto the canonical one.
+			dimension.setDimension(EpicReadinessDimension.canonicalName(dimension.getDimension()));
 			dimension.setWeight(normaliseWeight(dimension.getWeight()));
 			// A null score means "not applicable" — it must not drag the average down.
 			if (dimension.getScore() != null) {

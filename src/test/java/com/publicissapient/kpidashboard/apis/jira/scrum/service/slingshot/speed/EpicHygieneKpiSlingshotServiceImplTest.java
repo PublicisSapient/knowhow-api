@@ -11,7 +11,6 @@
 package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -71,6 +70,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneResultRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
 
 /**
@@ -231,7 +231,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	private List<CycleTimeGroup> defaultDimensions() {
 		return List.of(
 				dimension("Business Clarity", "description", "Score the business problem and value"),
-				dimension("Delivery Readiness", "assigneeName", "[2]: Score owner and milestones"));
+				dimension("Risk Readiness", "assigneeName", "[2]: Score risks, assumptions and blockers"));
 	}
 
 	private FieldMapping fieldMappingWith(List<CycleTimeGroup> dimensions) {
@@ -301,7 +301,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 										("{\"epicKey\":\"%s\",\"epicName\":\"%s name\",\"status\":\"Functional Grooming\","
 														+ "\"assignee\":\"Ada\",\"results\":["
 														+ "{\"dimension\":\"Business Clarity\",\"field\":\"description\",\"weight\":1,\"score\":%d},"
-														+ "{\"dimension\":\"Delivery Readiness\",\"field\":\"assigneeName\",\"weight\":2,\"score\":%d}],"
+														+ "{\"dimension\":\"Risk Readiness\",\"field\":\"assigneeName\",\"weight\":2,\"score\":%d}],"
 														+ "\"recommendations\":\"fix a | fix b | fix c\"}")
 												.formatted(
 														entry.getKey(), entry.getKey(), entry.getValue(), entry.getValue()))
@@ -535,7 +535,23 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		assertEquals("READY", row.getOverallStatus());
 		assertEquals("fix a | fix b | fix c", row.getRecommendations());
 		assertEquals("90", row.getGroupMap().get("Business Clarity"));
-		assertEquals("90", row.getGroupMap().get("Delivery Readiness"));
+		assertEquals("90", row.getGroupMap().get("Risk Readiness"));
+	}
+
+	@Test
+	public void getKpiData_excelColumnsAreTheFixedReadinessDimensions() throws Exception {
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		// Every row exposes the same five dimension columns, in the same order,
+		// whichever dimensions the LLM happened to return
+		assertEquals(
+				EpicReadinessDimension.displayNames(),
+				new ArrayList<>(result.getExcelData().get(0).getGroupMap().keySet()));
+		assertTrue(result.getExcelColumns().containsAll(EpicReadinessDimension.displayNames()));
+		assertTrue(result.getExcelColumns().contains("Readiness Score"));
 	}
 
 	// ---------------------------------------------------------------------

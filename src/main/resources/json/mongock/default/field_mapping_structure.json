@@ -5761,14 +5761,14 @@
 
   {
     "fieldName" : "jiraFieldsSelectionKPI312",
-    "fieldLabel" : "Epic readiness dimensions",
-    "placeHolderText" : "Epic readiness dimensions",
+    "fieldLabel" : "Epic readiness rules",
+    "placeHolderText" : "Epic readiness rules",
     "fieldType" : "chips",
     "section" : "Custom Fields Mapping",
     "fieldCategory" : "fields",
     "processorCommon" : false,
     "tooltip" : {
-      "definition" : "One entry per readiness dimension: pick the Jira field carrying the evidence and describe the 0-100 scoring criteria in the prompt. Prefix the prompt with [weight]: to make a dimension count more heavily than the others."
+      "definition" : "Rules used to score the five fixed readiness dimensions - Business Clarity, Scope Definition, Solution Readiness, Dependency Readiness and Risk Readiness. Name the entry after the dimension it scores, pick the Jira field carrying the evidence and describe the check in the prompt; several entries may target the same dimension. A dimension left unconfigured is scored with the standard Definition-of-Ready criteria. Prefix the prompt with [weight]: to make a dimension count more heavily than the others."
     },
     "filterGroup" : [ "CustomField" ],
     "nodeSpecific" : false,
