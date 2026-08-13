@@ -34,7 +34,7 @@ public class CommonUtilsTest {
 
 	@Test
 	public void getListFromString() {
-		Assert.assertEquals("List from string", 2, CommonUtils.getListFromString("Test~String").size());
+		Assert.assertEquals("List from string", 3, CommonUtils.getListFromString("Test~String").size());
 	}
 
 	@Test
