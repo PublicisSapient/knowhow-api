@@ -50,6 +50,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -65,6 +66,7 @@ import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneResult
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
 
 import lombok.extern.slf4j.Slf4j;
@@ -74,11 +76,13 @@ import lombok.extern.slf4j.Slf4j;
  * trailing N months of a project.
  *
  * <p>Where {@link StoryHygieneKpiSlingshotServiceImpl} grades sprint issues rule-by-rule with a
- * pass/fail verdict, an Epic is graded per <em>readiness dimension</em> on a 0-100 scale (Business
- * Clarity, Scope Definition, Solution Readiness, Dependency Readiness, Delivery Readiness, Risk
- * Readiness, ...). The dimensions are not hardcoded: they come from the project's {@code
- * jiraFieldsSelectionKPI312} field mapping, so each entry supplies the Jira field to inspect and
- * the scoring criteria to apply.
+ * pass/fail verdict, an Epic is graded on the FIXED readiness dimensions of {@link
+ * EpicReadinessDimension} — Business Clarity, Scope Definition, Solution Readiness, Dependency
+ * Readiness and Risk Readiness — each on a 0-100 scale, plus the derived Readiness Score. The
+ * dimensions are fixed so every project downloads the same comparable sheet; what a project
+ * configures in {@code jiraFieldsSelectionKPI312} is <em>how</em> a dimension is scored: the Jira
+ * field carrying the evidence and the rule to check. A dimension no configured rule matches falls
+ * back to the common Definition-of-Ready criteria shipped with the dimension.
  *
  * <p>Design notes:
  *
@@ -102,6 +106,12 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	static final String EPIC_ISSUES = "epicIssues";
 
 	private static final String READY = "READY";
+
+	/** Overall status of an Epic the LLM could not grade in this request. */
+	static final String NOT_EVALUATED = "NOT EVALUATED";
+
+	private static final String NOT_EVALUATED_REASON =
+			"The AI evaluation did not return a verdict for this Epic — it will be re-evaluated on the next refresh.";
 
 	/**
 	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
@@ -302,6 +312,10 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		if (CollectionUtils.isNotEmpty(anchorFieldNames)) {
 			jiraFields.addAll(anchorFieldNames);
 		}
+		// The fallback evidence of every fixed readiness dimension is always fetched:
+		// a dimension the project did not configure is graded on its default criteria
+		// and would otherwise have no field to read.
+		jiraFields.addAll(EpicReadinessDimension.allDefaultEvidenceFields());
 		jiraFields.addAll(
 				List.of(
 						"number",
@@ -340,7 +354,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 				readinessDimensions(
 						configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId()));
 
-		String readinessRules = HygienePromptBuilder.buildHygieneRules(readinessDimensions);
+		String readinessRules = HygienePromptBuilder.buildEpicReadinessRules(readinessDimensions);
 		String ruleSetHash = HygienePromptBuilder.computeRuleSetHash(readinessDimensions, objectMapper);
 
 		long startedAt = System.currentTimeMillis();
@@ -398,8 +412,13 @@ public class EpicHygieneKpiSlingshotServiceImpl
 							cachedByEpicKey));
 		}
 
+		// The drill-down must list EVERY Epic that was counted, so any Epic the LLM
+		// could not grade — gateway down, unparseable answer, omitted or renamed key —
+		// is reported as NOT EVALUATED instead of silently vanishing from the sheet.
+		List<EpicHygieneResponseDTO> completeVerdicts = withNotEvaluatedEpics(verdicts, epicByKey);
+
 		List<EpicHygieneResponseDTO> orderedVerdicts =
-				verdicts.stream()
+				completeVerdicts.stream()
 						.filter(Objects::nonNull)
 						.sorted(
 								Comparator.comparing(
@@ -409,6 +428,68 @@ public class EpicHygieneKpiSlingshotServiceImpl
 
 		publish(kpiElement, orderedVerdicts, sampledEpics.size());
 		node.setValue(orderedVerdicts);
+	}
+
+	/**
+	 * Adds a NOT EVALUATED placeholder for every sampled Epic that came back without a verdict, so
+	 * the number of drill-down rows always matches the "Total Active Epics" card.
+	 *
+	 * <p>Placeholders carry the real Jira metadata with every dimension score left {@code null}, so
+	 * they render as N/A, never count as READY and never move the average readiness score. They are
+	 * deliberately NOT persisted: the Epic is re-evaluated on the next request.
+	 */
+	private List<EpicHygieneResponseDTO> withNotEvaluatedEpics(
+			List<EpicHygieneResponseDTO> verdicts, Map<String, JiraIssue> epicByKey) {
+
+		Set<String> gradedKeys =
+				verdicts.stream()
+						.filter(Objects::nonNull)
+						.map(EpicHygieneResponseDTO::getEpicKey)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toSet());
+
+		List<EpicHygieneResponseDTO> completed = new ArrayList<>(verdicts);
+		epicByKey.forEach(
+				(epicKey, epic) -> {
+					if (!gradedKeys.contains(epicKey)) {
+						completed.add(notEvaluatedVerdict(epic));
+					}
+				});
+
+		int notEvaluated = completed.size() - verdicts.size();
+		if (notEvaluated > 0) {
+			log.warn(
+					"Epic Hygiene (kpi312): {} of {} Epic(s) could not be evaluated — reported as NOT EVALUATED.",
+					notEvaluated,
+					epicByKey.size());
+		}
+		return completed;
+	}
+
+	/** Builds the NOT EVALUATED row for one Epic: real metadata, no scores, no verdict. */
+	private EpicHygieneResponseDTO notEvaluatedVerdict(JiraIssue epic) {
+		List<EpicHygieneResponseDTO.DimensionResult> dimensions =
+				EpicReadinessDimension.displayNames().stream()
+						.map(
+								dimension ->
+										EpicHygieneResponseDTO.DimensionResult.builder()
+												.dimension(dimension)
+												.score(null)
+												.reason(NOT_EVALUATED_REASON)
+												.build())
+						.toList();
+
+		EpicHygieneResponseDTO verdict =
+				EpicHygieneResponseDTO.builder()
+						.epicKey(epic.getNumber())
+						.results(new ArrayList<>(dimensions))
+						.readinessScore(null)
+						.overallStatus(NOT_EVALUATED)
+						.topGaps(List.of())
+						.recommendations(NOT_EVALUATED_REASON)
+						.build();
+		applyJiraMetadata(verdict, epic);
+		return verdict;
 	}
 
 	/**
@@ -442,7 +523,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 											epicBatch.stream()
 													.map(
 															epic ->
-																	HygienePromptBuilder.buildIssueNode(
+																	HygienePromptBuilder.buildEpicIssueNode(
 																			epic, anchorFieldNames, readinessDimensions, objectMapper))
 													.toList();
 									String epicsJson = HygienePromptBuilder.buildIssuesJson(epicNodes, objectMapper);
@@ -497,15 +578,21 @@ public class EpicHygieneKpiSlingshotServiceImpl
 			log.debug("kpi312: content={}", responseContent);
 		} catch (Exception ex) {
 			log.error(
-					"AI Gateway call failed for {} Epic(s): {} — returning mock data (not persisted)",
+					"AI Gateway call failed for {} Epic(s): {} — those Epics are reported as {}",
 					epicBatch.size(),
 					ex.getMessage(),
+					NOT_EVALUATED,
 					ex);
 			responseContent = null;
 		}
 
 		if (StringUtils.isBlank(responseContent)) {
-			throw new MockEpicHygieneResponseException(mockVerdicts(batchByKey));
+			// No fabricated data: the Epics of this batch are back-filled as NOT
+			// EVALUATED so the sheet still lists them with their real keys.
+			log.warn(
+					"Epic Hygiene (kpi312): empty AI response for {} Epic(s) — nothing persisted.",
+					epicBatch.size());
+			return List.of();
 		}
 
 		List<EpicHygieneResponseDTO> verdicts = epicHygieneKpiParser.parse(responseContent);
@@ -540,9 +627,19 @@ public class EpicHygieneKpiSlingshotServiceImpl
 				});
 
 		List<EpicHygieneResult> toSave = new ArrayList<>();
+		Set<String> persistedKeys = new HashSet<>();
 		for (EpicHygieneResponseDTO verdict : verdicts) {
 			JiraIssue epic = batchByKey.get(verdict.getEpicKey());
 			applyJiraMetadata(verdict, epic);
+
+			// One document per (project, Epic): a model that returns the same Epic twice
+			// must not turn into a duplicate key error that costs the whole batch.
+			if (!persistedKeys.add(verdict.getEpicKey())) {
+				log.warn(
+						"kpi312: duplicate verdict for Epic '{}' — keeping the first one",
+						verdict.getEpicKey());
+				continue;
+			}
 
 			EpicHygieneResult result =
 					cachedByEpicKey.getOrDefault(
@@ -560,7 +657,17 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		}
 
 		if (!toSave.isEmpty()) {
-			epicHygieneResultRepository.saveAll(toSave);
+			try {
+				epicHygieneResultRepository.saveAll(toSave);
+			} catch (Exception ex) {
+				// Caching is an optimisation: a failed write must never cost the user the
+				// rows that were just computed, they are simply not cached this time.
+				log.error(
+						"Epic Hygiene (kpi312): could not cache {} verdict(s): {}",
+						toSave.size(),
+						ex.getMessage(),
+						ex);
+			}
 		}
 	}
 
@@ -578,8 +685,9 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	}
 
 	/**
-	 * Recovers from a failed batch. The mock payload is served at most once per request so a project
-	 * with many batches does not repeat the same fabricated Epics.
+	 * Recovers from a failed batch. The Epics of that batch are not lost: they are back-filled as NOT
+	 * EVALUATED once every batch has returned, so the drill-down still lists them with their real
+	 * keys instead of showing nothing (or fabricated data).
 	 */
 	private List<EpicHygieneResponseDTO> handleBatchFailure(
 			Throwable ex, List<JiraIssue> epicBatch, AtomicBoolean mockServed) {
@@ -610,14 +718,13 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		KPIExcelUtility.populateEpicHygieneExcelData(excelRows, verdicts);
 		kpiElement.setExcelData(excelRows);
 		kpiElement.setExcelColumns(KPIExcelColumn.EPIC_HYGIENE.getColumns());
+		List<IterationKpiData> kpiDataList = new ArrayList<>();
 
 		int readyEpics =
 				(int)
 						verdicts.stream()
 								.filter(verdict -> READY.equalsIgnoreCase(verdict.getOverallStatus()))
 								.count();
-		kpiElement.setScoreFactor(totalEpicsConsidered);
-		kpiElement.setValidScoreFactor(readyEpics);
 
 		OptionalDouble averageReadiness =
 				verdicts.stream()
@@ -625,10 +732,33 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						.filter(Objects::nonNull)
 						.mapToInt(Integer::intValue)
 						.average();
-		double projectScore =
-				averageReadiness.isPresent() ? roundToTwoDecimals(averageReadiness.getAsDouble()) : 0d;
-		kpiElement.setProjectScore(projectScore);
-		kpiElement.setValue(projectScore);
+		long atRisked =
+				verdicts.stream()
+						.map(EpicHygieneResponseDTO::getReadinessScore)
+						.filter(score -> score != null && score < 50)
+						.count();
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("Total Active Epics")
+						.value((double) totalEpicsConsidered)
+						.build());
+		kpiDataList.add(
+				IterationKpiData.builder().label("Construction Ready").value((double) readyEpics).build());
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("At Risk / Blocked")
+						.value((double) atRisked)
+						.labelInfo("Readiness < 50%")
+						.build());
+		kpiDataList.add(
+				IterationKpiData.builder()
+						.label("Avg Readiness Score")
+						.value(
+								averageReadiness.isPresent()
+										? roundToTwoDecimals(averageReadiness.getAsDouble())
+										: 0d)
+						.build());
+		kpiElement.setTrendValueList(kpiDataList);
 	}
 
 	/** A cached verdict survives only while both the rule-set and the Epic itself are unchanged. */

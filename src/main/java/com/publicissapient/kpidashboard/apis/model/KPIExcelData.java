@@ -678,6 +678,9 @@ public class KPIExcelData {
 	@JsonProperty("Recommendations")
 	private String recommendations;
 
+	@JsonProperty("Readiness Score")
+	private Integer readinessScore;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

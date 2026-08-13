@@ -1368,7 +1368,12 @@ public enum KPIExcelColumn {
 					"Epic Name",
 					"Status",
 					"Assignee",
-					"Hygiene Score",
+					"Business Clarity",
+					"Scope Definition",
+					"Solution Readiness",
+					"Dependency Readiness",
+					"Risk Readiness",
+					"Readiness Score",
 					"Overall Status",
 					"Recommendations")),
 	;
