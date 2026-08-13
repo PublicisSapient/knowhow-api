@@ -13,7 +13,6 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,7 +26,6 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -60,9 +58,7 @@ import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
 import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
-import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResult;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
-import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneResultRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -81,8 +77,8 @@ import lombok.extern.slf4j.Slf4j;
  * Readiness and Risk Readiness — each on a 0-100 scale, plus the derived Readiness Score. The
  * dimensions are fixed so every project downloads the same comparable sheet; what a project
  * configures in {@code jiraFieldsSelectionKPI312} is <em>how</em> a dimension is scored: the Jira
- * field carrying the evidence and the rule to check. A dimension no configured rule matches falls
- * back to the common Definition-of-Ready criteria shipped with the dimension.
+ * field carrying the evidence and the rule to check. A dimension no configured rule matches is
+ * graded with the default criteria carried by the {@code epic-hygiene} prompt.
  *
  * <p>Design notes:
  *
@@ -90,12 +86,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>No trend line.</b> Epics are not sprint scoped, so this KPI publishes no {@code
  *       trendValueList}. It reports the drill-down Excel rows plus {@code projectScore}, {@code
  *       scoreFactor} (Epics evaluated) and {@code validScoreFactor} (Epics READY).
- *   <li><b>Per-Epic cache.</b> One {@link EpicHygieneResult} document per (project, Epic). A cached
- *       verdict is reused while the rule-set hash and the Epic's {@code changeDate} are both
- *       unchanged, so a request only pays the LLM cost for Epics that were actually re-groomed.
- *   <li><b>Batched fan-out.</b> Epics needing evaluation are chunked and dispatched concurrently on
- *       the shared hygiene executor; per-call HTTP timeout is governed by OkHttp's {@code
- *       callTimeout} in {@code AiGatewayConfig}.
+ *   <li><b>No stored verdicts.</b> Every Epic is scored by the LLM on every request; nothing is
+ *       read from or written to a results collection, so the report always reflects the current
+ *       state of the Epic and the current prompt.
+ *   <li><b>Batched fan-out.</b> Epics are chunked and dispatched concurrently on the shared hygiene
+ *       executor; per-call HTTP timeout is governed by OkHttp's {@code callTimeout} in {@code
+ *       AiGatewayConfig}.
  * </ul>
  */
 @Slf4j
@@ -113,141 +109,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	private static final String NOT_EVALUATED_REASON =
 			"The AI evaluation did not return a verdict for this Epic — it will be re-evaluated on the next refresh.";
 
-	/**
-	 * Fallback response used when the AI Gateway is unavailable. Shown to the user but never
-	 * persisted.
-	 */
-	static final String MOCK_EPIC_HYGIENE_RESPONSE_JSON =
-			"""
-			[
-				{
-					"epicKey": "DTS-40112",
-					"epicName": "Role based access across KnowHOW resources",
-					"status": "Construction Ready",
-					"assignee": "Raja Kurru",
-					"results": [
-						{
-							"dimension": "Business Clarity",
-							"field": "description",
-							"weight": 1,
-							"score": 88,
-							"observed": "Problem statement, target personas and expected business outcome are documented",
-							"reason": "description states the business problem, the value proposition and the measurable outcome"
-						},
-						{
-							"dimension": "Scope Definition",
-							"field": "description",
-							"weight": 1,
-							"score": 82,
-							"observed": "In-scope and out-of-scope lists plus deliverables are enumerated",
-							"reason": "scope boundaries and deliverables are explicit, exclusions are called out"
-						},
-						{
-							"dimension": "Solution Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 78,
-							"observed": "Architecture approach and integration points documented",
-							"reason": "technical approach is described with the chosen option and its trade-offs"
-						},
-						{
-							"dimension": "Dependency Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 74,
-							"observed": "Two upstream dependencies listed with owners",
-							"reason": "dependencies are named with owners, but no target resolution dates are given"
-						},
-						{
-							"dimension": "Delivery Readiness",
-							"field": "assigneeName",
-							"weight": 1,
-							"score": 80,
-							"observed": "Raja Kurru",
-							"reason": "owner assigned and status is Construction Ready with milestones listed"
-						},
-						{
-							"dimension": "Risk Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 72,
-							"observed": "Risks and assumptions section present",
-							"reason": "risks are identified with mitigations, but no contingency or monitoring plan"
-						}
-					],
-					"readinessScore": 79,
-					"readinessGrade": "GOOD",
-					"overallStatus": "READY",
-					"topGaps": [],
-					"recommendations": "Add target resolution dates to each dependency | Document contingency plans for the top two risks | Capture NFRs for authorisation latency | Link the architecture decision record | Define success metrics for the rollout"
-				},
-				{
-					"epicKey": "DTS-41880",
-					"epicName": "Predictive KPIs for quality metrics",
-					"status": "Functional Grooming",
-					"assignee": "Theodor Constantin",
-					"results": [
-						{
-							"dimension": "Business Clarity",
-							"field": "description",
-							"weight": 1,
-							"score": 65,
-							"observed": "Goal stated at a high level, no measurable outcome",
-							"reason": "description explains the intent but does not quantify the expected business benefit"
-						},
-						{
-							"dimension": "Scope Definition",
-							"field": "description",
-							"weight": 1,
-							"score": 40,
-							"observed": "No acceptance criteria or deliverables listed",
-							"reason": "scope boundaries are absent; which KPIs are in scope is not stated"
-						},
-						{
-							"dimension": "Solution Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 30,
-							"observed": "null",
-							"reason": "no technical approach, model choice or data strategy documented"
-						},
-						{
-							"dimension": "Dependency Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 20,
-							"observed": "null",
-							"reason": "no dependencies documented despite an external data feed being implied"
-						},
-						{
-							"dimension": "Delivery Readiness",
-							"field": "assigneeName",
-							"weight": 1,
-							"score": 45,
-							"observed": "Theodor Constantin",
-							"reason": "owner assigned, but no milestones, phasing or capacity confirmation"
-						},
-						{
-							"dimension": "Risk Readiness",
-							"field": "description",
-							"weight": 1,
-							"score": 25,
-							"observed": "null",
-							"reason": "no risks, assumptions or constraints captured"
-						}
-					],
-					"readinessScore": 38,
-					"readinessGrade": "POOR",
-					"overallStatus": "NOT READY",
-					"topGaps": ["Dependency Readiness", "Risk Readiness", "Solution Readiness"],
-					"recommendations": "Document the technical approach and model selection | List in-scope KPIs and acceptance criteria | Capture dependencies with owners and dates | Record risks, assumptions and mitigations | Define measurable success metrics"
-				}
-			]
-			""";
-
 	@Autowired private EpicHygieneKpiParser epicHygieneKpiParser;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
-	@Autowired private EpicHygieneResultRepository epicHygieneResultRepository;
 	@Autowired private AiGatewayClient aiGatewayClient;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
@@ -355,7 +218,6 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId()));
 
 		String readinessRules = HygienePromptBuilder.buildEpicReadinessRules(readinessDimensions);
-		String ruleSetHash = HygienePromptBuilder.computeRuleSetHash(readinessDimensions, objectMapper);
 
 		long startedAt = System.currentTimeMillis();
 		Map<String, Object> resultMap = fetchKPIDataFromDb(List.of(node), null, null, kpiRequest);
@@ -379,38 +241,10 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						.collect(
 								Collectors.toMap(JiraIssue::getNumber, epic -> epic, (first, second) -> first));
 
-		Map<String, EpicHygieneResult> cachedByEpicKey =
-				epicHygieneResultRepository
-						.findByBasicProjectConfigIdAndEpicKeyIn(
-								basicProjectConfigId, new ArrayList<>(epicByKey.keySet()))
-						.stream()
-						.filter(result -> result.getEpicKey() != null)
-						.collect(
-								Collectors.toMap(EpicHygieneResult::getEpicKey, result -> result, (a, b) -> a));
-
-		List<EpicHygieneResponseDTO> verdicts = new ArrayList<>();
-		List<JiraIssue> staleEpics = new ArrayList<>();
-		epicByKey.forEach(
-				(epicKey, epic) -> {
-					EpicHygieneResult cached = cachedByEpicKey.get(epicKey);
-					if (isFresh(cached, ruleSetHash, epic)) {
-						log.debug("Epic Hygiene (kpi312): cache hit for Epic '{}' — serving from DB", epicKey);
-						verdicts.add(cached.getVerdict());
-					} else {
-						staleEpics.add(epic);
-					}
-				});
-
-		if (!staleEpics.isEmpty()) {
-			verdicts.addAll(
-					evaluateWithLlm(
-							staleEpics,
-							readinessDimensions,
-							readinessRules,
-							ruleSetHash,
-							basicProjectConfigId,
-							cachedByEpicKey));
-		}
+		// Every Epic is graded by the LLM on every request: no verdict is ever read
+		// from or written to the database.
+		List<EpicHygieneResponseDTO> verdicts =
+				evaluateWithLlm(new ArrayList<>(epicByKey.values()), readinessDimensions, readinessRules);
 
 		// The drill-down must list EVERY Epic that was counted, so any Epic the LLM
 		// could not grade — gateway down, unparseable answer, omitted or renamed key —
@@ -435,8 +269,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	 * the number of drill-down rows always matches the "Total Active Epics" card.
 	 *
 	 * <p>Placeholders carry the real Jira metadata with every dimension score left {@code null}, so
-	 * they render as N/A, never count as READY and never move the average readiness score. They are
-	 * deliberately NOT persisted: the Epic is re-evaluated on the next request.
+	 * they render as N/A, never count as READY and never move the average readiness score.
 	 */
 	private List<EpicHygieneResponseDTO> withNotEvaluatedEpics(
 			List<EpicHygieneResponseDTO> verdicts, Map<String, JiraIssue> epicByKey) {
@@ -493,26 +326,19 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	}
 
 	/**
-	 * Splits the Epics that need a fresh verdict into batches, fires one LLM call per batch on the
-	 * shared hygiene executor and collects the results. A batch that fails outright contributes no
-	 * rows; the first batch that hits an unreachable gateway contributes the mock payload so the user
-	 * still sees a populated table.
+	 * Splits the Epics into batches, fires one LLM call per batch on the shared hygiene executor and
+	 * collects the results. A batch that fails contributes no rows; its Epics are back-filled as NOT
+	 * EVALUATED by {@link #withNotEvaluatedEpics}.
 	 */
 	private List<EpicHygieneResponseDTO> evaluateWithLlm(
-			List<JiraIssue> staleEpics,
-			List<CycleTimeGroup> readinessDimensions,
-			String readinessRules,
-			String ruleSetHash,
-			String basicProjectConfigId,
-			Map<String, EpicHygieneResult> cachedByEpicKey) {
+			List<JiraIssue> epics, List<CycleTimeGroup> readinessDimensions, String readinessRules) {
 
 		List<String> anchorFieldNames = customApiConfig.getSlingshotEpicHygieneAnchorFields();
-		AtomicBoolean mockServed = new AtomicBoolean(false);
 
-		List<List<JiraIssue>> batches = batch(staleEpics, batchSize());
+		List<List<JiraIssue>> batches = batch(epics, batchSize());
 		log.info(
-				"Epic Hygiene (kpi312): {} Epic(s) need evaluation — dispatching {} LLM batch(es).",
-				staleEpics.size(),
+				"Epic Hygiene (kpi312): {} Epic(s) to evaluate — dispatching {} LLM batch(es).",
+				epics.size(),
 				batches.size());
 
 		List<CompletableFuture<List<EpicHygieneResponseDTO>>> futures =
@@ -533,15 +359,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 									}
 									String prompt = promptService.getEpicHygienePrompt(readinessRules, epicsJson);
 									return CompletableFuture.supplyAsync(
-													() ->
-															computeBatchReadiness(
-																	epicBatch,
-																	prompt,
-																	ruleSetHash,
-																	basicProjectConfigId,
-																	cachedByEpicKey),
-													hygieneAiExecutor)
-											.exceptionally(ex -> handleBatchFailure(ex, epicBatch, mockServed));
+													() -> computeBatchReadiness(epicBatch, prompt), hygieneAiExecutor)
+											.exceptionally(ex -> handleBatchFailure(ex, epicBatch));
 								})
 						.toList();
 
@@ -549,17 +368,9 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		return futures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
 	}
 
-	/**
-	 * Calls the LLM for one batch of Epics, persists every returned verdict and hands the verdicts
-	 * back. Existing documents are updated in place so the collection keeps exactly one entry per
-	 * (project, Epic).
-	 */
+	/** Calls the LLM for one batch of Epics and hands the parsed verdicts back. */
 	private List<EpicHygieneResponseDTO> computeBatchReadiness(
-			List<JiraIssue> epicBatch,
-			String prompt,
-			String ruleSetHash,
-			String basicProjectConfigId,
-			Map<String, EpicHygieneResult> cachedByEpicKey) {
+			List<JiraIssue> epicBatch, String prompt) {
 
 		Map<String, JiraIssue> batchByKey =
 				epicBatch.stream()
@@ -589,86 +400,45 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		if (StringUtils.isBlank(responseContent)) {
 			// No fabricated data: the Epics of this batch are back-filled as NOT
 			// EVALUATED so the sheet still lists them with their real keys.
-			log.warn(
-					"Epic Hygiene (kpi312): empty AI response for {} Epic(s) — nothing persisted.",
-					epicBatch.size());
+			log.warn("Epic Hygiene (kpi312): empty AI response for {} Epic(s).", epicBatch.size());
 			return List.of();
 		}
 
 		List<EpicHygieneResponseDTO> verdicts = epicHygieneKpiParser.parse(responseContent);
-		enrichAndPersist(verdicts, batchByKey, ruleSetHash, basicProjectConfigId, cachedByEpicKey);
+		enrichWithJiraMetadata(verdicts, batchByKey);
 		return verdicts;
 	}
 
 	/**
-	 * Embeds the Jira metadata the Excel sheet needs (URL, name, status, assignee) into each verdict
-	 * and upserts it, so a later cache hit is fully self-contained and needs no {@code jira_issues}
-	 * lookup.
+	 * Keeps only the verdicts that belong to the Epics of this batch and embeds the Jira metadata the
+	 * Excel sheet needs (URL, name, status, assignee).
 	 */
-	private void enrichAndPersist(
-			List<EpicHygieneResponseDTO> verdicts,
-			Map<String, JiraIssue> batchByKey,
-			String ruleSetHash,
-			String basicProjectConfigId,
-			Map<String, EpicHygieneResult> cachedByEpicKey) {
+	private void enrichWithJiraMetadata(
+			List<EpicHygieneResponseDTO> verdicts, Map<String, JiraIssue> batchByKey) {
 
 		// Drop verdicts for keys that were never in the batch — the LLM occasionally
-		// invents an issue key and such a row must neither be shown nor persisted.
+		// invents an issue key and such a row must not be shown.
+		Set<String> seenKeys = new HashSet<>();
 		verdicts.removeIf(
 				verdict -> {
-					boolean unknown =
-							verdict == null
-									|| verdict.getEpicKey() == null
-									|| !batchByKey.containsKey(verdict.getEpicKey());
-					if (unknown && verdict != null) {
-						log.warn("kpi312: dropping verdict for unknown Epic key '{}'", verdict.getEpicKey());
+					if (verdict == null
+							|| verdict.getEpicKey() == null
+							|| !batchByKey.containsKey(verdict.getEpicKey())) {
+						log.warn(
+								"kpi312: dropping verdict for unknown Epic key '{}'",
+								verdict == null ? null : verdict.getEpicKey());
+						return true;
 					}
-					return unknown;
+					if (!seenKeys.add(verdict.getEpicKey())) {
+						log.warn(
+								"kpi312: duplicate verdict for Epic '{}' — keeping the first one",
+								verdict.getEpicKey());
+						return true;
+					}
+					return false;
 				});
 
-		List<EpicHygieneResult> toSave = new ArrayList<>();
-		Set<String> persistedKeys = new HashSet<>();
-		for (EpicHygieneResponseDTO verdict : verdicts) {
-			JiraIssue epic = batchByKey.get(verdict.getEpicKey());
-			applyJiraMetadata(verdict, epic);
-
-			// One document per (project, Epic): a model that returns the same Epic twice
-			// must not turn into a duplicate key error that costs the whole batch.
-			if (!persistedKeys.add(verdict.getEpicKey())) {
-				log.warn(
-						"kpi312: duplicate verdict for Epic '{}' — keeping the first one",
-						verdict.getEpicKey());
-				continue;
-			}
-
-			EpicHygieneResult result =
-					cachedByEpicKey.getOrDefault(
-							verdict.getEpicKey(),
-							EpicHygieneResult.builder()
-									.basicProjectConfigId(basicProjectConfigId)
-									.epicKey(verdict.getEpicKey())
-									.build());
-			result.setEpicName(verdict.getEpicName());
-			result.setRuleSetHash(ruleSetHash);
-			result.setEpicChangeDate(epic.getChangeDate());
-			result.setVerdict(verdict);
-			result.setComputedAt(Instant.now());
-			toSave.add(result);
-		}
-
-		if (!toSave.isEmpty()) {
-			try {
-				epicHygieneResultRepository.saveAll(toSave);
-			} catch (Exception ex) {
-				// Caching is an optimisation: a failed write must never cost the user the
-				// rows that were just computed, they are simply not cached this time.
-				log.error(
-						"Epic Hygiene (kpi312): could not cache {} verdict(s): {}",
-						toSave.size(),
-						ex.getMessage(),
-						ex);
-			}
-		}
+		verdicts.forEach(verdict -> applyJiraMetadata(verdict, batchByKey.get(verdict.getEpicKey())));
 	}
 
 	private void applyJiraMetadata(EpicHygieneResponseDTO verdict, JiraIssue epic) {
@@ -689,12 +459,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	 * EVALUATED once every batch has returned, so the drill-down still lists them with their real
 	 * keys instead of showing nothing (or fabricated data).
 	 */
-	private List<EpicHygieneResponseDTO> handleBatchFailure(
-			Throwable ex, List<JiraIssue> epicBatch, AtomicBoolean mockServed) {
-		Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
-		if (cause instanceof MockEpicHygieneResponseException mockEx) {
-			return mockServed.compareAndSet(false, true) ? mockEx.verdicts() : List.of();
-		}
+	private List<EpicHygieneResponseDTO> handleBatchFailure(Throwable ex, List<JiraIssue> epicBatch) {
 		log.error(
 				"Epic Hygiene (kpi312): evaluation failed for a batch of {} Epic(s): {}",
 				epicBatch.size(),
@@ -761,17 +526,6 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		kpiElement.setTrendValueList(kpiDataList);
 	}
 
-	/** A cached verdict survives only while both the rule-set and the Epic itself are unchanged. */
-	private boolean isFresh(EpicHygieneResult cached, String ruleSetHash, JiraIssue epic) {
-		return cached != null
-				&& cached.getVerdict() != null
-				&& StringUtils.isNotBlank(ruleSetHash)
-				&& ruleSetHash.equals(cached.getRuleSetHash())
-				&& Objects.equals(
-						Objects.toString(cached.getEpicChangeDate(), ""),
-						Objects.toString(epic.getChangeDate(), ""));
-	}
-
 	/**
 	 * Keeps the most recently touched Epics when the project has more than the configured cap, so a
 	 * very large backlog cannot blow up the prompt budget.
@@ -824,22 +578,6 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		return DateUtil.dateTimeFormatter(LocalDateTime.now(), DateUtil.TIME_FORMAT);
 	}
 
-	/** Mock verdicts are shown but never persisted — they carry no real evidence. */
-	private List<EpicHygieneResponseDTO> mockVerdicts(Map<String, JiraIssue> batchByKey) {
-		List<EpicHygieneResponseDTO> mocks =
-				epicHygieneKpiParser.parse(MOCK_EPIC_HYGIENE_RESPONSE_JSON);
-		mocks.forEach(
-				mock -> {
-					JiraIssue epic = batchByKey.get(mock.getEpicKey());
-					if (epic != null) {
-						applyJiraMetadata(mock, epic);
-					} else {
-						mock.setEpicUrl("");
-					}
-				});
-		return mocks;
-	}
-
 	/** Resolves the configured readiness dimensions, tolerating a missing field mapping. */
 	private List<CycleTimeGroup> readinessDimensions(FieldMapping fieldMapping) {
 		return fieldMapping == null ? List.of() : fieldMapping.getJiraFieldsSelectionKPI312();
@@ -847,26 +585,5 @@ public class EpicHygieneKpiSlingshotServiceImpl
 
 	private double roundToTwoDecimals(double value) {
 		return Math.round(value * 100.0) / 100.0;
-	}
-
-	/**
-	 * Thrown by {@link #computeBatchReadiness} when the AI Gateway is unavailable and the mock
-	 * response is used. Carries the pre-built verdicts so the {@code exceptionally} handler can
-	 * return them — bypassing the DB persist while still showing data to the user.
-	 */
-	private static final class MockEpicHygieneResponseException extends RuntimeException {
-
-		private static final long serialVersionUID = 1L;
-
-		private final transient List<EpicHygieneResponseDTO> verdicts;
-
-		MockEpicHygieneResponseException(List<EpicHygieneResponseDTO> verdicts) {
-			super("AI Gateway unavailable — serving mock epic hygiene data");
-			this.verdicts = verdicts;
-		}
-
-		List<EpicHygieneResponseDTO> verdicts() {
-			return verdicts;
-		}
 	}
 }

@@ -51,9 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>replaces the kpi312 Excel column configuration with the fixed layout - which also fixes the
  *       column that was mislabelled "Hygiene Score" instead of "Readiness Score";
  *   <li>re-words the {@code jiraFieldsSelectionKPI312} field mapping: it configures the RULES that
- *       score the dimensions, not the dimensions themselves;
- *   <li>clears the cached Epic verdicts, which were produced by the previous prompt and would
- *       otherwise keep being served from {@code epic_hygiene_results} with the old dimension names.
+ *       score the dimensions, not the dimensions themselves.
  * </ul>
  *
  * <p>The prompt exists in the {@code prompt_details} collection only - this migration is the only
@@ -71,7 +69,6 @@ public class EpicHygieneReadinessDimensionsChangeUnit {
 
 	private static final String PROMPT_DETAILS_COLLECTION = "prompt_details";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
-	private static final String EPIC_HYGIENE_RESULTS_COLLECTION = "epic_hygiene_results";
 	private static final String FIELD_MAPPING_STRUCTURE_COLLECTION = "field_mapping_structure";
 
 	private static final String EPIC_HYGIENE_PROMPT = PromptKeys.EPIC_HYGIENE_PROMPT;
@@ -157,14 +154,12 @@ public class EpicHygieneReadinessDimensionsChangeUnit {
 		updateEpicHygienePrompt();
 		updateColumnConfig(FIXED_COLUMNS);
 		updateFieldMappingStructure(RULES_LABEL, RULES_TOOLTIP);
-		evictCachedVerdicts();
 	}
 
 	@RollbackExecution
 	public void rollback() {
 		updateColumnConfig(PREVIOUS_COLUMNS);
 		updateFieldMappingStructure(PREVIOUS_RULES_LABEL, PREVIOUS_RULES_TOOLTIP);
-		evictCachedVerdicts();
 	}
 
 	/** Rewrites the epic hygiene prompt document with the fixed five dimension version. */
@@ -370,14 +365,6 @@ public class EpicHygieneReadinessDimensionsChangeUnit {
 						.set(PLACEHOLDER_TEXT, label)
 						.set(TOOLTIP, new Document().append(DEFINITION, tooltip)),
 				FIELD_MAPPING_STRUCTURE_COLLECTION);
-	}
-
-	/**
-	 * Drops the cached verdicts so the next request re-evaluates every Epic against the new prompt.
-	 * The cache is keyed by (project, Epic) and rebuilt automatically, so nothing is lost.
-	 */
-	private void evictCachedVerdicts() {
-		mongoTemplate.remove(new Query(), EPIC_HYGIENE_RESULTS_COLLECTION);
 	}
 
 	private static List<Document> columns(List<String> columnNames) {
