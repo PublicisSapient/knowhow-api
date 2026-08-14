@@ -24,6 +24,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -81,6 +85,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ObjectMapper objectMapper;
 	@Autowired private StoryHygieneSprintResultRepository hygieneResultRepository;
+	@Autowired private MongoTemplate mongoTemplate;
 	@Autowired private PromptService promptService;
 
 	@Autowired
@@ -323,7 +328,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 																	totalIssueCount,
 																	ruleSetHash,
 																	basicProjectConfigId,
-																	cached,
 																	issueUrlMap),
 													hygieneAiExecutor)
 											.exceptionally(
@@ -391,11 +395,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		node.setValue(dataCountList);
 	}
 
-	/**
-	 * Calls the LLM for a single sprint, persists the result to MongoDB, and returns the outcome. The
-	 * {@code existingResult} is used to carry over the document {@code _id} for an in-place upsert
-	 * (avoids insert + delete on hash change).
-	 */
+	/** Calls the LLM for a single sprint, persists the result to MongoDB, and returns the outcome. */
 	private SprintHygieneOutcome computeSprintHygiene(
 			String sprintId,
 			String sprintName,
@@ -405,7 +405,6 @@ public class StoryHygieneKpiSlingshotServiceImpl
 			int totalIssueCount,
 			String ruleSetHash,
 			String basicProjectConfigId,
-			StoryHygieneSprintResult existingResult,
 			Map<String, String> issueUrlMap) {
 
 		String responseContent;
@@ -445,22 +444,23 @@ public class StoryHygieneKpiSlingshotServiceImpl
 		// for the Excel path — no jira_issues query needed on cache hits.
 		issueVerdicts.forEach(v -> v.setIssueUrl(issueUrlMap.getOrDefault(v.getIssueKey(), "")));
 
-		// Persist only on a real LLM success — upsert in place if a doc already existed
-		// (stale hash)
-		StoryHygieneSprintResult toSave =
-				existingResult != null
-						? existingResult
-						: StoryHygieneSprintResult.builder()
-								.basicProjectConfigId(basicProjectConfigId)
-								.sprintId(sprintId)
-								.build();
-		toSave.setSprintName(sprintName);
-		toSave.setRuleSetHash(ruleSetHash);
-		toSave.setSampledIssueCount(sampledCount);
-		toSave.setTotalIssueCount(totalIssueCount);
-		toSave.setIssueVerdicts(issueVerdicts);
-		toSave.setComputedAt(Instant.now());
-		hygieneResultRepository.save(toSave);
+		// Atomic upsert — avoids DuplicateKeyException when two concurrent requests
+		// both find a cache miss for the same sprint and race to insert.
+		Query query =
+				new Query(
+						Criteria.where("basicProjectConfigId")
+								.is(basicProjectConfigId)
+								.and("sprintId")
+								.is(sprintId));
+		Update update =
+				new Update()
+						.set("sprintName", sprintName)
+						.set("ruleSetHash", ruleSetHash)
+						.set("sampledIssueCount", sampledCount)
+						.set("totalIssueCount", totalIssueCount)
+						.set("issueVerdicts", issueVerdicts)
+						.set("computedAt", Instant.now());
+		mongoTemplate.upsert(query, update, StoryHygieneSprintResult.class);
 
 		return buildOutcomeFromVerdicts(
 				sprintId, sprintName, projectName, issueVerdicts, sampledCount, totalIssueCount);

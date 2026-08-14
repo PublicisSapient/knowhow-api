@@ -485,6 +485,9 @@ public class KPIExcelData {
 	@JsonProperty("Flaky Rate %")
 	private String flakyRate;
 
+	@JsonProperty("Change Failure Rate %")
+	private String changeFailureRate;
+
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
 

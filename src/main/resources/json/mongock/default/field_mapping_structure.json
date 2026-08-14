@@ -5638,6 +5638,20 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "thresholdValueKPI221",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target change failure rate (%). Shown as a reference line on the chart. DORA Elite benchmark is 0-5%. Leave empty to use the default maturity line."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "jiraIssueStatusGroupByCategoryKPI206",
     "fieldLabel" : "Workfow groups",
     "fieldType" : "chips",

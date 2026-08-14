@@ -5738,7 +5738,7 @@
     "kpiId" : "kpi215",
     "kpiName" : "PR Revert Rate",
     "isDeleted" : "False",
-    "defaultOrder" : 1,
+    "defaultOrder" : 3,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Quality",
     "kpiUnit" : "%",
@@ -5752,7 +5752,7 @@
     "hideOverallFilter" : true,
     "kpiSource" : "BitBucket",
     "kanban" : false,
-    "groupId" : 67,
+    "groupId" : 69,
     "kpiInfo" : {
       "definition" : "% of merged PRs that are subsequently reverted. Strong proxy for code-review effectiveness."
     },
@@ -5767,7 +5767,7 @@
     "kpiId" : "kpi216",
     "kpiName" : "Defect Escape Rate",
     "isDeleted" : "False",
-    "defaultOrder" : 2,
+    "defaultOrder" : 4,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Quality",
     "kpiUnit" : "%",
@@ -5783,7 +5783,7 @@
     "maxValue" : 100,
     "thresholdValue" : 10,
     "kanban" : false,
-    "groupId" : 68,
+    "groupId" : 70,
     "kpiInfo" : {
       "definition" : "% of defects discovered in production vs. discovered preproduction."
     },
@@ -5800,7 +5800,7 @@
     "kpiId" : "kpi217",
     "kpiName" : "Mean Time to Recover",
     "isDeleted" : "False",
-    "defaultOrder" : 3,
+    "defaultOrder" : 2,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Quality",
     "kpiUnit" : "Hours",
@@ -5814,7 +5814,7 @@
     "kpiSource" : "Jira",
     "thresholdValue" : 24,
     "kanban" : false,
-    "groupId" : 69,
+    "groupId" : 68,
     "kpiInfo" : {
       "definition" : "Mean time from production incident detected to service restored."
     },
@@ -5831,7 +5831,7 @@
     "kpiId" : "kpi218",
     "kpiName" : "E2E Test Pass Rate",
     "isDeleted" : "False",
-    "defaultOrder" : 4,
+    "defaultOrder" : 5,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Quality",
     "kpiUnit" : "%",
@@ -5845,7 +5845,7 @@
     "hideOverallFilter" : true,
     "kpiSource" : "Jenkins",
     "kanban" : false,
-    "groupId" : 70,
+    "groupId" : 71,
     "kpiInfo" : {
       "definition" : "% of automated end-to-end tests passing on main branch."
     },
@@ -5862,7 +5862,7 @@
     "kpiId" : "kpi219",
     "kpiName" : "Mean Time to Test Feedback",
     "isDeleted" : "False",
-    "defaultOrder" : 5,
+    "defaultOrder" : 7,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Quality",
     "kpiUnit" : "Hours",
@@ -5876,7 +5876,7 @@
     "hideOverallFilter" : true,
     "kpiSource" : "Jenkins",
     "kanban" : false,
-    "groupId" : 70,
+    "groupId" : 73,
     "kpiInfo" : {
       "definition" : "Time from PR push to all CI / Selenium results posted back to the PR."
     },
@@ -5921,10 +5921,41 @@
     "forecastModel" : "thetaMethod"
   },
   {
+    "kpiId" : "kpi221",
+    "kpiName" : "Change Failure Rate",
+    "isDeleted" : "False",
+    "defaultOrder" : 1,
+    "kpiCategory" : "Slingshot",
+    "kpiSubCategory" : "Quality",
+    "kpiUnit" : "%",
+    "chartType" : "line",
+    "xAxisLabel" : "Weeks",
+    "yAxisLabel" : "Percentage",
+    "showTrend" : true,
+    "isPositiveTrend" : false,
+    "calculateMaturity" : true,
+    "maturityRange" : [ "-20", "15-20", "10-15", "5-10", "5-" ],
+    "hideOverallFilter" : true,
+    "kpiSource" : "Jenkins",
+    "kanban" : false,
+    "groupId" : 67,
+    "kpiInfo" : {
+      "definition" : "% of production deployments that cause a failure (rollback, hotfix, incident, or revert). Computed from CI/CD pipeline build outcomes — failed builds as a fraction of all intentional build executions (SUCCESS + FAILURE). DORA Elite: 0-5%. High: 5-10%. Medium: 10-15%. Above 20%: fundamental pipeline trust problem."
+    },
+    "kpiFilter" : "dropDown",
+    "aggregationCriteria" : "average",
+    "isTrendCalculative" : false,
+    "isAdditionalFilterSupport" : false,
+    "combinedKpiSource" : "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity",
+    "upperThresholdBG" : "red",
+    "lowerThresholdBG" : "white",
+    "forecastModel" : "thetaMethod"
+  },
+  {
     "kpiId" : "kpi311",
     "kpiName" : "Story Hygiene",
     "isDeleted" : "False",
-    "defaultOrder" : 1,
+    "defaultOrder" : 311,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Sandbox",
     "kpiUnit" : "%",
@@ -5957,7 +5988,7 @@
     "kpiId" : "kpi312",
     "kpiName" : "Epic Hygiene",
     "isDeleted" : "False",
-    "defaultOrder" : 2,
+    "defaultOrder" : 312,
     "kpiCategory" : "Slingshot",
     "kpiSubCategory" : "Sandbox",
     "kpiUnit" : "%",
