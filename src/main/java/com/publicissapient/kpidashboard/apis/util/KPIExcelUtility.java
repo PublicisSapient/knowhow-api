@@ -1597,6 +1597,30 @@ public class KPIExcelUtility {
 	}
 
 	/**
+	 * Populates one weekly-aggregate excel row for the Slingshot Change Failure Rate KPI (kpi221).
+	 * Each call appends one row representing one job/branch/week combination.
+	 */
+	public static void populateChangeFailureRateSlingshotExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String daysWeeks,
+			String jobName,
+			String branch,
+			int totalBuilds,
+			int successBuilds,
+			int failedBuilds,
+			double changeFailureRate) {
+		KPIExcelData row = new KPIExcelData();
+		row.setDaysWeeks(daysWeeks);
+		row.setWorkflow(jobName);
+		row.setBranch(branch);
+		row.setTotalBuilds(String.valueOf(totalBuilds));
+		row.setSuccessfulBuilds(String.valueOf(successBuilds));
+		row.setFailedBuilds(String.valueOf(failedBuilds));
+		row.setChangeFailureRate(String.format("%.2f", changeFailureRate));
+		kpiExcelData.add(row);
+	}
+
+	/**
 	 * Populates excel data for the Deployment Frequency (Speed) KPI. This is a standalone copy kept
 	 * independent from {@link #populateDeploymentFrequencyExcelData} so the DORA KPI can evolve
 	 * without impacting this one.

@@ -930,6 +930,7 @@ public enum FieldMappingEnum {
 			"Flaky Test Rate",
 			KPISource.JENKINS.name(),
 			List.of("e2eTestBranchKPI220", "thresholdValueKPI220")),
+	KPI221("Change Failure Rate", KPISource.JENKINS.name(), List.of("thresholdValueKPI221")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),
