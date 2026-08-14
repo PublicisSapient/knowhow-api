@@ -54,7 +54,7 @@ public class ChangeFailureRateSlingshotKpiChangeUnit {
 						.append("kpiId", KPI_ID)
 						.append("kpiName", "Change Failure Rate")
 						.append("isDeleted", "False")
-						.append("defaultOrder", 7)
+						.append("defaultOrder", 1)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Quality")
 						.append("kpiUnit", "%")
@@ -71,7 +71,7 @@ public class ChangeFailureRateSlingshotKpiChangeUnit {
 						.append("kpiSource", "Jenkins")
 						.append("combinedKpiSource", "Jenkins/Bamboo/GitHubAction/AzurePipeline/Teamcity")
 						.append("kanban", false)
-						.append("groupId", 73)
+						.append("groupId", 67)
 						.append(
 								"kpiInfo",
 								new Document()

@@ -29,8 +29,11 @@ import io.mongock.api.annotations.RollbackExecution;
  * Reorders the Slingshot Quality sub-category KPIs to the agreed display sequence and aligns
  * groupIds so they are sequential in display order (67-73, no gaps).
  *
+ * <p>kpi221 (Change Failure Rate) is omitted — it is inserted with the correct values (1, 67) by
+ * the preceding ChangeFailureRateSlingshotKpiChangeUnit (order 17179) and needs no update here.
+ *
  * <ol>
- *   <li>Change Failure Rate (kpi221) — defaultOrder 1, groupId 67
+ *   <li>Change Failure Rate (kpi221) — defaultOrder 1, groupId 67 (set by migration 17179)
  *   <li>Mean Time to Recover (kpi217) — defaultOrder 2, groupId 68
  *   <li>PR Revert Rate (kpi215) — defaultOrder 3, groupId 69
  *   <li>Defect Escape Rate (kpi216) — defaultOrder 4, groupId 70
@@ -48,10 +51,10 @@ public class SlingshotQualityKpiOrderChangeUnit {
 
 	private static final String KPI_MASTER = "kpi_master";
 
-	// kpi220 (Flaky Test Rate) is omitted — both values are already correct (6,
-	// 72).
+	// kpi220 (Flaky Test Rate) omitted — already correct (6, 72).
+	// kpi221 (Change Failure Rate) omitted — inserted with correct values (1, 67)
+	// by migration 17179.
 	private static final String[][] KPI_IDS = {
-		{"kpi221"}, // Change Failure Rate: defaultOrder 1, groupId 67
 		{"kpi217"}, // Mean Time to Recover: defaultOrder 2, groupId 68
 		{"kpi215"}, // PR Revert Rate: defaultOrder 3, groupId 69
 		{"kpi216"}, // Defect Escape Rate: defaultOrder 4, groupId 70
@@ -61,12 +64,11 @@ public class SlingshotQualityKpiOrderChangeUnit {
 
 	// { defaultOrder, groupId } aligned with KPI_IDS rows
 	private static final int[][] NEW_VALUES = {
-		{1, 67}, {2, 68}, {3, 69}, {4, 70}, {5, 71}, {7, 73},
+		{2, 68}, {3, 69}, {4, 70}, {5, 71}, {7, 73},
 	};
 
 	// Previous values for rollback
 	private static final int[][] OLD_VALUES = {
-		{7, 73}, // kpi221 was: defaultOrder 7, groupId 73
 		{3, 69}, // kpi217 was: defaultOrder 3, groupId 69
 		{1, 67}, // kpi215 was: defaultOrder 1, groupId 67
 		{2, 68}, // kpi216 was: defaultOrder 2, groupId 68
