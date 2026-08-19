@@ -45,6 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter.OrganizationHierarchyAdapter;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyLevel;
@@ -64,6 +65,8 @@ public class IntegrationServiceImplTest {
 
 	@Mock private OrganizationHierarchyService organizationHierarchyService;
 
+	@Mock private CustomApiConfig customApiConfig;
+
 	@InjectMocks private IntegrationServiceImpl integrationService;
 
 	private List<OrganizationHierarchy> allDbNodes;
@@ -75,6 +78,11 @@ public class IntegrationServiceImplTest {
 		allDbNodes = createTestDbNodes();
 		externalList = createTestExternalNodes();
 		hierarchyDetails = createTestHierarchyDetails();
+
+		// Default config: only inserts enabled, updates and project pausing disabled
+		when(customApiConfig.isHierarchySyncAllowInserts()).thenReturn(true);
+		when(customApiConfig.isHierarchySyncAllowUpdates()).thenReturn(false);
+		when(customApiConfig.isHierarchySyncPauseProjects()).thenReturn(false);
 	}
 
 	// Test Data Factory Methods
@@ -212,7 +220,9 @@ public class IntegrationServiceImplTest {
 
 	@Test
 	public void testSyncOrganizationHierarchy_HappyPath() {
-		// Arrange
+		// Arrange: EXT_PORT_001 already exists in DB — this exercises the update path
+		when(customApiConfig.isHierarchySyncAllowUpdates()).thenReturn(true);
+
 		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
 		OrganizationHierarchy updatedNode = new OrganizationHierarchy();
 		updatedNode.setId(new ObjectId("507f1f77bcf86cd799439017"));
@@ -228,13 +238,6 @@ public class IntegrationServiceImplTest {
 
 		doNothing().when(organizationHierarchyService).saveAll(anyList());
 		doNothing().when(organizationHierarchyService).clearCache();
-
-		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
-		/*
-		 * when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(
-		 * projectConfigs);
-		 * when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
-		 */
 
 		// Act
 		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
@@ -263,10 +266,6 @@ public class IntegrationServiceImplTest {
 		doNothing().when(organizationHierarchyService).saveAll(anyList());
 		doNothing().when(organizationHierarchyService).clearCache();
 
-		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
-		when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
-		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
-
 		// Act
 		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
 
@@ -274,6 +273,7 @@ public class IntegrationServiceImplTest {
 		ArgumentCaptor<List<OrganizationHierarchy>> saveCaptor = ArgumentCaptor.forClass(List.class);
 		verify(organizationHierarchyService, times(1)).saveAll(saveCaptor.capture());
 		verify(organizationHierarchyService, times(1)).clearCache();
+		verify(projectConfigRepository, never()).findByProjectNodeIdIn(anySet());
 
 		List<OrganizationHierarchy> savedNodes = saveCaptor.getValue();
 		assertEquals(1, savedNodes.size());
@@ -494,16 +494,105 @@ public class IntegrationServiceImplTest {
 		// Arrange
 		Set<OrganizationHierarchy> emptyExternalNodes = new HashSet<>();
 
-		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
-		when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
-		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
-
 		// Act
 		integrationService.syncOrganizationHierarchy(emptyExternalNodes, allDbNodes);
 
 		// Assert
 		verify(organizationHierarchyService, never()).saveAll(anyList());
 		verify(organizationHierarchyService, never()).clearCache();
+		verify(projectConfigRepository, never()).findByProjectNodeIdIn(anySet());
+	}
+
+	// Config flag tests
+
+	@Test
+	public void testSyncOrganizationHierarchy_InsertsDisabled_NewNodeNotSaved() {
+		when(customApiConfig.isHierarchySyncAllowInserts()).thenReturn(false);
+
+		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
+		OrganizationHierarchy newNode = new OrganizationHierarchy();
+		newNode.setExternalId("EXT_BRAND_NEW");
+		newNode.setNodeId("new_001");
+		newNode.setNodeName("Brand New Node");
+		newNode.setHierarchyLevelId("port");
+		externalNodes.add(newNode);
+
+		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
+
+		verify(organizationHierarchyService, never()).saveAll(anyList());
+		verify(organizationHierarchyService, never()).clearCache();
+	}
+
+	@Test
+	public void testSyncOrganizationHierarchy_UpdatesEnabled_ExistingNodeUpdated() {
+		when(customApiConfig.isHierarchySyncAllowUpdates()).thenReturn(true);
+
+		// EXT_PORT_001 already exists in DB
+		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
+		OrganizationHierarchy updatedNode = new OrganizationHierarchy();
+		updatedNode.setExternalId("EXT_PORT_001");
+		updatedNode.setNodeId("port_001");
+		updatedNode.setNodeName("Renamed Port");
+		updatedNode.setHierarchyLevelId("port");
+		updatedNode.setParentId("root_001");
+		externalNodes.add(updatedNode);
+
+		doNothing().when(organizationHierarchyService).saveAll(anyList());
+		doNothing().when(organizationHierarchyService).clearCache();
+
+		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
+
+		ArgumentCaptor<List<OrganizationHierarchy>> saveCaptor = ArgumentCaptor.forClass(List.class);
+		verify(organizationHierarchyService, times(1)).saveAll(saveCaptor.capture());
+		assertEquals("Renamed Port", saveCaptor.getValue().get(0).getNodeName());
+	}
+
+	@Test
+	public void testSyncOrganizationHierarchy_UpdatesDisabled_ExistingNodeNotSaved() {
+		// allowUpdates=false is the default set in setUp()
+
+		// EXT_PORT_001 already exists in DB
+		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
+		OrganizationHierarchy updatedNode = new OrganizationHierarchy();
+		updatedNode.setExternalId("EXT_PORT_001");
+		updatedNode.setNodeId("port_001");
+		updatedNode.setNodeName("Renamed Port");
+		updatedNode.setHierarchyLevelId("port");
+		updatedNode.setParentId("root_001");
+		externalNodes.add(updatedNode);
+
+		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
+
+		verify(organizationHierarchyService, never()).saveAll(anyList());
+		verify(organizationHierarchyService, never()).clearCache();
+	}
+
+	@Test
+	public void testSyncOrganizationHierarchy_PauseProjectsEnabled_ProjectPaused() {
+		when(customApiConfig.isHierarchySyncPauseProjects()).thenReturn(true);
+
+		// External list does NOT contain EXT_PORT_001, so project_001 (child of port_001) should be
+		// paused
+		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
+
+		List<ProjectBasicConfig> projectConfigs = createTestProjectConfigs();
+		when(projectConfigRepository.findByProjectNodeIdIn(anySet())).thenReturn(projectConfigs);
+		when(projectConfigRepository.saveAll(anyList())).thenReturn(projectConfigs);
+
+		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
+
 		verify(projectConfigRepository, times(1)).findByProjectNodeIdIn(anySet());
+		verify(projectConfigRepository, times(1)).saveAll(anyList());
+	}
+
+	@Test
+	public void testSyncOrganizationHierarchy_PauseProjectsDisabled_ProjectNotPaused() {
+		// pauseProjects=false is the default set in setUp()
+		Set<OrganizationHierarchy> externalNodes = new HashSet<>();
+
+		integrationService.syncOrganizationHierarchy(externalNodes, allDbNodes);
+
+		verify(projectConfigRepository, never()).findByProjectNodeIdIn(anySet());
+		verify(projectConfigRepository, never()).saveAll(anyList());
 	}
 }

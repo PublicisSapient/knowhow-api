@@ -56,35 +56,37 @@ public class IntegrateHierarchyScheduler {
 
 	@Scheduled(cron = "${hierarchySync.cron}")
 	public void callApi() {
+		try {
+			executeSync();
+		} catch (Exception e) {
+			log.error("Hierarchy sync failed. Error: {}", e.getMessage());
+		}
+	}
+
+	public void executeSync() {
 		String apiUrl = customApiConfig.getCentralHierarchyUrl();
 
 		HttpHeaders headers = new HttpHeaders();
-		// add x-api-key
 		headers.add("x-api-key", customApiConfig.getCentralHierarchyApiKey());
-
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
 		ReaderRetryHelper.RetryableOperation<ResponseEntity<String>> retryableOperation =
 				() -> restTemplate.exchange(apiUrl, HttpMethod.GET, requestEntity, String.class);
 
-		try {
-			ResponseEntity<String> response = retryHelper.executeWithRetry(retryableOperation);
-			if (response.getStatusCode().is2xxSuccessful()) {
-				HierarchyDetailParser hierarchyDetailParser = new SF360Parser();
-				HierarchyDetails hierarchyDetails =
-						hierarchyDetailParser.convertToHierachyDetail(response.getBody());
-				// Step 1: Fetch all existing records from the database
-				List<OrganizationHierarchy> allDbNodes = organizationHierarchyRepository.findAll();
-				Set<OrganizationHierarchy> centralHierarchies =
-						integerationService.convertHieracyResponseToOrganizationHierachy(
-								hierarchyDetails, allDbNodes);
-				integerationService.syncOrganizationHierarchy(centralHierarchies, allDbNodes);
-			} else {
-				throw new HttpServerErrorException(response.getStatusCode(), "API call failed");
-			}
-		} catch (Exception e) {
-			log.error("API call failed after retries. Error: {}", e.getMessage());
+		ResponseEntity<String> response = retryHelper.executeWithRetry(retryableOperation);
+		if (response.getStatusCode().is2xxSuccessful()) {
+			HierarchyDetailParser hierarchyDetailParser = new SF360Parser();
+			HierarchyDetails hierarchyDetails =
+					hierarchyDetailParser.convertToHierachyDetail(response.getBody());
+			List<OrganizationHierarchy> allDbNodes = organizationHierarchyRepository.findAll();
+			Set<OrganizationHierarchy> centralHierarchies =
+					integerationService.convertHieracyResponseToOrganizationHierachy(
+							hierarchyDetails, allDbNodes);
+			integerationService.syncOrganizationHierarchy(centralHierarchies, allDbNodes);
+		} else {
+			throw new HttpServerErrorException(
+					response.getStatusCode(), "Central hierarchy API call failed");
 		}
 	}
 }
