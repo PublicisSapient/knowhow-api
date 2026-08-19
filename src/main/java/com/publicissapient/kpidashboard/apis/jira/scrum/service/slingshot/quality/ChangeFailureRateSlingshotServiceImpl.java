@@ -134,9 +134,10 @@ public class ChangeFailureRateSlingshotServiceImpl
 						.average();
 		if (overallAvg.isPresent()) {
 			String kpiId = KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId();
+			double val = round(overallAvg.getAsDouble());
 			kpiElement.setOverallMaturity(
-					calculateMaturity(
-							getMaturityRange(kpiId), kpiId, String.valueOf(round(overallAvg.getAsDouble()))));
+					calculateMaturity(getMaturityRange(kpiId), kpiId, String.valueOf(val)));
+			kpiElement.setOverAllMaturityValue(String.valueOf(val));
 		}
 		return kpiElement;
 	}

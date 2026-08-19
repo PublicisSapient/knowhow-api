@@ -184,6 +184,7 @@ public class SprintVelocitySlingshotServiceImpl
 			kpiElement.setTrendValueList(groups);
 			if (!trendValues.isEmpty() && trendValues.get(0).getMaturity() != null) {
 				kpiElement.setOverallMaturity(trendValues.get(0).getMaturity());
+				kpiElement.setOverAllMaturityValue(String.valueOf(trendValues.get(0).getMaturityValue()));
 			}
 		} else {
 			kpiElement.setTrendValueList(trendValues);

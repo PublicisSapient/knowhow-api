@@ -173,9 +173,12 @@ public class DefectEscapeRateSlingshotServiceImpl
 		trendValuesMap.values().stream()
 				.flatMap(List::stream)
 				.findFirst()
-				.map(DataCount::getMaturity)
-				.filter(java.util.Objects::nonNull)
-				.ifPresent(kpiElement::setOverallMaturity);
+				.filter(dc -> dc.getMaturity() != null)
+				.ifPresent(
+						dc -> {
+							kpiElement.setOverallMaturity(dc.getMaturity());
+							kpiElement.setOverAllMaturityValue(String.valueOf(dc.getMaturityValue()));
+						});
 
 		return kpiElement;
 	}

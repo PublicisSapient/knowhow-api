@@ -113,9 +113,10 @@ public class E2ETestPassRateServiceImpl
 						.average();
 		if (overallAvg.isPresent()) {
 			String kpiId = KPICode.E2E_TEST_PASS_RATE.getKpiId();
+			double val = round(overallAvg.getAsDouble());
 			kpiElement.setOverallMaturity(
-					calculateMaturity(
-							getMaturityRange(kpiId), kpiId, String.valueOf(round(overallAvg.getAsDouble()))));
+					calculateMaturity(getMaturityRange(kpiId), kpiId, String.valueOf(val)));
+			kpiElement.setOverAllMaturityValue(String.valueOf(val));
 		}
 		return kpiElement;
 	}
