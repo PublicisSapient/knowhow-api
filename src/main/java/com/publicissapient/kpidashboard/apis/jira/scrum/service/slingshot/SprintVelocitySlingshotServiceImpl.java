@@ -180,6 +180,12 @@ public class SprintVelocitySlingshotServiceImpl
 			sprintGroup.setValue(
 					buildSprintOutput(projectList.get(0), fm != null ? fm : new FieldMapping()));
 			groups.add(sprintGroup);
+
+			DataCountGroup overallGroup = new DataCountGroup();
+			overallGroup.setFilter(CommonConstant.OVERALL);
+			overallGroup.setValue(new ArrayList<>(trendValues));
+			groups.add(overallGroup);
+
 			kpiElement.setTrendValueList(groups);
 		} else {
 			kpiElement.setTrendValueList(trendValues);

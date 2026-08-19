@@ -168,6 +168,15 @@ public class DefectEscapeRateSlingshotServiceImpl
 						perProjectWeeklyDc,
 						treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER),
 						kpiRequest);
+
+		if (MapUtils.isNotEmpty(trendValuesMap)) {
+			DataCountGroup overallGroup = new DataCountGroup();
+			overallGroup.setFilter(CommonConstant.OVERALL);
+			overallGroup.setValue(
+					trendValuesMap.values().stream().flatMap(List::stream).collect(Collectors.toList()));
+			groups.add(overallGroup);
+		}
+
 		kpiElement.setTrendValueList(groups);
 
 		return kpiElement;

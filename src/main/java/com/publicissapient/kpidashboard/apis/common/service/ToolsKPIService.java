@@ -72,7 +72,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.OPEN_TICKET_AGING_BY_PRIORITY.name(),
 							KPICode.PI_PREDICTABILITY.name(),
 							KPICode.MEAN_TIME_TO_RECOVER_SLINGSHOT.name(),
-							KPICode.STORY_HYGIENE.name()));
+							KPICode.STORY_HYGIENE.name(),
+							KPICode.REFINEMENT_CYCLE_TIME_SLINGSHOT.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(
@@ -1451,6 +1452,10 @@ public abstract class ToolsKPIService<R, S> {
 	public String calculateMaturity(
 			List<String> maturityRangeList, String kpiId, String kpiCeilValue) {
 		return commonService.getMaturityLevel(maturityRangeList, kpiId, String.valueOf(kpiCeilValue));
+	}
+
+	public List<String> getMaturityRange(String kpiId) {
+		return configHelperService.calculateMaturity().get(kpiId);
 	}
 
 	/**

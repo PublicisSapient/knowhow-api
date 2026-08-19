@@ -501,7 +501,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 		assertNotNull(result.getTrendValueList());
 		assertTrue(result.getTrendValueList() instanceof List<?>);
 		List<?> groups = (List<?>) result.getTrendValueList();
-		assertEquals(4, groups.size());
+		assertEquals(5, groups.size());
 		List<String> filterNames =
 				groups.stream()
 						.map(g -> ((DataCountGroup) g).getFilter())
@@ -510,6 +510,7 @@ public class SprintVelocitySlingshotServiceImplTest {
 		assertTrue(filterNames.contains("Bi-Weekly"));
 		assertTrue(filterNames.contains("Monthly"));
 		assertTrue(filterNames.contains("Sprint"));
+		assertTrue(filterNames.contains("Overall"));
 	}
 
 	@Test

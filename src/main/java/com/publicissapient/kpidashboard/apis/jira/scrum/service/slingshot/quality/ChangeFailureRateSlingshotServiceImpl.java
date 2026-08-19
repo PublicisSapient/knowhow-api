@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -55,6 +56,7 @@ import com.publicissapient.kpidashboard.common.constant.BuildStatus;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.Build;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
+import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.repository.application.BuildRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -114,9 +116,31 @@ public class ChangeFailureRateSlingshotServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(
 						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CHANGE_FAILURE_RATE_SLINGSHOT);
-		kpiElement.setTrendValueList(
-				DeveloperKpiHelper.prepareDataCountGroups(
-						trendValuesMap, KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId()));
+
+		List<DataCountGroup> groups =
+				new ArrayList<>(
+						DeveloperKpiHelper.prepareDataCountGroups(
+								trendValuesMap, KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId()));
+
+		OptionalDouble overallAvg =
+				trendValuesMap.values().stream()
+						.filter(list -> !list.isEmpty())
+						.mapToDouble(list -> (Double) list.get(0).getValue())
+						.average();
+		if (overallAvg.isPresent()) {
+			String kpiId = KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId();
+			DataCount overallDc = new DataCount();
+			overallDc.setValue(round(overallAvg.getAsDouble()));
+			overallDc.setMaturity(
+					calculateMaturity(
+							getMaturityRange(kpiId), kpiId, String.valueOf(round(overallAvg.getAsDouble()))));
+			DataCountGroup overallGroup = new DataCountGroup();
+			overallGroup.setFilter(CommonConstant.OVERALL);
+			overallGroup.setValue(Collections.singletonList(overallDc));
+			groups.add(overallGroup);
+		}
+
+		kpiElement.setTrendValueList(groups);
 		return kpiElement;
 	}
 
