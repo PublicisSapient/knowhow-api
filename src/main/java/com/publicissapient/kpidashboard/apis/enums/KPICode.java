@@ -345,6 +345,8 @@ public enum KPICode {
 	FLAKY_TEST_RATE("kpi220", KPISource.JENKINS.name()),
 	/** Change Failure Rate (Slingshot / Quality) */
 	CHANGE_FAILURE_RATE_SLINGSHOT("kpi221", KPISource.JENKINS.name()),
+	/** Refinement Cycle Time (Slingshot / Intake) */
+	REFINEMENT_CYCLE_TIME_SLINGSHOT("kpi222", KPISource.JIRA.name()),
 	STORY_HYGIENE("kpi311", KPISource.JIRA.name()),
 	/** Epic Hygiene / Readiness */
 	EPIC_HYGIENE("kpi312", KPISource.JIRA.name());

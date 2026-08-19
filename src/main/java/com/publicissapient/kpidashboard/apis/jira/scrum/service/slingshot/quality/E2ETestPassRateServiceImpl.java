@@ -24,12 +24,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -103,6 +98,26 @@ public class E2ETestPassRateServiceImpl
 		kpiElement.setTrendValueList(
 				DeveloperKpiHelper.prepareDataCountGroups(
 						trendValuesMap, KPICode.E2E_TEST_PASS_RATE.getKpiId()));
+
+		OptionalDouble overallAvg =
+				trendValuesMap.values().stream()
+						.filter(list -> !list.isEmpty())
+						.mapToDouble(
+								list -> {
+									try {
+										return Double.parseDouble(list.get(0).getData());
+									} catch (NumberFormatException | NullPointerException e) {
+										return 0.0;
+									}
+								})
+						.average();
+		if (overallAvg.isPresent()) {
+			String kpiId = KPICode.E2E_TEST_PASS_RATE.getKpiId();
+			double val = round(overallAvg.getAsDouble());
+			kpiElement.setOverallMaturity(
+					calculateMaturity(getMaturityRange(kpiId), kpiId, String.valueOf(val)));
+			kpiElement.setOverAllMaturityValue(String.valueOf(val));
+		}
 		return kpiElement;
 	}
 

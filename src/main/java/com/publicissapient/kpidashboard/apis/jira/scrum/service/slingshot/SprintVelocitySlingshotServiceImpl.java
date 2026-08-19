@@ -180,7 +180,14 @@ public class SprintVelocitySlingshotServiceImpl
 			sprintGroup.setValue(
 					buildSprintOutput(projectList.get(0), fm != null ? fm : new FieldMapping()));
 			groups.add(sprintGroup);
+
 			kpiElement.setTrendValueList(groups);
+			if (!trendValues.isEmpty()
+					&& trendValues.get(0).getMaturity() != null
+					&& trendValues.get(0).getMaturityValue() != null) {
+				kpiElement.setOverallMaturity(trendValues.get(0).getMaturity());
+				kpiElement.setOverAllMaturityValue(String.valueOf(trendValues.get(0).getMaturityValue()));
+			}
 		} else {
 			kpiElement.setTrendValueList(trendValues);
 		}

@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -114,9 +115,30 @@ public class ChangeFailureRateSlingshotServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(
 						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.CHANGE_FAILURE_RATE_SLINGSHOT);
+
 		kpiElement.setTrendValueList(
 				DeveloperKpiHelper.prepareDataCountGroups(
 						trendValuesMap, KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId()));
+
+		OptionalDouble overallAvg =
+				trendValuesMap.values().stream()
+						.filter(list -> !list.isEmpty())
+						.mapToDouble(
+								list -> {
+									try {
+										return Double.parseDouble(list.get(0).getData());
+									} catch (NumberFormatException | NullPointerException e) {
+										return 0.0;
+									}
+								})
+						.average();
+		if (overallAvg.isPresent()) {
+			String kpiId = KPICode.CHANGE_FAILURE_RATE_SLINGSHOT.getKpiId();
+			double val = round(overallAvg.getAsDouble());
+			kpiElement.setOverallMaturity(
+					calculateMaturity(getMaturityRange(kpiId), kpiId, String.valueOf(val)));
+			kpiElement.setOverAllMaturityValue(String.valueOf(val));
+		}
 		return kpiElement;
 	}
 
