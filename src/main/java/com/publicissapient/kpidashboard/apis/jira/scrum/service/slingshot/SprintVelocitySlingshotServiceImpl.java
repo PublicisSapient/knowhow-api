@@ -181,12 +181,10 @@ public class SprintVelocitySlingshotServiceImpl
 					buildSprintOutput(projectList.get(0), fm != null ? fm : new FieldMapping()));
 			groups.add(sprintGroup);
 
-			DataCountGroup overallGroup = new DataCountGroup();
-			overallGroup.setFilter(CommonConstant.OVERALL);
-			overallGroup.setValue(new ArrayList<>(trendValues));
-			groups.add(overallGroup);
-
 			kpiElement.setTrendValueList(groups);
+			if (!trendValues.isEmpty() && trendValues.get(0).getMaturity() != null) {
+				kpiElement.setOverallMaturity(trendValues.get(0).getMaturity());
+			}
 		} else {
 			kpiElement.setTrendValueList(trendValues);
 		}

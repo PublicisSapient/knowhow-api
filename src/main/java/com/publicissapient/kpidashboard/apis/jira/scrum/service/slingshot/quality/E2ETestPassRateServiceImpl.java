@@ -24,13 +24,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalDouble;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -52,7 +46,6 @@ import com.publicissapient.kpidashboard.apis.util.DeveloperKpiHelper;
 import com.publicissapient.kpidashboard.apis.util.KpiDataHelper;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
-import com.publicissapient.kpidashboard.common.model.application.DataCountGroup;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.TestSuiteExecution;
 import com.publicissapient.kpidashboard.common.repository.application.TestSuiteExecutionRepository;
@@ -102,30 +95,28 @@ public class E2ETestPassRateServiceImpl
 		Map<String, List<DataCount>> trendValuesMap =
 				getTrendValuesMap(kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.E2E_TEST_PASS_RATE);
 
-		List<DataCountGroup> groups =
-				new ArrayList<>(
-						DeveloperKpiHelper.prepareDataCountGroups(
-								trendValuesMap, KPICode.E2E_TEST_PASS_RATE.getKpiId()));
+		kpiElement.setTrendValueList(
+				DeveloperKpiHelper.prepareDataCountGroups(
+						trendValuesMap, KPICode.E2E_TEST_PASS_RATE.getKpiId()));
 
 		OptionalDouble overallAvg =
 				trendValuesMap.values().stream()
 						.filter(list -> !list.isEmpty())
-						.mapToDouble(list -> (Double) list.get(0).getValue())
+						.mapToDouble(
+								list -> {
+									try {
+										return Double.parseDouble(list.get(0).getData());
+									} catch (NumberFormatException | NullPointerException e) {
+										return 0.0;
+									}
+								})
 						.average();
 		if (overallAvg.isPresent()) {
 			String kpiId = KPICode.E2E_TEST_PASS_RATE.getKpiId();
-			DataCount overallDc = new DataCount();
-			overallDc.setValue(round(overallAvg.getAsDouble()));
-			overallDc.setMaturity(
+			kpiElement.setOverallMaturity(
 					calculateMaturity(
 							getMaturityRange(kpiId), kpiId, String.valueOf(round(overallAvg.getAsDouble()))));
-			DataCountGroup overallGroup = new DataCountGroup();
-			overallGroup.setFilter(CommonConstant.OVERALL);
-			overallGroup.setValue(Collections.singletonList(overallDc));
-			groups.add(overallGroup);
 		}
-
-		kpiElement.setTrendValueList(groups);
 		return kpiElement;
 	}
 
