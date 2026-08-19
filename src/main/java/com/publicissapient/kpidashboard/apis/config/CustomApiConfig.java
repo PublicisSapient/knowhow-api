@@ -267,6 +267,9 @@ public class CustomApiConfig { // NOPMD
 	private String rnrRecommendationUrl;
 	private String centralHierarchyUrl;
 	private String centralHierarchyApiKey;
+	private boolean hierarchySyncAllowInserts = false;
+	private boolean hierarchySyncAllowUpdates = false;
+	private boolean hierarchySyncPauseProjects = false;
 
 	public String getRnrRecommendationUrl() {
 		return rnrRecommendationUrl;
