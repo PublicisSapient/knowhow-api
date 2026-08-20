@@ -485,6 +485,9 @@ public class KPIExcelData {
 	@JsonProperty("Flaky Rate %")
 	private String flakyRate;
 
+	@JsonProperty("Change Failure Rate %")
+	private String changeFailureRate;
+
 	@JsonProperty("Time to Recover (In Hours)")
 	private String timeToRecover;
 
@@ -677,6 +680,9 @@ public class KPIExcelData {
 
 	@JsonProperty("Recommendations")
 	private String recommendations;
+
+	@JsonProperty("Readiness Score")
+	private Integer readinessScore;
 
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 

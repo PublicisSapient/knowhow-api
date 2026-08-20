@@ -88,6 +88,7 @@ import com.publicissapient.kpidashboard.common.model.testexecution.KanbanTestExe
 import com.publicissapient.kpidashboard.common.model.testexecution.TestExecution;
 import com.publicissapient.kpidashboard.common.model.zephyr.TestCaseDetails;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -1593,6 +1594,30 @@ public class KPIExcelUtility {
 			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
 			kpiExcelData.add(excelData);
 		}
+	}
+
+	/**
+	 * Populates one weekly-aggregate excel row for the Slingshot Change Failure Rate KPI (kpi221).
+	 * Each call appends one row representing one job/branch/week combination.
+	 */
+	public static void populateChangeFailureRateSlingshotExcelData(
+			List<KPIExcelData> kpiExcelData,
+			String daysWeeks,
+			String jobName,
+			String branch,
+			int totalBuilds,
+			int successBuilds,
+			int failedBuilds,
+			double changeFailureRate) {
+		KPIExcelData row = new KPIExcelData();
+		row.setDaysWeeks(daysWeeks);
+		row.setWorkflow(jobName);
+		row.setBranch(branch);
+		row.setTotalBuilds(String.valueOf(totalBuilds));
+		row.setSuccessfulBuilds(String.valueOf(successBuilds));
+		row.setFailedBuilds(String.valueOf(failedBuilds));
+		row.setChangeFailureRate(String.format("%.2f", changeFailureRate));
+		kpiExcelData.add(row);
 	}
 
 	/**
@@ -3487,10 +3512,12 @@ public class KPIExcelUtility {
 	/**
 	 * Populates excel data for the Epic Hygiene (Sandbox) KPI (kpi312).
 	 *
-	 * <p>Each row corresponds to ONE Jira Epic's readiness evaluation returned by the LLM. The fixed
-	 * columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#EPIC_HYGIENE};
-	 * one additional dynamic column per configured readiness dimension is appended through {@code
-	 * groupMap}, carrying that dimension's 0-100 score.
+	 * <p>Each row corresponds to ONE Jira Epic's readiness evaluation returned by the LLM. The
+	 * columns mirror {@link com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn#EPIC_HYGIENE}:
+	 * the identity columns are set directly and the FIXED readiness dimensions ({@link
+	 * EpicReadinessDimension}) are carried through {@code groupMap}, one column per dimension holding
+	 * its 0-100 score. The dimension set is closed - a verdict naming a dimension that is not one of
+	 * the five is ignored for the sheet - so every project downloads the same, comparable layout.
 	 *
 	 * @param kpiExcelData the mutable list to append rows to
 	 * @param epicVerdicts per-Epic readiness results parsed from the LLM
@@ -3501,37 +3528,31 @@ public class KPIExcelUtility {
 			return;
 		}
 		final String notApplicable = "N/A";
-		// Collect every dimension seen across all Epics so all rows share the same
-		// column set even when the LLM omits a dimension for one Epic.
-		LinkedHashSet<String> allDimensions =
-				epicVerdicts.stream()
-						.filter(Objects::nonNull)
-						.filter(dto -> dto.getResults() != null)
-						.flatMap(dto -> dto.getResults().stream())
-						.filter(Objects::nonNull)
-						.map(EpicHygieneResponseDTO.DimensionResult::getDimension)
-						.filter(Objects::nonNull)
-						.collect(Collectors.toCollection(LinkedHashSet::new));
 
 		epicVerdicts.stream()
 				.filter(Objects::nonNull)
 				.forEach(
 						epicVerdict -> {
+							// Seed every fixed dimension so all rows share the same columns in the
+							// same order, whatever the LLM chose to return for this Epic.
 							LinkedHashMap<String, String> dimensionScores = new LinkedHashMap<>();
+							EpicReadinessDimension.displayNames()
+									.forEach(dimension -> dimensionScores.put(dimension, notApplicable));
+
 							if (epicVerdict.getResults() != null) {
 								epicVerdict.getResults().stream()
 										.filter(dr -> dr != null && dr.getDimension() != null)
 										.forEach(
 												dr ->
-														dimensionScores.putIfAbsent(
-																dr.getDimension(),
-																dr.getScore() == null
-																		? notApplicable
-																		: String.valueOf(dr.getScore())));
+														EpicReadinessDimension.from(dr.getDimension())
+																.ifPresent(
+																		dimension ->
+																				dimensionScores.put(
+																						dimension.getDisplayName(),
+																						dr.getScore() == null
+																								? notApplicable
+																								: String.valueOf(dr.getScore()))));
 							}
-							// Fill any dimension not returned by the LLM for this Epic with N/A
-							allDimensions.forEach(
-									dimension -> dimensionScores.putIfAbsent(dimension, notApplicable));
 
 							KPIExcelData excelData = new KPIExcelData();
 							Map<String, String> epicIdMap = new HashMap<>();
@@ -3542,7 +3563,7 @@ public class KPIExcelUtility {
 							excelData.setStatus(epicVerdict.getStatus());
 							excelData.setAssignee(epicVerdict.getAssignee());
 							excelData.setGroupMap(dimensionScores);
-							excelData.setHygieneScore(epicVerdict.getReadinessScore());
+							excelData.setReadinessScore(epicVerdict.getReadinessScore());
 							excelData.setOverallStatus(epicVerdict.getOverallStatus());
 							excelData.setRecommendations(epicVerdict.getRecommendations());
 							kpiExcelData.add(excelData);

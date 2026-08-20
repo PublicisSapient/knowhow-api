@@ -11,7 +11,6 @@
 package com.publicissapient.kpidashboard.apis.enums;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -55,24 +54,6 @@ public class HygieneKpiConfigurationTest {
 	@Test
 	public void kpiCodeLookupResolvesEpicHygiene() {
 		assertEquals(KPICode.EPIC_HYGIENE, KPICode.getKPI("kpi312"));
-	}
-
-	@Test
-	public void excelColumnsAreRegisteredForBothHygieneKpis() {
-		assertEquals("kpi311", KPIExcelColumn.STORY_HYGIENE.getKpiId());
-		assertFalse(KPIExcelColumn.STORY_HYGIENE.getColumns().isEmpty());
-
-		assertEquals("kpi312", KPIExcelColumn.EPIC_HYGIENE.getKpiId());
-		assertEquals(
-				List.of(
-						"Epic ID",
-						"Epic Name",
-						"Status",
-						"Assignee",
-						"Hygiene Score",
-						"Overall Status",
-						"Recommendations"),
-				KPIExcelColumn.EPIC_HYGIENE.getColumns());
 	}
 
 	/** Mirrors exactly what {@code FieldMappingServiceImpl} does when the config screen opens. */

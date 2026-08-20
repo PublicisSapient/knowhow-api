@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.publicissapient.kpidashboard.apis.hierarchy.dto.CreateHierarchyRequest;
 import com.publicissapient.kpidashboard.apis.hierarchy.dto.UpdateHierarchyRequest;
+import com.publicissapient.kpidashboard.apis.hierarchy.integration.controller.IntegrateHierarchyScheduler;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.HierarchyOptionService;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
 import com.publicissapient.kpidashboard.apis.model.ServiceResponse;
@@ -44,10 +45,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/hierarchy")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(
 		name = "Organization Hierarchy API",
 		description = "APIs for Organization Hierarchy Management")
@@ -56,6 +59,8 @@ public class OrganizationHierarchyController {
 	private final OrganizationHierarchyService organizationHierarchyService;
 
 	private final HierarchyOptionService hierarchyOptionService;
+
+	private final IntegrateHierarchyScheduler integrateHierarchyScheduler;
 
 	@Operation(
 			summary = "Get Organization Hierarchies",
@@ -126,5 +131,29 @@ public class OrganizationHierarchyController {
 					@RequestBody
 					UpdateHierarchyRequest request) {
 		return organizationHierarchyService.updateName(request.getDisplayName(), id);
+	}
+
+	@Operation(
+			summary = "Trigger Central Hierarchy Sync",
+			description =
+					"Manually triggers the central hierarchy sync job. Respects the same operation flags "
+							+ "(hierarchySync.allowInserts, hierarchySync.allowUpdates, hierarchySync.pauseProjects) "
+							+ "as the scheduled run.")
+	@ApiResponses(
+			value = {
+				@ApiResponse(responseCode = "200", description = "Hierarchy sync triggered successfully"),
+				@ApiResponse(responseCode = "500", description = "Hierarchy sync failed")
+			})
+	@PostMapping("/sync")
+	public ResponseEntity<ServiceResponse> triggerHierarchySync() {
+		try {
+			integrateHierarchyScheduler.executeSync();
+			return ResponseEntity.status(HttpStatus.OK)
+					.body(new ServiceResponse(true, "Hierarchy sync completed successfully.", null));
+		} catch (Exception e) {
+			log.error("Hierarchy sync trigger failed: {}", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new ServiceResponse(false, "Hierarchy sync failed: " + e.getMessage(), null));
+		}
 	}
 }

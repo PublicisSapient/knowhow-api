@@ -15,7 +15,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
@@ -55,6 +54,7 @@ import com.publicissapient.kpidashboard.apis.constant.Constant;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
+import com.publicissapient.kpidashboard.apis.model.IterationKpiData;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
 import com.publicissapient.kpidashboard.apis.model.KpiRequest;
@@ -64,12 +64,10 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
-import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResult;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
-import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneResultRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
-import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
+import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
 
 /**
  * Tests for {@link EpicHygieneKpiSlingshotServiceImpl}.
@@ -82,6 +80,9 @@ import com.publicissapient.kpidashboard.common.util.HygienePromptBuilder;
  *
  * <p>The real {@link EpicHygieneKpiParser} is used rather than a mock: the parser is pure and its
  * arithmetic is exactly what the score factors are asserted against.
+ *
+ * <p>The KPI keeps no stored verdicts: every row of every request comes from the LLM, which the
+ * tests below assert explicitly.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class EpicHygieneKpiSlingshotServiceImplTest {
@@ -94,8 +95,14 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	/** Tracker id shape used by a normal dashboard call. */
 	private static final String DASHBOARD_TRACKER_ID = "Jira-4b224f13-9a7a-49c5-8e01-9012ad92bfcb";
 
+	// The four summary cards this KPI publishes as its trend value list. There is
+	// no trend line — these cards plus the drill-down rows are the whole payload.
+	private static final String CARD_TOTAL_EPICS = "Total Active Epics";
+	private static final String CARD_CONSTRUCTION_READY = "Construction Ready";
+	private static final String CARD_AT_RISK = "At Risk / Blocked";
+	private static final String CARD_AVG_READINESS = "Avg Readiness Score";
+
 	@Mock private JiraIssueRepository jiraIssueRepository;
-	@Mock private EpicHygieneResultRepository epicHygieneResultRepository;
 	@Mock private AiGatewayClient aiGatewayClient;
 	@Mock private ConfigHelperService configHelperService;
 	@Mock private CustomApiConfig customApiConfig;
@@ -107,7 +114,6 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	private ObjectId projectConfigId;
 	private KpiRequest kpiRequest;
 	private KpiElement kpiElement;
-	private String ruleSetHash;
 
 	// ---------------------------------------------------------------------
 	// Fixture
@@ -124,9 +130,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "cacheService", cacheService);
 
 		// Most assertions below are about the drill-down rows, which only the Excel
-		// path
-		// produces — so default the request tracker to an Excel one. See
-		// getKpiData_dashboardRequest_doesNotBuildExcelRows for the other branch.
+		// path produces — so default the request tracker to an Excel one.
 		useTracker(EXCEL_TRACKER_ID);
 
 		projectConfigId = new ObjectId(PROJECT_CONFIG_ID);
@@ -154,13 +158,6 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		lenient()
 				.when(promptService.getEpicHygienePrompt(any(), any()))
 				.thenReturn("epic-hygiene-prompt");
-		lenient()
-				.when(
-						epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(
-								anyString(), anyList()))
-				.thenReturn(Collections.emptyList());
-
-		ruleSetHash = HygienePromptBuilder.computeRuleSetHash(defaultDimensions(), new ObjectMapper());
 	}
 
 	// ---------------------------------------------------------------------
@@ -193,6 +190,23 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 				.thenReturn(trackerId);
 	}
 
+	/** All summary cards published on the element, in the order the service emitted them. */
+	@SuppressWarnings("unchecked")
+	private List<IterationKpiData> summaryCards(KpiElement element) {
+		Object trendValueList = element.getTrendValueList();
+		assertNotNull("KPI published no summary cards", trendValueList);
+		return (List<IterationKpiData>) trendValueList;
+	}
+
+	/** Value of the summary card carrying {@code label}. */
+	private Double card(KpiElement element, String label) {
+		return summaryCards(element).stream()
+				.filter(data -> label.equals(data.getLabel()))
+				.map(IterationKpiData::getValue)
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("No summary card labelled '" + label + "'"));
+	}
+
 	private CycleTimeGroup dimension(String label, String fieldName, String prompt) {
 		CycleTimeGroup group = new CycleTimeGroup();
 		group.setLabel(label);
@@ -204,7 +218,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	private List<CycleTimeGroup> defaultDimensions() {
 		return List.of(
 				dimension("Business Clarity", "description", "Score the business problem and value"),
-				dimension("Delivery Readiness", "assigneeName", "[2]: Score owner and milestones"));
+				dimension("Risk Readiness", "assigneeName", "[2]: Score risks, assumptions and blockers"));
 	}
 
 	private FieldMapping fieldMappingWith(List<CycleTimeGroup> dimensions) {
@@ -274,26 +288,12 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 										("{\"epicKey\":\"%s\",\"epicName\":\"%s name\",\"status\":\"Functional Grooming\","
 														+ "\"assignee\":\"Ada\",\"results\":["
 														+ "{\"dimension\":\"Business Clarity\",\"field\":\"description\",\"weight\":1,\"score\":%d},"
-														+ "{\"dimension\":\"Delivery Readiness\",\"field\":\"assigneeName\",\"weight\":2,\"score\":%d}],"
+														+ "{\"dimension\":\"Risk Readiness\",\"field\":\"assigneeName\",\"weight\":2,\"score\":%d}],"
 														+ "\"recommendations\":\"fix a | fix b | fix c\"}")
 												.formatted(
 														entry.getKey(), entry.getKey(), entry.getValue(), entry.getValue()))
 						.collect(Collectors.joining(","));
 		return "[" + elements + "]";
-	}
-
-	private EpicHygieneResult cachedResult(
-			String epicKey, String hash, String changeDate, int score) {
-		EpicHygieneResult result =
-				EpicHygieneResult.builder()
-						.basicProjectConfigId(PROJECT_CONFIG_ID)
-						.epicKey(epicKey)
-						.epicName(epicKey + " name")
-						.ruleSetHash(hash)
-						.epicChangeDate(changeDate)
-						.build();
-		result.setVerdict(new EpicHygieneKpiParser().parse(llmPayload(Map.of(epicKey, score))).get(0));
-		return result;
 	}
 
 	// ---------------------------------------------------------------------
@@ -379,7 +379,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTreeWithoutProject());
 
 		assertNull(result.getExcelData());
-		assertNull(result.getScoreFactor());
+		assertNull(result.getTrendValueList());
 		verify(jiraIssueRepository, never())
 				.findByTypeNameInAndBasicProjectConfigIdAndCreatedDateBetweenWithFields(
 						anySet(), anyString(), anyString(), anyString(), anySet());
@@ -393,20 +393,34 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 
 		assertTrue(result.getExcelData().isEmpty());
 		assertEquals(KPIExcelColumn.EPIC_HYGIENE.getColumns(), result.getExcelColumns());
-		assertEquals(Integer.valueOf(0), result.getScoreFactor());
-		assertEquals(Integer.valueOf(0), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(0d), result.getProjectScore());
+		assertEquals(Double.valueOf(0d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(Double.valueOf(0d), card(result, CARD_CONSTRUCTION_READY));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AVG_READINESS));
 		verify(aiGatewayClient, never()).generate(any(ChatGenerationRequest.class));
 	}
 
+	/**
+	 * The KPI is not sprint scoped, so it publishes no trend line. The trend value list is instead
+	 * reused to carry the four project level summary cards.
+	 */
 	@Test
-	public void getKpiData_neverPublishesATrendLine() throws Exception {
+	public void getKpiData_publishesTheFourSummaryCards() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertNull(result.getTrendValueList());
+		assertEquals(
+				List.of(CARD_TOTAL_EPICS, CARD_CONSTRUCTION_READY, CARD_AT_RISK, CARD_AVG_READINESS),
+				summaryCards(result).stream().map(IterationKpiData::getLabel).toList());
+		assertEquals(
+				"Readiness < 50%",
+				summaryCards(result).stream()
+						.filter(data -> CARD_AT_RISK.equals(data.getLabel()))
+						.map(IterationKpiData::getLabelInfo)
+						.findFirst()
+						.orElse(null));
 	}
 
 	/**
@@ -424,9 +438,10 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		assertNotNull(result.getExcelData());
 		assertEquals(1, result.getExcelData().size());
 		assertEquals(KPIExcelColumn.EPIC_HYGIENE.getColumns(), result.getExcelColumns());
-		assertEquals(Integer.valueOf(1), result.getScoreFactor());
-		assertEquals(Integer.valueOf(1), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(90d), result.getProjectScore());
+		assertEquals(Double.valueOf(1d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(Double.valueOf(1d), card(result, CARD_CONSTRUCTION_READY));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(90d), card(result, CARD_AVG_READINESS));
 	}
 
 	@Test
@@ -442,7 +457,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	}
 
 	@Test
-	public void getKpiData_cacheMiss_callsLlmPersistsAndPublishesScoreFactors() throws Exception {
+	public void getKpiData_callsTheLlmAndPublishesTheScoreFactors() throws Exception {
 		mockEpics(
 				List.of(
 						epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000"),
@@ -456,24 +471,25 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
 		assertEquals(2, result.getExcelData().size());
-		assertEquals(Integer.valueOf(2), result.getScoreFactor());
-		assertEquals(Integer.valueOf(1), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(65d), result.getProjectScore());
-		assertEquals(Double.valueOf(65d), result.getValue());
+		assertEquals(Double.valueOf(2d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(Double.valueOf(1d), card(result, CARD_CONSTRUCTION_READY));
+		// EPIC-2 lands at 40, i.e. under the "at risk" line of 50
+		assertEquals(Double.valueOf(1d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(65d), card(result, CARD_AVG_READINESS));
 
 		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
 
-		ArgumentCaptor<List<EpicHygieneResult>> savedCaptor = ArgumentCaptor.forClass(List.class);
-		verify(epicHygieneResultRepository).saveAll(savedCaptor.capture());
-		List<EpicHygieneResult> saved = savedCaptor.getValue();
-		assertEquals(2, saved.size());
-		saved.forEach(
-				stored -> {
-					assertEquals(PROJECT_CONFIG_ID, stored.getBasicProjectConfigId());
-					assertEquals(ruleSetHash, stored.getRuleSetHash());
-					assertNotNull(stored.getComputedAt());
-					assertNotNull(stored.getVerdict());
-				});
+	/** Nothing is stored: a second request re-asks the LLM instead of replaying a saved verdict. */
+	@Test
+	public void getKpiData_everyRequestGoesToTheLlm() throws Exception {
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		verify(aiGatewayClient, times(2)).generate(any(ChatGenerationRequest.class));
 	}
 
 	@Test
@@ -488,75 +504,27 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		assertEquals("EPIC-1 name", row.getEpicName());
 		assertEquals("Functional Grooming", row.getStatus());
 		assertEquals("Ada", row.getAssignee());
-		assertEquals(Integer.valueOf(90), row.getHygieneScore());
+		assertEquals(Integer.valueOf(90), row.getReadinessScore());
 		assertEquals("READY", row.getOverallStatus());
 		assertEquals("fix a | fix b | fix c", row.getRecommendations());
 		assertEquals("90", row.getGroupMap().get("Business Clarity"));
-		assertEquals("90", row.getGroupMap().get("Delivery Readiness"));
+		assertEquals("90", row.getGroupMap().get("Risk Readiness"));
 	}
 
-	// ---------------------------------------------------------------------
-	// Caching
-	// ---------------------------------------------------------------------
-
 	@Test
-	public void getKpiData_freshCache_servesFromDbWithoutCallingTheLlm() throws Exception {
-		String changeDate = "2026-07-01T00:00:00.0000000";
-		mockEpics(List.of(epic("EPIC-1", "One", changeDate)));
-		when(epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(anyString(), anyList()))
-				.thenReturn(List.of(cachedResult("EPIC-1", ruleSetHash, changeDate, 90)));
+	public void getKpiData_excelColumnsAreTheFixedReadinessDimensions() throws Exception {
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertEquals(1, result.getExcelData().size());
-		assertEquals(Integer.valueOf(1), result.getValidScoreFactor());
-		verify(aiGatewayClient, never()).generate(any(ChatGenerationRequest.class));
-		verify(epicHygieneResultRepository, never()).saveAll(anyList());
-	}
-
-	@Test
-	public void getKpiData_staleRuleSetHash_reEvaluatesWithTheLlm() throws Exception {
-		String changeDate = "2026-07-01T00:00:00.0000000";
-		mockEpics(List.of(epic("EPIC-1", "One", changeDate)));
-		when(epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(anyString(), anyList()))
-				.thenReturn(List.of(cachedResult("EPIC-1", "an-outdated-hash", changeDate, 90)));
-		mockLlmResponse(llmPayload(Map.of("EPIC-1", 30)));
-
-		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
-
-		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
-		assertEquals(Integer.valueOf(0), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(30d), result.getProjectScore());
-	}
-
-	@Test
-	public void getKpiData_epicEditedSinceLastRun_reEvaluatesWithTheLlm() throws Exception {
-		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-09T00:00:00.0000000")));
-		when(epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(anyString(), anyList()))
-				.thenReturn(
-						List.of(cachedResult("EPIC-1", ruleSetHash, "2026-07-01T00:00:00.0000000", 90)));
-		mockLlmResponse(llmPayload(Map.of("EPIC-1", 95)));
-
-		service.getKpiData(kpiRequest, kpiElement, buildTree());
-
-		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
-	}
-
-	@Test
-	public void getKpiData_mixedCacheState_onlyStaleEpicsGoToTheLlm() throws Exception {
-		String changeDate = "2026-07-01T00:00:00.0000000";
-		mockEpics(List.of(epic("EPIC-1", "One", changeDate), epic("EPIC-2", "Two", changeDate)));
-		when(epicHygieneResultRepository.findByBasicProjectConfigIdAndEpicKeyIn(anyString(), anyList()))
-				.thenReturn(List.of(cachedResult("EPIC-1", ruleSetHash, changeDate, 90)));
-		mockLlmResponse(llmPayload(Map.of("EPIC-2", 60)));
-
-		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
-
-		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
-		assertEquals(2, result.getExcelData().size());
-		assertEquals(Integer.valueOf(2), result.getScoreFactor());
-		assertEquals(Integer.valueOf(1), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(75d), result.getProjectScore());
+		// Every row exposes the same five dimension columns, in the same order,
+		// whichever dimensions the LLM happened to return
+		assertEquals(
+				EpicReadinessDimension.displayNames(),
+				new ArrayList<>(result.getExcelData().get(0).getGroupMap().keySet()));
+		assertTrue(result.getExcelColumns().containsAll(EpicReadinessDimension.displayNames()));
+		assertTrue(result.getExcelColumns().contains("Readiness Score"));
 	}
 
 	// ---------------------------------------------------------------------
@@ -596,7 +564,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertEquals(Integer.valueOf(2), result.getScoreFactor());
+		assertEquals(Double.valueOf(2d), card(result, CARD_TOTAL_EPICS));
 		List<String> reportedEpics =
 				result.getExcelData().stream()
 						.flatMap(row -> row.getEpicID().keySet().stream())
@@ -606,34 +574,40 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	}
 
 	// ---------------------------------------------------------------------
-	// Failure handling
+	// Failure handling — no fabricated and no stored data
 	// ---------------------------------------------------------------------
 
 	@Test
-	public void getKpiData_blankLlmResponse_servesMockDataAndPersistsNothing() throws Exception {
+	public void getKpiData_blankLlmResponse_reportsTheRealEpicAsNotEvaluated() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		mockLlmResponse("   ");
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertTrue(result.getExcelData().size() > 0);
-		verify(epicHygieneResultRepository, never()).saveAll(anyList());
+		assertEquals(1, result.getExcelData().size());
+		KPIExcelData row = result.getExcelData().get(0);
+		assertTrue(row.getEpicID().containsKey("EPIC-1"));
+		assertEquals(EpicHygieneKpiSlingshotServiceImpl.NOT_EVALUATED, row.getOverallStatus());
+		assertNull(row.getReadinessScore());
 	}
 
 	@Test
-	public void getKpiData_gatewayThrows_servesMockDataAndPersistsNothing() throws Exception {
+	public void getKpiData_gatewayThrows_reportsTheRealEpicAsNotEvaluated() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
 				.thenThrow(new IllegalStateException("gateway down"));
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertTrue(result.getExcelData().size() > 0);
-		verify(epicHygieneResultRepository, never()).saveAll(anyList());
+		assertEquals(1, result.getExcelData().size());
+		assertTrue(result.getExcelData().get(0).getEpicID().containsKey("EPIC-1"));
+		assertEquals(
+				EpicHygieneKpiSlingshotServiceImpl.NOT_EVALUATED,
+				result.getExcelData().get(0).getOverallStatus());
 	}
 
 	@Test
-	public void getKpiData_mockIsServedOnlyOnceAcrossBatches() throws Exception {
+	public void getKpiData_gatewayDown_stillReportsEveryEpicAcrossBatches() throws Exception {
 		when(customApiConfig.getSlingshotEpicHygieneBatchSize()).thenReturn(1);
 		mockEpics(
 				List.of(
@@ -644,15 +618,47 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		int mockRowCount =
-				new EpicHygieneKpiParser()
-						.parse(EpicHygieneKpiSlingshotServiceImpl.MOCK_EPIC_HYGIENE_RESPONSE_JSON)
-						.size();
-		assertEquals(mockRowCount, result.getExcelData().size());
+		// Never fabricated Epics: one row per real Epic, and the card agrees with it
+		assertEquals(Double.valueOf(2d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(2, result.getExcelData().size());
+		assertEquals(
+				List.of("EPIC-1", "EPIC-2"),
+				result.getExcelData().stream()
+						.flatMap(row -> row.getEpicID().keySet().stream())
+						.sorted()
+						.toList());
+		// Un-evaluated Epics never inflate the summary cards
+		assertEquals(Double.valueOf(0d), card(result, CARD_CONSTRUCTION_READY));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AVG_READINESS));
 	}
 
 	@Test
-	public void getKpiData_llmInventsAnEpicKey_dropsItFromTheReportAndTheDb() throws Exception {
+	public void getKpiData_llmSkipsSomeEpics_theyAreStillListedAsNotEvaluated() throws Exception {
+		mockEpics(
+				List.of(
+						epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000"),
+						epic("EPIC-2", "Two", "2026-07-02T00:00:00.0000000")));
+		// The model graded only one of the two Epics it was given
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		assertEquals(Double.valueOf(2d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(2, result.getExcelData().size());
+		Map<String, KPIExcelData> rowsByKey = new HashMap<>();
+		result
+				.getExcelData()
+				.forEach(row -> row.getEpicID().keySet().forEach(key -> rowsByKey.put(key, row)));
+		assertEquals(Integer.valueOf(90), rowsByKey.get("EPIC-1").getReadinessScore());
+		assertEquals(
+				EpicHygieneKpiSlingshotServiceImpl.NOT_EVALUATED,
+				rowsByKey.get("EPIC-2").getOverallStatus());
+		assertEquals("N/A", rowsByKey.get("EPIC-2").getGroupMap().get("Business Clarity"));
+	}
+
+	@Test
+	public void getKpiData_llmInventsAnEpicKey_dropsItFromTheReport() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		Map<String, Integer> scores = new java.util.LinkedHashMap<>();
 		scores.put("EPIC-1", 90);
@@ -663,24 +669,22 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 
 		assertEquals(1, result.getExcelData().size());
 		assertTrue(result.getExcelData().get(0).getEpicID().containsKey("EPIC-1"));
-
-		ArgumentCaptor<List<EpicHygieneResult>> savedCaptor = ArgumentCaptor.forClass(List.class);
-		verify(epicHygieneResultRepository).saveAll(savedCaptor.capture());
-		assertEquals(1, savedCaptor.getValue().size());
-		assertEquals("EPIC-1", savedCaptor.getValue().get(0).getEpicKey());
 	}
 
 	@Test
-	public void getKpiData_unparseableLlmResponse_yieldsNoRowsButDoesNotFail() throws Exception {
+	public void getKpiData_unparseableLlmResponse_reportsTheEpicAsNotEvaluated() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		mockLlmResponse("I am afraid I cannot help with that.");
 
 		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
 
-		assertTrue(result.getExcelData().isEmpty());
-		assertEquals(Integer.valueOf(1), result.getScoreFactor());
-		assertEquals(Integer.valueOf(0), result.getValidScoreFactor());
-		assertEquals(Double.valueOf(0d), result.getProjectScore());
-		verify(epicHygieneResultRepository, never()).saveAll(anyList());
+		assertEquals(1, result.getExcelData().size());
+		assertEquals(
+				EpicHygieneKpiSlingshotServiceImpl.NOT_EVALUATED,
+				result.getExcelData().get(0).getOverallStatus());
+		assertEquals(Double.valueOf(1d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(Double.valueOf(0d), card(result, CARD_CONSTRUCTION_READY));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(0d), card(result, CARD_AVG_READINESS));
 	}
 }

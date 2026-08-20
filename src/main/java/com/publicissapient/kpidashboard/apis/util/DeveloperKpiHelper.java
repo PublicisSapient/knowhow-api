@@ -88,10 +88,10 @@ public final class DeveloperKpiHelper {
 		return trendValuesMap.entrySet().stream()
 				.map(
 						entry -> {
-							String[] filters = entry.getKey().split("#");
+							String[] filters = entry.getKey().split("#", 2);
 							DataCountGroup group = new DataCountGroup();
 							group.setFilter1(filters[0]);
-							group.setFilter2(filters[1]);
+							group.setFilter2(filters.length > 1 ? filters[1] : "");
 							group.setValue(entry.getValue());
 							// Add forecasts if configured
 							Optional.ofNullable(forecastingManager)
