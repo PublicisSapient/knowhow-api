@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 
+import com.publicissapient.kpidashboard.apis.config.CustomApiConfig;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.adapter.OrganizationHierarchyAdapter;
 import com.publicissapient.kpidashboard.apis.hierarchy.integration.dto.HierarchyDetails;
 import com.publicissapient.kpidashboard.apis.hierarchy.service.OrganizationHierarchyService;
@@ -55,13 +56,18 @@ public class IntegrationServiceImpl implements IntegerationService {
 	private final OrganizationHierarchyAdapter organizationHierarchyAdapter;
 	private final ProjectBasicConfigRepository projectConfigRepository;
 	private final OrganizationHierarchyService organizationHierarchyService;
+	private final CustomApiConfig customApiConfig;
 
 	@Override
 	public void syncOrganizationHierarchy(
 			Set<OrganizationHierarchy> externalList, List<OrganizationHierarchy> allDbNodes) {
 
 		// Step 1: Pause projects and ports with missing parent external IDs
-		pauseProjectsWithUnavailablePortExternalID(externalList, allDbNodes);
+		if (customApiConfig.isHierarchySyncPauseProjects()) {
+			pauseProjectsWithUnavailablePortExternalID(externalList, allDbNodes);
+		} else {
+			log.info("Hierarchy sync: project pausing is disabled (hierarchySync.pauseProjects=false)");
+		}
 
 		// Step 2: Map database records by externalId for quick lookup
 		Map<String, OrganizationHierarchy> databaseMapByExternalId =
@@ -88,27 +94,35 @@ public class IntegrationServiceImpl implements IntegerationService {
 			OrganizationHierarchy dbNode = databaseMapByExternalId.get(externalNode.getExternalId());
 
 			if (dbNode == null) {
-				// New node: set createdDate and modifiedDate, and add to save list
-				externalNode.setCreatedDate(LocalDateTime.now());
-				externalNode.setModifiedDate(LocalDateTime.now());
-				nodesToSave.add(externalNode);
+				if (customApiConfig.isHierarchySyncAllowInserts()) {
+					externalNode.setCreatedDate(LocalDateTime.now());
+					externalNode.setModifiedDate(LocalDateTime.now());
+					nodesToSave.add(externalNode);
+				} else {
+					log.debug(
+							"Hierarchy sync: insert skipped for externalId={} (hierarchySync.allowInserts=false)",
+							externalNode.getExternalId());
+				}
 			} else {
-				// Existing node: update fields and add to save list
-				dbNode.setNodeName(externalNode.getNodeName());
-				dbNode.setNodeDisplayName(externalNode.getNodeName());
-				dbNode.setHierarchyLevelId(externalNode.getHierarchyLevelId());
-				dbNode.setParentId(externalNode.getParentId());
-				dbNode.setModifiedDate(LocalDateTime.now());
-				nodesToSave.add(dbNode);
+				if (customApiConfig.isHierarchySyncAllowUpdates()) {
+					dbNode.setNodeName(externalNode.getNodeName());
+					dbNode.setNodeDisplayName(externalNode.getNodeName());
+					dbNode.setHierarchyLevelId(externalNode.getHierarchyLevelId());
+					dbNode.setParentId(externalNode.getParentId());
+					dbNode.setModifiedDate(LocalDateTime.now());
+					nodesToSave.add(dbNode);
+				} else {
+					log.debug(
+							"Hierarchy sync: update skipped for externalId={} (hierarchySync.allowUpdates=false)",
+							externalNode.getExternalId());
+				}
 			}
 		}
 
 		// Save all new and updated nodes and update the maps
 		if (CollectionUtils.isNotEmpty(nodesToSave)) {
-			// Save all nodes
 			organizationHierarchyService.saveAll(nodesToSave);
 
-			// Update our maps with the nodes that were just saved
 			for (OrganizationHierarchy node : nodesToSave) {
 				if (node.getExternalId() != null) {
 					databaseMapByExternalId.put(node.getExternalId(), node);

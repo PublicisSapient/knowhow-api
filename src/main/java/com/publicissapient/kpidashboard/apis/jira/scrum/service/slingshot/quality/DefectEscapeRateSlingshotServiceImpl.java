@@ -168,7 +168,17 @@ public class DefectEscapeRateSlingshotServiceImpl
 						perProjectWeeklyDc,
 						treeAggregatorDetail.getMapOfListOfLeafNodes().get(CommonConstant.SPRINT_MASTER),
 						kpiRequest);
+
 		kpiElement.setTrendValueList(groups);
+		trendValuesMap.values().stream()
+				.flatMap(List::stream)
+				.findFirst()
+				.filter(dc -> dc.getMaturity() != null)
+				.ifPresent(
+						dc -> {
+							kpiElement.setOverallMaturity(dc.getMaturity());
+							kpiElement.setOverAllMaturityValue(String.valueOf(dc.getMaturityValue()));
+						});
 
 		return kpiElement;
 	}

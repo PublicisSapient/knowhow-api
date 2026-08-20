@@ -208,7 +208,10 @@ public class FlakyTestRateServiceImpl
 			int sep = rawKey.indexOf('#');
 			String workflow = sep >= 0 ? rawKey.substring(0, sep) : rawKey;
 			String branch = sep >= 0 ? rawKey.substring(sep + 1) : "";
-			String displayKey = workflow + "#" + branch;
+			// Use "default" when branch is empty so the filter2 dropdown has a selectable
+			// value
+			String branchDisplay = (branch != null && !branch.isEmpty()) ? branch : "default";
+			String displayKey = workflow + "#" + branchDisplay;
 			keyMetadata.put(displayKey, new String[] {workflow, branch});
 			prepareInfoForFlakiness(trendLineName, displayKey, entry.getValue(), aggDataMap);
 		}

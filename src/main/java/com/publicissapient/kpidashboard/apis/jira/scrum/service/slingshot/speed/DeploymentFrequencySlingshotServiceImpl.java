@@ -107,6 +107,27 @@ public class DeploymentFrequencySlingshotServiceImpl
 						kpiRequest, kpiElement, nodeWiseKPIValue, KPICode.DEPLOYMENT_FREQUENCY_SLINGSHOT);
 
 		kpiElement.setTrendValueList(buildEnvironmentWiseDataCountGroups(trendValuesMap));
+
+		double totalDeployments =
+				trendValuesMap.values().stream()
+						.filter(list -> !list.isEmpty())
+						.mapToDouble(
+								list -> {
+									try {
+										return Double.parseDouble(String.valueOf(list.get(0).getMaturityValue()));
+									} catch (NumberFormatException | NullPointerException e) {
+										return 0.0;
+									}
+								})
+						.sum();
+		if (totalDeployments > 0) {
+			String kpiId = KPICode.DEPLOYMENT_FREQUENCY_SLINGSHOT.getKpiId();
+			double val = round(totalDeployments);
+			kpiElement.setOverallMaturity(
+					calculateMaturity(getMaturityRange(kpiId), kpiId, String.valueOf(val)));
+			kpiElement.setOverAllMaturityValue(String.valueOf(val));
+		}
+
 		log.debug(
 				"[DEPLOYMENT-FREQUENCY-SLINGSHOT-LEAF-AGGREGATED-VALUE][{}]. Aggregated Value at each level in the tree {}",
 				kpiRequest.getRequestTrackerId(),

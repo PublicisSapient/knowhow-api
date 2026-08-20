@@ -1351,6 +1351,16 @@ public enum KPIExcelColumn {
 					"Failing Runs",
 					"Flaky",
 					"Flaky Rate %")),
+	CHANGE_FAILURE_RATE_SLINGSHOT(
+			"kpi221",
+			Arrays.asList(
+					"Days/Weeks",
+					"Workflow",
+					"Branch",
+					"Total Builds",
+					"Successful Builds",
+					"Failed Builds",
+					"Change Failure Rate %")),
 	STORY_HYGIENE(
 			"kpi311",
 			Arrays.asList(
@@ -1368,7 +1378,12 @@ public enum KPIExcelColumn {
 					"Epic Name",
 					"Status",
 					"Assignee",
-					"Hygiene Score",
+					"Business Clarity",
+					"Scope Definition",
+					"Solution Readiness",
+					"Dependency Readiness",
+					"Risk Readiness",
+					"Readiness Score",
 					"Overall Status",
 					"Recommendations")),
 	;
