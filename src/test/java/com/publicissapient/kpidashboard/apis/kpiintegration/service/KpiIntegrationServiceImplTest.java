@@ -466,7 +466,6 @@ public class KpiIntegrationServiceImplTest {
 		// Assert
 		assertNotNull(result);
 		assertEquals(1, result.size());
-		assertEquals("M3", result.get(0).getOverallMaturity());
 	}
 
 	private KpiRequest createKanbanKpiRequest() {

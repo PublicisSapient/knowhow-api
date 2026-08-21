@@ -13,6 +13,8 @@ package com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.speed
 
 import static com.publicissapient.kpidashboard.common.constant.CommonConstant.HIERARCHY_LEVEL_ID_PROJECT;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,8 +60,11 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.apis.util.KPIExcelUtility;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneData;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneData.EpicHygieneMetric;
 import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneDataRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -86,9 +92,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>No trend line.</b> Epics are not sprint scoped, so this KPI publishes no {@code
  *       trendValueList}. It reports the drill-down Excel rows plus {@code projectScore}, {@code
  *       scoreFactor} (Epics evaluated) and {@code validScoreFactor} (Epics READY).
- *   <li><b>No stored verdicts.</b> Every Epic is scored by the LLM on every request; nothing is
- *       read from or written to a results collection, so the report always reflects the current
- *       state of the Epic and the current prompt.
+ *   <li><b>Snapshot first.</b> The {@code epic-hygiene-calculation} job pre-computes one document
+ *       per project in {@code epic_hygiene_data}. A request is served from that snapshot whenever
+ *       one exists and still carries data; only when nothing usable is stored are the Epics graded
+ *       live by the LLM — and the result is written back so the next request is cheap again.
  *   <li><b>Batched fan-out.</b> Epics are chunked and dispatched concurrently on the shared hygiene
  *       executor; per-call HTTP timeout is governed by OkHttp's {@code callTimeout} in {@code
  *       AiGatewayConfig}.
@@ -109,13 +116,29 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	private static final String NOT_EVALUATED_REASON =
 			"The AI evaluation did not return a verdict for this Epic — it will be re-evaluated on the next refresh.";
 
+	// Card labels — kept in sync with the data-processor parser that maps them onto
+	// the
+	// typed fields of EpicHygieneData.
+	private static final String LABEL_TOTAL_ACTIVE_EPICS = "Total Active Epics";
+	private static final String LABEL_CONSTRUCTION_READY = "Construction Ready";
+	private static final String LABEL_AT_RISK_BLOCKED = "At Risk / Blocked";
+	private static final String LABEL_AVG_READINESS_SCORE = "Avg Readiness Score";
+
 	@Autowired private EpicHygieneKpiParser epicHygieneKpiParser;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private EpicHygieneDataRepository epicHygieneDataRepository;
 	@Autowired private AiGatewayClient aiGatewayClient;
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private CustomApiConfig customApiConfig;
 	@Autowired private ObjectMapper objectMapper;
 	@Autowired private PromptService promptService;
+
+	/**
+	 * How long a stored snapshot may be served before the Epics are graded again. {@code 0} (or a
+	 * negative value) disables the check and always prefers the stored snapshot.
+	 */
+	@Value("${slingshotEpicHygieneSnapshotMaxAgeHours:200}")
+	private long snapshotMaxAgeHours;
 
 	@Autowired
 	@Qualifier(HygieneAiExecutorConfig.HYGIENE_AI_EXECUTOR)
@@ -213,6 +236,29 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	private void projectWiseLeafNodeValue(KpiElement kpiElement, Node node, KpiRequest kpiRequest) {
 		String basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId().toString();
 
+		// Stored snapshot first: `epic_hygiene_data` holds the pre-computed result of
+		// the
+		// epic-hygiene-calculation job. Grading Epics with the LLM is slow and costly,
+		// so it
+		// only happens when nothing usable is stored for this project.
+		EpicHygieneData storedSnapshot = readStoredSnapshot(basicProjectConfigId);
+		if (storedSnapshot != null) {
+			List<EpicHygieneResponseDTO> storedVerdicts = orderVerdicts(storedSnapshot.getEpicDetails());
+			int storedEpicCount =
+					storedSnapshot.getTotalActiveEpics() == null
+							? storedVerdicts.size()
+							: storedSnapshot.getTotalActiveEpics();
+			log.info(
+					"Epic Hygiene (kpi312): serving {} stored verdict(s) for {} from '{}' (calculated at {}).",
+					storedVerdicts.size(),
+					basicProjectConfigId,
+					EpicHygieneData.COLLECTION_NAME,
+					storedSnapshot.getCalculationDate());
+			publish(kpiElement, storedVerdicts, storedEpicCount);
+			node.setValue(storedVerdicts);
+			return;
+		}
+
 		List<CycleTimeGroup> readinessDimensions =
 				readinessDimensions(
 						configHelperService.getFieldMapping(node.getProjectFilter().getBasicProjectConfigId()));
@@ -241,8 +287,8 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						.collect(
 								Collectors.toMap(JiraIssue::getNumber, epic -> epic, (first, second) -> first));
 
-		// Every Epic is graded by the LLM on every request: no verdict is ever read
-		// from or written to the database.
+		// Nothing usable was stored, so the Epics are graded by the LLM in this
+		// request.
 		List<EpicHygieneResponseDTO> verdicts =
 				evaluateWithLlm(new ArrayList<>(epicByKey.values()), readinessDimensions, readinessRules);
 
@@ -251,17 +297,158 @@ public class EpicHygieneKpiSlingshotServiceImpl
 		// is reported as NOT EVALUATED instead of silently vanishing from the sheet.
 		List<EpicHygieneResponseDTO> completeVerdicts = withNotEvaluatedEpics(verdicts, epicByKey);
 
-		List<EpicHygieneResponseDTO> orderedVerdicts =
-				completeVerdicts.stream()
-						.filter(Objects::nonNull)
-						.sorted(
-								Comparator.comparing(
-										EpicHygieneResponseDTO::getEpicKey,
-										Comparator.nullsLast(Comparator.naturalOrder())))
-						.toList();
+		List<EpicHygieneResponseDTO> orderedVerdicts = orderVerdicts(completeVerdicts);
 
-		publish(kpiElement, orderedVerdicts, sampledEpics.size());
+		List<IterationKpiData> cards = publish(kpiElement, orderedVerdicts, sampledEpics.size());
 		node.setValue(orderedVerdicts);
+
+		// Write the snapshot back so the next request — including the Excel download —
+		// is served without another LLM round trip. Only real evaluations are cached:
+		// a run in which every Epic came back NOT EVALUATED is not worth keeping.
+		if (CollectionUtils.isNotEmpty(verdicts)) {
+			persistSnapshot(node, kpiElement, orderedVerdicts, sampledEpics.size(), cards);
+		}
+	}
+
+	/** Sorts the verdicts by Epic key so the drill-down is stable between requests. */
+	private List<EpicHygieneResponseDTO> orderVerdicts(List<EpicHygieneResponseDTO> verdicts) {
+		if (CollectionUtils.isEmpty(verdicts)) {
+			return List.of();
+		}
+		return verdicts.stream()
+				.filter(Objects::nonNull)
+				.sorted(
+						Comparator.comparing(
+								EpicHygieneResponseDTO::getEpicKey,
+								Comparator.nullsLast(Comparator.naturalOrder())))
+				.toList();
+	}
+
+	// ────────────────────────────────────────────────────────────────────────
+	// Stored snapshot (epic_hygiene_data)
+	// ────────────────────────────────────────────────────────────────────────
+
+	/**
+	 * Reads the newest snapshot of a project from {@code epic_hygiene_data}.
+	 *
+	 * @return the snapshot to serve, or {@code null} when there is none, when it is a fallback
+	 *     record, when it carries no verdicts or when it is older than {@code
+	 *     slingshotEpicHygieneSnapshotMaxAgeHours} — in all of those cases the caller falls back to
+	 *     the AI gateway.
+	 */
+	private EpicHygieneData readStoredSnapshot(String basicProjectConfigId) {
+		try {
+			return epicHygieneDataRepository
+					.findFirstByBasicProjectConfigIdOrderByCalculationDateDesc(basicProjectConfigId)
+					.filter(snapshot -> !snapshot.isFallback())
+					.filter(snapshot -> CollectionUtils.isNotEmpty(snapshot.getEpicDetails()))
+					.filter(this::isFresh)
+					.orElse(null);
+		} catch (Exception ex) {
+			// A read problem must never break the KPI: fall back to a live evaluation.
+			log.error(
+					"Epic Hygiene (kpi312): could not read the stored snapshot of {} — evaluating live. {}",
+					basicProjectConfigId,
+					ex.getMessage(),
+					ex);
+			return null;
+		}
+	}
+
+	private boolean isFresh(EpicHygieneData snapshot) {
+		if (snapshotMaxAgeHours <= 0) {
+			return true;
+		}
+		Instant calculatedAt = snapshot.getCalculationDate();
+		if (calculatedAt == null) {
+			return false;
+		}
+		boolean fresh =
+				calculatedAt.isAfter(Instant.now().minus(Duration.ofHours(snapshotMaxAgeHours)));
+		if (!fresh) {
+			log.info(
+					"Epic Hygiene (kpi312): stored snapshot of {} is older than {}h — re-evaluating.",
+					snapshot.getBasicProjectConfigId(),
+					snapshotMaxAgeHours);
+		}
+		return fresh;
+	}
+
+	/**
+	 * Stores the freshly graded Epics in {@code epic_hygiene_data}, replacing the previous snapshot
+	 * of the project so consumers never have to de-duplicate.
+	 *
+	 * <p>Best effort by design: a storage failure is logged and swallowed, the KPI response has
+	 * already been built and must still be returned.
+	 */
+	private void persistSnapshot(
+			Node node,
+			KpiElement kpiElement,
+			List<EpicHygieneResponseDTO> verdicts,
+			int totalEpicsConsidered,
+			List<IterationKpiData> cards) {
+
+		String basicProjectConfigId = node.getProjectFilter().getBasicProjectConfigId().toString();
+		try {
+			EpicHygieneData snapshot =
+					EpicHygieneData.builder()
+							.basicProjectConfigId(basicProjectConfigId)
+							.projectNodeId(node.getId())
+							.projectName(node.getName())
+							.kpiId(kpiElement.getKpiId())
+							.kpiName(kpiElement.getKpiName())
+							.totalActiveEpics(totalEpicsConsidered)
+							.constructionReadyEpics(toInteger(cardValue(cards, LABEL_CONSTRUCTION_READY)))
+							.atRiskEpics(toInteger(cardValue(cards, LABEL_AT_RISK_BLOCKED)))
+							.avgReadinessScore(cardValue(cards, LABEL_AVG_READINESS_SCORE))
+							.metrics(toMetrics(cards))
+							.epicDetails(new ArrayList<>(verdicts))
+							.fallback(false)
+							.calculationDate(Instant.now())
+							.build();
+
+			epicHygieneDataRepository.deleteByBasicProjectConfigId(basicProjectConfigId);
+			epicHygieneDataRepository.save(snapshot);
+			log.info(
+					"Epic Hygiene (kpi312): stored {} verdict(s) of {} in '{}'.",
+					verdicts.size(),
+					basicProjectConfigId,
+					EpicHygieneData.COLLECTION_NAME);
+		} catch (Exception ex) {
+			log.error(
+					"Epic Hygiene (kpi312): could not store the snapshot of {} — the response is unaffected. {}",
+					basicProjectConfigId,
+					ex.getMessage(),
+					ex);
+		}
+	}
+
+	private List<EpicHygieneMetric> toMetrics(List<IterationKpiData> cards) {
+		return cards.stream()
+				.filter(Objects::nonNull)
+				.map(
+						card ->
+								EpicHygieneMetric.builder()
+										.label(card.getLabel())
+										.value(card.getValue())
+										.labelInfo(card.getLabelInfo())
+										.unit(card.getUnit())
+										.build())
+				.toList();
+	}
+
+	private Double cardValue(List<IterationKpiData> cards, String label) {
+		return cards.stream()
+				.filter(Objects::nonNull)
+				.filter(card -> label.equalsIgnoreCase(card.getLabel()))
+				.map(IterationKpiData::getValue)
+				.filter(Objects::nonNull)
+				.findFirst()
+				.orElse(null);
+	}
+
+	private Integer toInteger(Double value) {
+		return value == null ? null : (int) Math.round(value);
 	}
 
 	/**
@@ -472,8 +659,10 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	 * Writes the Excel rows and the project level score factors onto the {@link KpiElement}. {@code
 	 * scoreFactor} is the number of Epics evaluated, {@code validScoreFactor} the number that came
 	 * back READY and {@code projectScore} the mean readiness score across all Epics.
+	 *
+	 * @return the published cards, so the caller can store them verbatim in the snapshot
 	 */
-	private void publish(
+	private List<IterationKpiData> publish(
 			KpiElement kpiElement, List<EpicHygieneResponseDTO> verdicts, int totalEpicsConsidered) {
 
 		// This KPI has no trend line, so the drill-down rows ARE its payload: they are
@@ -504,26 +693,30 @@ public class EpicHygieneKpiSlingshotServiceImpl
 						.count();
 		kpiDataList.add(
 				IterationKpiData.builder()
-						.label("Total Active Epics")
+						.label(LABEL_TOTAL_ACTIVE_EPICS)
 						.value((double) totalEpicsConsidered)
 						.build());
 		kpiDataList.add(
-				IterationKpiData.builder().label("Construction Ready").value((double) readyEpics).build());
+				IterationKpiData.builder()
+						.label(LABEL_CONSTRUCTION_READY)
+						.value((double) readyEpics)
+						.build());
 		kpiDataList.add(
 				IterationKpiData.builder()
-						.label("At Risk / Blocked")
+						.label(LABEL_AT_RISK_BLOCKED)
 						.value((double) atRisked)
 						.labelInfo("Readiness < 50%")
 						.build());
 		kpiDataList.add(
 				IterationKpiData.builder()
-						.label("Avg Readiness Score")
+						.label(LABEL_AVG_READINESS_SCORE)
 						.value(
 								averageReadiness.isPresent()
 										? roundToTwoDecimals(averageReadiness.getAsDouble())
 										: 0d)
 						.build());
 		kpiElement.setTrendValueList(kpiDataList);
+		return kpiDataList;
 	}
 
 	/**
