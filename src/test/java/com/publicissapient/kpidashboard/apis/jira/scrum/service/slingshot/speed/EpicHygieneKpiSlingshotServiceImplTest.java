@@ -24,12 +24,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -64,7 +67,10 @@ import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.application.dto.CycleTimeGroup;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneData;
+import com.publicissapient.kpidashboard.common.model.jira.EpicHygieneResponseDTO;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.repository.jira.EpicHygieneDataRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.service.recommendation.PromptService;
 import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
@@ -81,8 +87,9 @@ import com.publicissapient.kpidashboard.common.util.EpicReadinessDimension;
  * <p>The real {@link EpicHygieneKpiParser} is used rather than a mock: the parser is pure and its
  * arithmetic is exactly what the score factors are asserted against.
  *
- * <p>The KPI keeps no stored verdicts: every row of every request comes from the LLM, which the
- * tests below assert explicitly.
+ * <p>The KPI serves the pre-computed snapshot stored in {@code epic_hygiene_data} whenever one
+ * exists and still carries verdicts; the LLM is only asked when that snapshot is missing, empty,
+ * stale or a fallback record. Both branches are asserted below.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class EpicHygieneKpiSlingshotServiceImplTest {
@@ -103,6 +110,7 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	private static final String CARD_AVG_READINESS = "Avg Readiness Score";
 
 	@Mock private JiraIssueRepository jiraIssueRepository;
+	@Mock private EpicHygieneDataRepository epicHygieneDataRepository;
 	@Mock private AiGatewayClient aiGatewayClient;
 	@Mock private ConfigHelperService configHelperService;
 	@Mock private CustomApiConfig customApiConfig;
@@ -128,6 +136,8 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		injectField(service, "configHelperService", configHelperService);
 		injectField(service, "customApiConfig", customApiConfig);
 		injectField(service, "cacheService", cacheService);
+		injectField(service, "epicHygieneDataRepository", epicHygieneDataRepository);
+		injectField(service, "snapshotMaxAgeHours", 24L);
 
 		// Most assertions below are about the drill-down rows, which only the Excel
 		// path produces — so default the request tracker to an Excel one.
@@ -143,6 +153,14 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		kpiRequest.setLabel("PROJECT");
 		kpiRequest.setLevel(4);
 		kpiRequest.setKpiList(new ArrayList<>(Collections.singletonList(kpiElement)));
+
+		// Nothing pre-computed unless a test says otherwise: the default is a live
+		// evaluation.
+		lenient()
+				.when(
+						epicHygieneDataRepository.findFirstByBasicProjectConfigIdOrderByCalculationDateDesc(
+								anyString()))
+				.thenReturn(Optional.empty());
 
 		lenient().when(customApiConfig.getSlingshotEpicHygieneMonths()).thenReturn(6);
 		lenient().when(customApiConfig.getSlingshotEpicHygieneEpicCount()).thenReturn(50);
@@ -277,6 +295,47 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 	private void mockLlmResponse(String content) {
 		ChatGenerationResponseDTO response = new ChatGenerationResponseDTO(content);
 		when(aiGatewayClient.generate(any(ChatGenerationRequest.class))).thenReturn(response);
+	}
+
+	/** Makes {@code epic_hygiene_data} answer with the supplied snapshot for this project. */
+	private void mockStoredSnapshot(EpicHygieneData snapshot) {
+		when(epicHygieneDataRepository.findFirstByBasicProjectConfigIdOrderByCalculationDateDesc(
+						anyString()))
+				.thenReturn(Optional.ofNullable(snapshot));
+	}
+
+	private EpicHygieneResponseDTO storedVerdict(String epicKey, int score, String overallStatus) {
+		return EpicHygieneResponseDTO.builder()
+				.epicKey(epicKey)
+				.epicName(epicKey + " name")
+				.epicUrl("https://jira/browse/" + epicKey)
+				.status("Functional Grooming")
+				.assignee("Ada")
+				.readinessScore(score)
+				.overallStatus(overallStatus)
+				.results(
+						List.of(
+								EpicHygieneResponseDTO.DimensionResult.builder()
+										.dimension("Business Clarity")
+										.field("description")
+										.score(score)
+										.build()))
+				.topGaps(List.of())
+				.recommendations("fix a | fix b")
+				.build();
+	}
+
+	private EpicHygieneData snapshotWith(
+			Instant calculationDate, List<EpicHygieneResponseDTO> verdicts) {
+		return EpicHygieneData.builder()
+				.basicProjectConfigId(PROJECT_CONFIG_ID)
+				.projectNodeId("project1")
+				.projectName("Test Project")
+				.kpiId(KPICode.EPIC_HYGIENE.getKpiId())
+				.totalActiveEpics(verdicts.size())
+				.epicDetails(new ArrayList<>(verdicts))
+				.calculationDate(calculationDate)
+				.build();
 	}
 
 	/** Builds an LLM payload scoring every supplied Epic key at {@code score} on both dimensions. */
@@ -480,9 +539,9 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
 	}
 
-	/** Nothing is stored: a second request re-asks the LLM instead of replaying a saved verdict. */
+	/** Nothing stored: a second request re-asks the LLM instead of replaying a saved verdict. */
 	@Test
-	public void getKpiData_everyRequestGoesToTheLlm() throws Exception {
+	public void getKpiData_noStoredSnapshot_everyRequestGoesToTheLlm() throws Exception {
 		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
 		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
 
@@ -490,6 +549,134 @@ public class EpicHygieneKpiSlingshotServiceImplTest {
 		service.getKpiData(kpiRequest, kpiElement, buildTree());
 
 		verify(aiGatewayClient, times(2)).generate(any(ChatGenerationRequest.class));
+	}
+
+	// ---------------------------------------------------------------------
+	// Stored snapshot (epic_hygiene_data) — read first, AI gateway second
+	// ---------------------------------------------------------------------
+
+	@Test
+	public void getKpiData_storedSnapshotExists_isServedWithoutCallingTheLlm() throws Exception {
+		mockStoredSnapshot(
+				snapshotWith(
+						Instant.now(),
+						List.of(
+								storedVerdict("EPIC-1", 90, "READY"), storedVerdict("EPIC-2", 40, "NOT READY"))));
+
+		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		assertEquals(2, result.getExcelData().size());
+		assertEquals(Double.valueOf(2d), card(result, CARD_TOTAL_EPICS));
+		assertEquals(Double.valueOf(1d), card(result, CARD_CONSTRUCTION_READY));
+		assertEquals(Double.valueOf(1d), card(result, CARD_AT_RISK));
+		assertEquals(Double.valueOf(65d), card(result, CARD_AVG_READINESS));
+		assertEquals(KPIExcelColumn.EPIC_HYGIENE.getColumns(), result.getExcelColumns());
+
+		// Neither the Jira read nor the AI gateway is touched when a snapshot is
+		// served.
+		verify(aiGatewayClient, never()).generate(any(ChatGenerationRequest.class));
+		verify(jiraIssueRepository, never())
+				.findByTypeNameInAndBasicProjectConfigIdAndCreatedDateBetweenWithFields(
+						anySet(), anyString(), anyString(), anyString(), anySet());
+	}
+
+	@Test
+	public void getKpiData_storedSnapshotWithoutVerdicts_fallsBackToTheAiGateway() throws Exception {
+		mockStoredSnapshot(snapshotWith(Instant.now(), Collections.emptyList()));
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		assertEquals(1, result.getExcelData().size());
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void getKpiData_storedFallbackRecord_fallsBackToTheAiGateway() throws Exception {
+		EpicHygieneData fallbackRecord =
+				snapshotWith(Instant.now(), List.of(storedVerdict("EPIC-1", 90, "READY")));
+		fallbackRecord.setFallback(true);
+		mockStoredSnapshot(fallbackRecord);
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void getKpiData_staleStoredSnapshot_fallsBackToTheAiGateway() throws Exception {
+		mockStoredSnapshot(
+				snapshotWith(
+						Instant.now().minus(48, ChronoUnit.HOURS),
+						List.of(storedVerdict("EPIC-1", 90, "READY"))));
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void getKpiData_repositoryBlowsUp_stillEvaluatesThroughTheAiGateway() throws Exception {
+		when(epicHygieneDataRepository.findFirstByBasicProjectConfigIdOrderByCalculationDateDesc(
+						anyString()))
+				.thenThrow(new IllegalStateException("mongo down"));
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		KpiElement result = service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		assertEquals(1, result.getExcelData().size());
+		verify(aiGatewayClient, times(1)).generate(any(ChatGenerationRequest.class));
+	}
+
+	@Test
+	public void getKpiData_liveEvaluation_writesTheSnapshotBack() throws Exception {
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		mockLlmResponse(llmPayload(Map.of("EPIC-1", 90)));
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		ArgumentCaptor<EpicHygieneData> savedCaptor = ArgumentCaptor.forClass(EpicHygieneData.class);
+		verify(epicHygieneDataRepository).deleteByBasicProjectConfigId(PROJECT_CONFIG_ID);
+		verify(epicHygieneDataRepository).save(savedCaptor.capture());
+
+		EpicHygieneData saved = savedCaptor.getValue();
+		assertEquals(PROJECT_CONFIG_ID, saved.getBasicProjectConfigId());
+		assertEquals("project1", saved.getProjectNodeId());
+		assertEquals("Test Project", saved.getProjectName());
+		assertEquals(Integer.valueOf(1), saved.getTotalActiveEpics());
+		assertEquals(Integer.valueOf(1), saved.getConstructionReadyEpics());
+		assertEquals(Integer.valueOf(0), saved.getAtRiskEpics());
+		assertEquals(Double.valueOf(90d), saved.getAvgReadinessScore());
+		assertEquals(1, saved.getEpicDetails().size());
+		assertEquals("EPIC-1", saved.getEpicDetails().get(0).getEpicKey());
+		assertEquals(4, saved.getMetrics().size());
+		assertNotNull(saved.getCalculationDate());
+	}
+
+	@Test
+	public void getKpiData_gatewayDown_doesNotStoreASnapshot() throws Exception {
+		mockEpics(List.of(epic("EPIC-1", "One", "2026-07-01T00:00:00.0000000")));
+		when(aiGatewayClient.generate(any(ChatGenerationRequest.class)))
+				.thenThrow(new IllegalStateException("gateway down"));
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		verify(epicHygieneDataRepository, never()).save(any(EpicHygieneData.class));
+	}
+
+	@Test
+	public void getKpiData_noEpicsInWindow_doesNotStoreASnapshot() throws Exception {
+		mockEpics(Collections.emptyList());
+
+		service.getKpiData(kpiRequest, kpiElement, buildTree());
+
+		verify(epicHygieneDataRepository, never()).save(any(EpicHygieneData.class));
 	}
 
 	@Test
