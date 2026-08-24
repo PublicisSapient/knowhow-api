@@ -1386,6 +1386,16 @@ public enum KPIExcelColumn {
 					"Readiness Score",
 					"Overall Status",
 					"Recommendations")),
+	REFINEMENT_CYCLE_TIME_SLINGSHOT(
+			"kpi222",
+			Arrays.asList(
+					"Days/Weeks",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Start Time",
+					"Ready Time",
+					"Refinement Cycle Time (Days)")),
 	;
 
 	// @formatter:on

@@ -4242,6 +4242,54 @@
   },
   {
     "basicProjectConfigId" : null,
+    "kpiId" : "kpi222",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue ID",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Start Time",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Ready Time",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Refinement Cycle Time (Days)",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
     "kpiId" : "kpi218",
     "kpiColumnDetails" : [
       {

@@ -608,6 +608,12 @@ public class KPIExcelData {
 	@JsonProperty("Labels")
 	private List<String> labels;
 
+	@JsonProperty("Ready Time")
+	private String readyTime;
+
+	@JsonProperty("Refinement Cycle Time (Days)")
+	private String refinementCycleTime;
+
 	@JsonProperty("Closed Time")
 	private String closedDate;
 
