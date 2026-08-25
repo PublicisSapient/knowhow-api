@@ -128,7 +128,7 @@ public class ThetaMethodForecaster extends AbstractForecastService {
 		DataCount forecast =
 				createForecastDataCount(prediction, projectName, kpiGroup, getModelType().getName());
 
-		log.info(
+		log.debug(
 				"Generated forecast for KPI {}: value={} [Theta Method]",
 				kpiId,
 				String.format("%.2f", prediction));

@@ -1396,6 +1396,10 @@ public enum KPIExcelColumn {
 					"Start Time",
 					"Ready Time",
 					"Refinement Cycle Time (Days)")),
+	SECURITY_VULNERABILITY_LEAD_TIME(
+			"kpi223",
+			Arrays.asList(
+					"Days/Weeks", "Repository Name", "Severity", "Alert Count", "Mean Lead Time (Days)")),
 	;
 
 	// @formatter:on

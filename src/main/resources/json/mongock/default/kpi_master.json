@@ -6057,6 +6057,44 @@
     "kpiSubCategoryOrder": 1
   },
   {
+    "kpiId": "kpi223",
+    "kpiName": "Security Vulnerability Lead Time",
+    "isDeleted": "False",
+    "defaultOrder": 8,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Quality",
+    "kpiUnit": "Days",
+    "chartType": "line",
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Days",
+    "showTrend": true,
+    "isPositiveTrend": false,
+    "calculateMaturity": true,
+    "maturityRange": [
+      "-90",
+      "30-90",
+      "15-30",
+      "7-15",
+      "7-"
+    ],
+    "hideOverallFilter": true,
+    "kpiSource": "Jenkins",
+    "kanban": false,
+    "groupId": 314,
+    "kpiInfo": {
+      "definition": "Time from vulnerability detected to fix merged in codebase, grouped by severity."
+    },
+    "kpiFilter": "dropDown",
+    "aggregationCriteria": "average",
+    "isTrendCalculative": false,
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "GitHubAction",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "forecastModel": "thetaMethod",
+    "kpiSubCategoryOrder": 4
+  },
+  {
     "kpiId": "kpi311",
     "kpiName": "Story Hygiene",
     "isDeleted": "False",

@@ -347,6 +347,8 @@ public enum KPICode {
 	CHANGE_FAILURE_RATE_SLINGSHOT("kpi221", KPISource.JENKINS.name()),
 	/** Refinement Cycle Time (Slingshot / Intake) */
 	REFINEMENT_CYCLE_TIME_SLINGSHOT("kpi222", KPISource.JIRA.name()),
+	/** Security Vulnerability Lead Time */
+	SECURITY_VULNERABILITY_LEAD_TIME("kpi223", KPISource.JENKINS.name()),
 	STORY_HYGIENE("kpi311", KPISource.JIRA.name()),
 	/** Epic Hygiene / Readiness */
 	EPIC_HYGIENE("kpi312", KPISource.JIRA.name());

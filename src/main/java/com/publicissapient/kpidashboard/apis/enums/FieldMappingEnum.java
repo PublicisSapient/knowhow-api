@@ -939,6 +939,10 @@ public enum FieldMappingEnum {
 					"jiraStatusToStartRefinementKPI222",
 					"jiraStatusForRefinementKPI222",
 					"thresholdValueKPI222")),
+	KPI223(
+			"Security Vulnerability Lead Time",
+			KPISource.JENKINS.name(),
+			List.of("thresholdValueKPI223")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),
