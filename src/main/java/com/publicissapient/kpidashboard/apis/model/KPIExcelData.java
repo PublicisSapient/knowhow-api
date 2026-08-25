@@ -690,6 +690,16 @@ public class KPIExcelData {
 	@JsonProperty("Readiness Score")
 	private Integer readinessScore;
 
+	// ---- Security Vulnerability Lead Time KPI (kpi223) fields ----
+	@JsonProperty("Severity")
+	private String securityAlertSeverity;
+
+	@JsonProperty("Alert Count")
+	private String alertCount;
+
+	@JsonProperty("Mean Lead Time (Days)")
+	private String meanLeadTimeDays;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore
