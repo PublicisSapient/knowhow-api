@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
  *   <li>Inserts a {@code field_mapping_structure} entry so the new field appears in the project
  *       settings UI.
  *   <li>Replaces the default {@code kpi_column_configs} entry for kpi214 to include the two new
- *       Excel columns "Job Name / Pipeline Name" (order 4) and "Environment" (order 5) after
+ *       Excel columns "Job / Pipeline / Workflow" (order 4) and "Environment" (order 5) after
  *       "Repo".
  * </ul>
  *
@@ -107,7 +107,7 @@ public class LeadTimeForChangeSlingshotProductionJobChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job Name / Pipeline Name")
+												.append(COLUMN_NAME, "Job / Pipeline / Workflow")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

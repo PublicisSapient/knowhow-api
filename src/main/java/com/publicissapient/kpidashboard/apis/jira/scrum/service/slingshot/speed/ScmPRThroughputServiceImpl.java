@@ -268,7 +268,7 @@ public class ScmPRThroughputServiceImpl
 			List<KPIExcelData> excelData = new ArrayList<>();
 			KPIExcelUtility.populatePRThroughputExcelData(validationDataList, excelData);
 			kpiElement.setExcelData(excelData);
-			kpiElement.setExcelColumns(KPIExcelColumn.SCM_PR_THROUGHPUT.getColumns());
+			kpiElement.setExcelColumns(KPIExcelColumn.PR_THROUGHPUT_SLINGSHOT.getColumns());
 		}
 	}
 

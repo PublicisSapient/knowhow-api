@@ -270,7 +270,8 @@ public class MeanTimeToTestFeedbackServiceImpl
 
 				KPIExcelData row = new KPIExcelData();
 				row.setDaysWeeks(dc.getDate());
-				row.setWorkflow(meta[0]);
+				row.setProject(trendLineName);
+				row.setJobPipelineName(meta[0]);
 				row.setBranch(meta[1]);
 				row.setTotalBuilds(String.valueOf(builds));
 				row.setAvgDuration(dc.getData());
