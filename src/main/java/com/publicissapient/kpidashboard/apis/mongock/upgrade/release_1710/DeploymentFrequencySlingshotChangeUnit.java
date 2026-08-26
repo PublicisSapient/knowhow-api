@@ -94,7 +94,7 @@ public class DeploymentFrequencySlingshotChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job Name / Pipeline Name")
+												.append(COLUMN_NAME, "Job / Pipeline / Workflow")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

@@ -239,7 +239,8 @@ public class FlakyTestRateServiceImpl
 					boolean isFlaky = passing > 0 && failing > 0 && total >= 2;
 					KPIExcelData row = new KPIExcelData();
 					row.setDaysWeeks(dc.getDate());
-					row.setWorkflow(meta[0]);
+					row.setProject(trendLineName);
+					row.setJobPipelineName(meta[0]);
 					row.setBranch(meta[1]);
 					row.setSuiteName(suiteEntry.getKey());
 					row.setTotalBuilds(String.valueOf(total));

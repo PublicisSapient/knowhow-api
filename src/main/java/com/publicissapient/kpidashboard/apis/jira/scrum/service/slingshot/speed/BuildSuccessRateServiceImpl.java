@@ -8,15 +8,12 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +23,6 @@ import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
 import com.publicissapient.kpidashboard.apis.jenkins.service.JenkinsKPIService;
-import com.publicissapient.kpidashboard.apis.model.BuildFrequencyInfo;
 import com.publicissapient.kpidashboard.apis.model.CustomDateRange;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -161,8 +157,7 @@ public class BuildSuccessRateServiceImpl
 
 		List<KPIExcelData> excelData = new ArrayList<>();
 		String trendLineName = projectLeafNode.getProjectFilter().getName();
-
-		BuildFrequencyInfo buildFrequencyInfo = new BuildFrequencyInfo();
+		String projectName = trendLineName;
 
 		Map<String, List<DataCount>> aggDataMap = new HashMap<>();
 		List<Build> aggBuildList = new ArrayList<>();
@@ -175,7 +170,7 @@ public class BuildSuccessRateServiceImpl
 		for (Map.Entry<String, List<Build>> entry : buildMapJobWise.entrySet()) {
 			List<Build> buildList = entry.getValue();
 			aggBuildList.addAll(buildList);
-			prepareInfoForBuild(buildFrequencyInfo, buildList, trendLineName, entry.getKey(), aggDataMap);
+			prepareInfoForBuild(buildList, trendLineName, entry.getKey(), aggDataMap);
 		}
 
 		if (CollectionUtils.isEmpty(aggBuildList)) {
@@ -183,9 +178,9 @@ public class BuildSuccessRateServiceImpl
 			return;
 		}
 		mapTmp.get(projectLeafNode.getId()).setValue(aggDataMap);
-		populateValidationDataObject(requestTrackerId, excelData, trendLineName, buildFrequencyInfo);
+		populateValidationDataObject(requestTrackerId, excelData, projectName, aggDataMap);
 		kpiElement.setExcelData(excelData);
-		kpiElement.setExcelColumns(KPIExcelColumn.BUILD_FREQUENCY.getColumns());
+		kpiElement.setExcelColumns(KPIExcelColumn.BUILD_SUCCESS_RATE.getColumns());
 	}
 
 	private boolean checkDateIsInWeeks(LocalDate monday, LocalDate sunday, Build build) {
@@ -195,15 +190,7 @@ public class BuildSuccessRateServiceImpl
 				&& (buildTime.isBefore(sunday) || buildTime.isEqual(sunday));
 	}
 
-	/**
-	 * @param buildFrequencyInfo buildFrequencyInfo
-	 * @param buildList buildList
-	 * @param trendLineName trendLineName
-	 * @param jobName jobName
-	 * @param aggDataMap aggDataMap
-	 */
 	private void prepareInfoForBuild(
-			BuildFrequencyInfo buildFrequencyInfo,
 			List<Build> buildList,
 			String trendLineName,
 			String jobName,
@@ -223,7 +210,6 @@ public class BuildSuccessRateServiceImpl
 					totalBuilds++;
 					if (BuildStatus.SUCCESS.name().equalsIgnoreCase(build.getBuildStatus().name()))
 						successBuilds++;
-					buildFrequencyInfo(buildFrequencyInfo, build, date);
 				}
 			}
 
@@ -231,29 +217,6 @@ public class BuildSuccessRateServiceImpl
 			DataCount dataCount = createDataCount(trendLineName, totalBuilds, successBuilds, date);
 			aggDataMap.get(jobName).add(dataCount);
 			currentDate = DeveloperKpiHelper.getNextRangeDate(CommonConstant.WEEK, currentDate);
-		}
-	}
-
-	/**
-	 * @param buildFrequencyInfo buildFrequencyInfo
-	 * @param build build
-	 * @param date date
-	 */
-	private void buildFrequencyInfo(BuildFrequencyInfo buildFrequencyInfo, Build build, String date) {
-		if (null != buildFrequencyInfo) {
-
-			if (StringUtils.isNotEmpty(build.getBuildJob())) {
-				buildFrequencyInfo.addBuildJobNameList(build.getBuildJob());
-			} else if (StringUtils.isNotEmpty(build.getJobFolder())) {
-				buildFrequencyInfo.addBuildJobNameList(build.getJobFolder());
-			} else {
-				buildFrequencyInfo.addBuildJobNameList(build.getPipelineName());
-			}
-			buildFrequencyInfo.addBuildUrl(build.getBuildUrl());
-			buildFrequencyInfo.addBuildStartTime(String.valueOf(build.getStartTime()));
-			buildFrequencyInfo.addWeeks(date);
-			buildFrequencyInfo.addStatuses(build.getBuildStatus().name());
-			buildFrequencyInfo.addBuildBranch(build.getBuildBranch());
 		}
 	}
 
@@ -277,15 +240,25 @@ public class BuildSuccessRateServiceImpl
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
 			String projectName,
-			BuildFrequencyInfo buildFrequencyInfo) {
+			Map<String, List<DataCount>> aggDataMap) {
 
-		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateBuildSuccessRate(excelData, projectName, buildFrequencyInfo);
-			excelData.sort(Comparator.comparingLong(data -> Long.parseLong(data.getStartDate())));
-			excelData.forEach(
-					data ->
-							data.setStartDate(
-									DateUtil.dateConverter(new Date(Long.parseLong(data.getStartDate())))));
+		if (!requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) return;
+
+		for (Map.Entry<String, List<DataCount>> entry : aggDataMap.entrySet()) {
+			String key = entry.getKey();
+			int sep = key.lastIndexOf('#');
+			String job = sep >= 0 ? key.substring(0, sep) : key;
+			String branch = sep >= 0 ? key.substring(sep + 1) : "";
+			for (DataCount dc : entry.getValue()) {
+				Map<String, Object> hover = dc.getHoverValue();
+				if (hover == null) continue;
+				int total = (Integer) hover.getOrDefault(TOTAL_BUILDS, 0);
+				int success = (Integer) hover.getOrDefault(SUCCESS_BUILDS, 0);
+				int failed = total - success;
+				double rate = total > 0 ? ((double) success / total) * 100 : 0.0;
+				KPIExcelUtility.populateBuildSuccessRate(
+						excelData, projectName, dc.getDate(), job, branch, total, success, failed, rate);
+			}
 		}
 	}
 }

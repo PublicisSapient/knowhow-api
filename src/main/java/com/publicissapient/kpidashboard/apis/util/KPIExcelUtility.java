@@ -836,7 +836,7 @@ public class KPIExcelUtility {
 							testCaseType = Constant.EMPTY_STRING; // fallback
 						}
 
-						// ✅ Calculate average execution time in seconds
+						// âœ… Calculate average execution time in seconds
 						double avgExecutionTimeSec = 0.0;
 						if (CollectionUtils.isNotEmpty(testIssue.getExecutions())) {
 							avgExecutionTimeSec =
@@ -846,7 +846,7 @@ public class KPIExcelUtility {
 													// ms
 													.average()
 													.orElse(0.0)
-											/ 1000.0; // convert ms → sec
+											/ 1000.0; // convert ms â†’ sec
 						}
 
 						// Populate Excel Data
@@ -1578,22 +1578,25 @@ public class KPIExcelUtility {
 	}
 
 	public static void populateBuildSuccessRate(
-			List<KPIExcelData> kpiExcelData, String projectName, BuildFrequencyInfo buildFrequencyInfo) {
-
-		for (int i = 0; i < buildFrequencyInfo.getBuildJobList().size(); i++) {
-			KPIExcelData excelData = new KPIExcelData();
-			excelData.setProject(projectName);
-			excelData.setJobName(buildFrequencyInfo.getBuildJobList().get(i));
-			Map<String, String> buildUrl = new HashMap<>();
-			buildUrl.put(
-					buildFrequencyInfo.getBuildUrlList().get(i), buildFrequencyInfo.getBuildUrlList().get(i));
-			excelData.setBuildUrl(buildUrl);
-			excelData.setStartDate(buildFrequencyInfo.getBuildStartTimeList().get(i));
-			excelData.setDaysWeeks(buildFrequencyInfo.getWeeksList().get(i));
-			excelData.setBuildStatus(buildFrequencyInfo.getStatusList().get(i));
-			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
-			kpiExcelData.add(excelData);
-		}
+			List<KPIExcelData> kpiExcelData,
+			String projectName,
+			String daysWeeks,
+			String jobName,
+			String branch,
+			int totalBuilds,
+			int successBuilds,
+			int failedBuilds,
+			double buildSuccessRate) {
+		KPIExcelData row = new KPIExcelData();
+		row.setProject(projectName);
+		row.setDaysWeeks(daysWeeks);
+		row.setJobPipelineName(jobName);
+		row.setBranch(branch);
+		row.setTotalBuilds(String.valueOf(totalBuilds));
+		row.setSuccessfulBuilds(String.valueOf(successBuilds));
+		row.setFailedBuilds(String.valueOf(failedBuilds));
+		row.setBuildSuccessRate(String.format("%.2f", buildSuccessRate));
+		kpiExcelData.add(row);
 	}
 
 	/**
@@ -1602,6 +1605,7 @@ public class KPIExcelUtility {
 	 */
 	public static void populateChangeFailureRateSlingshotExcelData(
 			List<KPIExcelData> kpiExcelData,
+			String projectName,
 			String daysWeeks,
 			String jobName,
 			String branch,
@@ -1611,7 +1615,8 @@ public class KPIExcelUtility {
 			double changeFailureRate) {
 		KPIExcelData row = new KPIExcelData();
 		row.setDaysWeeks(daysWeeks);
-		row.setWorkflow(jobName);
+		row.setProject(projectName);
+		row.setJobPipelineName(jobName);
 		row.setBranch(branch);
 		row.setTotalBuilds(String.valueOf(totalBuilds));
 		row.setSuccessfulBuilds(String.valueOf(successBuilds));
@@ -1730,7 +1735,7 @@ public class KPIExcelUtility {
 												KPIExcelData excelData = new KPIExcelData();
 												excelData.setDaysWeeks(repoToolValidationData.getDate());
 												excelData.setProject(repoToolValidationData.getProjectName());
-												excelData.setRepo(repoToolValidationData.getRepoUrl());
+												excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 												excelData.setBranch(repoToolValidationData.getBranchName());
 												excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 												excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1750,7 +1755,7 @@ public class KPIExcelUtility {
 							KPIExcelData excelData = new KPIExcelData();
 							excelData.setDaysWeeks(repoToolValidationData.getDate());
 							excelData.setProject(repoToolValidationData.getProjectName());
-							excelData.setRepo(repoToolValidationData.getRepoUrl());
+							excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 							excelData.setBranch(repoToolValidationData.getBranchName());
 							excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 							excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1860,7 +1865,7 @@ public class KPIExcelUtility {
 						KPIExcelData excelData = new KPIExcelData();
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
+						excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1891,7 +1896,7 @@ public class KPIExcelUtility {
 							repoToolValidationData -> {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDaysWeeks(repoToolValidationData.getDate());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
@@ -1922,7 +1927,7 @@ public class KPIExcelUtility {
 							repoToolValidationData -> {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1955,7 +1960,7 @@ public class KPIExcelUtility {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setDaysWeeks(repoToolValidationData.getDate());
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
