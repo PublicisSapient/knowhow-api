@@ -388,7 +388,8 @@ public class KPIExcelUtility {
 			List<KPIExcelData> excelDataList,
 			FieldMapping fieldMapping,
 			List<JiraIssue> totalStoryWoDrop,
-			String daysWeeks) {
+			String daysWeeks,
+			String projectName) {
 
 		Map<String, String> labelWiseValidationData =
 				dsrValidationDataList.stream()
@@ -406,6 +407,7 @@ public class KPIExcelUtility {
 						label = StringUtils.capitalize(labelWiseValidationData.get(defectId));
 					}
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					excelData.setDaysWeeks(daysWeeks);
 					excelData.setSprintName(sprint);
 					excelData.setDescription(checkEmptyName(jiraIssue));
@@ -1029,7 +1031,8 @@ public class KPIExcelUtility {
 	public static void populateSprintVelocitySlingshot(
 			Map<String, Set<JiraIssue>> jiraIssuesByWeek,
 			List<KPIExcelData> kpiExcelData,
-			FieldMapping fieldMapping) {
+			FieldMapping fieldMapping,
+			String projectName) {
 
 		if (MapUtils.isNotEmpty(jiraIssuesByWeek)) {
 			DateTimeFormatter displayFormatter =
@@ -1060,6 +1063,7 @@ public class KPIExcelUtility {
 				Set<JiraIssue> issueSet = sortedEntries.get(i).getValue();
 				for (JiraIssue jiraIssue : issueSet) {
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					setSpeedKPIExcelData(jiraIssue.getSprintName(), jiraIssue, fieldMapping, excelData);
 					excelData.setDaysWeeks(weekLabel);
 					excelData.setIssueStatus(null);
@@ -1233,9 +1237,12 @@ public class KPIExcelUtility {
 	}
 
 	public static void populateCycleTimeSlingshot(
-			List<CycleTimeValidationData> cycleTimeList, List<KPIExcelData> excelDataList) {
+			String projectName,
+			List<CycleTimeValidationData> cycleTimeList,
+			List<KPIExcelData> excelDataList) {
 		for (CycleTimeValidationData cycleTime : cycleTimeList) {
 			KPIExcelData excelData = new KPIExcelData();
+			excelData.setProject(projectName);
 			Map<String, String> storyId = new HashMap<>();
 			storyId.put(cycleTime.getIssueNumber(), cycleTime.getUrl());
 			excelData.setIssueID(storyId);
@@ -3021,13 +3028,15 @@ public class KPIExcelUtility {
 	 */
 	public static void populateMeanTimeToRecoverSlingshotExcelData(
 			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
-			List<KPIExcelData> kpiExcelData) {
+			List<KPIExcelData> kpiExcelData,
+			String projectName) {
 		if (MapUtils.isNotEmpty(meanTimeRecoverMapTimeWise)) {
 			meanTimeRecoverMapTimeWise.forEach(
 					(weekOrMonthName, meanRecoverListCurrentTime) ->
 							meanRecoverListCurrentTime.forEach(
 									meanTimeRecoverData -> {
 										KPIExcelData excelData = new KPIExcelData();
+										excelData.setProject(projectName);
 										excelData.setDaysWeeks(meanTimeRecoverData.getDate());
 										Map<String, String> issueDetails = new HashMap<>();
 										issueDetails.put(
@@ -3117,11 +3126,13 @@ public class KPIExcelUtility {
 			List<String> waitTimeList,
 			List<String> totalTimeList,
 			List<KPIExcelData> excelDataList,
-			Map<String, LinkedHashMap<String, String>> issueGroupMap) {
+			Map<String, LinkedHashMap<String, String>> issueGroupMap,
+			String projectName) {
 		AtomicInteger i = new AtomicInteger();
 		flowEfficiency.forEach(
 				(issue, value) -> {
 					KPIExcelData kpiExcelData = new KPIExcelData();
+					kpiExcelData.setProject(projectName);
 					Map<String, String> url = new HashMap<>();
 					url.put(issue.getStoryID(), checkEmptyURL(issue));
 					kpiExcelData.setIssueID(url);
@@ -3468,6 +3479,7 @@ public class KPIExcelUtility {
 	 */
 	public static void populateStoryHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
+			String projectName,
 			String sprintId,
 			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
@@ -3498,6 +3510,7 @@ public class KPIExcelUtility {
 					allRules.forEach(rule -> ruleResult.putIfAbsent(rule, "N/A"));
 
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					excelData.setSprintName(sprintId);
 					String issueKey = hygieneKpiResponseDTO.getIssueKey();
 					Map<String, String> issueIdMap = new HashMap<>();
@@ -3528,7 +3541,9 @@ public class KPIExcelUtility {
 	 * @param epicVerdicts per-Epic readiness results parsed from the LLM
 	 */
 	public static void populateEpicHygieneExcelData(
-			List<KPIExcelData> kpiExcelData, List<EpicHygieneResponseDTO> epicVerdicts) {
+			List<KPIExcelData> kpiExcelData,
+			List<EpicHygieneResponseDTO> epicVerdicts,
+			String projectName) {
 		if (CollectionUtils.isEmpty(epicVerdicts)) {
 			return;
 		}
@@ -3560,6 +3575,7 @@ public class KPIExcelUtility {
 							}
 
 							KPIExcelData excelData = new KPIExcelData();
+							excelData.setProject(projectName);
 							Map<String, String> epicIdMap = new HashMap<>();
 							epicIdMap.put(
 									epicVerdict.getEpicKey(), Objects.toString(epicVerdict.getEpicUrl(), ""));

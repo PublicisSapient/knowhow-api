@@ -269,7 +269,7 @@ public class RefinementCycleTimeSlingshotServiceImpl
 								buildDataCounts(trendLineName, weekBuckets, weekRecords);
 						mapTmp.get(node.getId()).setValue(dataCountList);
 
-						populateExcelData(requestTrackerId, excelData, weekRecords);
+						populateExcelData(requestTrackerId, excelData, weekRecords, trendLineName);
 					});
 
 			kpiElement.setExcelData(excelData);
@@ -425,7 +425,8 @@ public class RefinementCycleTimeSlingshotServiceImpl
 	private void populateExcelData(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
-			Map<String, List<RefinementRecord>> weekRecords) {
+			Map<String, List<RefinementRecord>> weekRecords,
+			String projectName) {
 		if (!requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			return;
 		}
@@ -434,6 +435,7 @@ public class RefinementCycleTimeSlingshotServiceImpl
 						records.forEach(
 								rec -> {
 									KPIExcelData row = new KPIExcelData();
+									row.setProject(projectName);
 									row.setDaysWeeks(bucketKey);
 									row.setIssueID(Map.of(rec.storyId(), rec.url()));
 									row.setIssueType(rec.issueType());

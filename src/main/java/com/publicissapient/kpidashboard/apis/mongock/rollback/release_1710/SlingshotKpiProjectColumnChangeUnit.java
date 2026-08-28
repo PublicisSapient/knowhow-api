@@ -14,7 +14,7 @@
  *  License.
  */
 
-package com.publicissapient.kpidashboard.apis.mongock.upgrade.release_1710;
+package com.publicissapient.kpidashboard.apis.mongock.rollback.release_1710;
 
 import java.util.List;
 
@@ -43,151 +43,6 @@ public class SlingshotKpiProjectColumnChangeUnit {
 
 	@Execution
 	public void execute() {
-		ReplaceOptions upsert = new ReplaceOptions().upsert(true);
-
-		upsert(
-				upsert,
-				"kpi202",
-				List.of(
-						col("Project", 1),
-						col("Issue ID", 2),
-						col("Issue Type", 3),
-						col("Issue Description", 4),
-						col("Status", 5),
-						col("Group Map", 6)));
-
-		upsert(
-				upsert,
-				"kpi204",
-				List.of(
-						col("Project", 1),
-						col("Issue ID", 2),
-						col("Issue Type", 3),
-						col("Issue Description", 4),
-						col("Sprint Name", 5),
-						col("Status", 6),
-						col("Group Map", 7)));
-
-		upsert(
-				upsert,
-				"kpi203",
-				List.of(
-						col("Project", 1),
-						col("Issue ID", 2),
-						col("Issue Type", 3),
-						col("Issue Description", 4),
-						col("Size (In Story Points)", 5),
-						col("Status", 6),
-						col("Wait Time", 7),
-						col("Total Time", 8),
-						col("Flow Efficiency", 9),
-						col("Group Map", 10)));
-
-		upsert(
-				upsert,
-				"kpi205",
-				List.of(
-						col("Days/Weeks", 1),
-						col("Project", 2),
-						col("Issue ID", 3),
-						col("Issue Type", 4),
-						col("Issue Description", 5),
-						col("Sprint Name", 6),
-						col("Squad", 7),
-						col("Priority", 8),
-						col("Story Points", 9),
-						col("Status", 10),
-						col("Original Time Estimate (in hours)", 11),
-						col("Time Spent (in hours)", 12)));
-
-		upsert(
-				upsert,
-				"kpi216",
-				List.of(
-						col("Days/Weeks", 1),
-						col("Project", 2),
-						col("Sprint Name", 3),
-						col("Defect ID", 4),
-						col("Description", 5),
-						col("Escaped Defect", 6),
-						col("Escaped defect identifier", 7),
-						col("Defect Priority", 8),
-						col("Defect Status", 9),
-						col("Story ID", 10),
-						col("Squad", 11),
-						col("Time Spent (in hours)", 12)));
-
-		upsert(
-				upsert,
-				"kpi217",
-				List.of(
-						col("Days/Weeks", 1),
-						col("Project", 2),
-						col("Issue ID", 3),
-						col("Issue Type", 4),
-						col("Issue Description", 5),
-						col("Created Time", 6),
-						col("Closed Time", 7),
-						col("Time to Recover (In Hours)", 8)));
-
-		upsert(
-				upsert,
-				"kpi222",
-				List.of(
-						col("Days/Weeks", 1),
-						col("Project", 2),
-						col("Issue ID", 3),
-						col("Issue Type", 4),
-						col("Issue Description", 5),
-						col("Start Time", 6),
-						col("Ready Time", 7),
-						col("Refinement Cycle Time (Days)", 8)));
-
-		upsert(
-				upsert,
-				"kpi223",
-				List.of(
-						col("Days/Weeks", 1),
-						col("Project", 2),
-						col("Repository", 3),
-						col("Severity", 4),
-						col("Alert Count", 5),
-						col("Mean Lead Time (Days)", 6)));
-
-		upsert(
-				upsert,
-				"kpi311",
-				List.of(
-						col("Project", 1),
-						col("Sprint Name", 2),
-						col("Issue Id", 3),
-						col("Issue Type", 4),
-						col("Assignee", 5),
-						col("Hygiene Score", 6),
-						col("Overall Status", 7),
-						col("Recommendations", 8)));
-
-		upsert(
-				upsert,
-				"kpi312",
-				List.of(
-						col("Project", 1),
-						col("Epic ID", 2),
-						col("Epic Name", 3),
-						col("Status", 4),
-						col("Assignee", 5),
-						col("Business Clarity", 6),
-						col("Scope Definition", 7),
-						col("Solution Readiness", 8),
-						col("Dependency Readiness", 9),
-						col("Risk Readiness", 10),
-						col("Readiness Score", 11),
-						col("Overall Status", 12),
-						col("Recommendations", 13)));
-	}
-
-	@RollbackExecution
-	public void rollback() {
 		ReplaceOptions upsert = new ReplaceOptions().upsert(true);
 
 		upsert(
@@ -320,6 +175,9 @@ public class SlingshotKpiProjectColumnChangeUnit {
 						col("Overall Status", 11),
 						col("Recommendations", 12)));
 	}
+
+	@RollbackExecution
+	public void rollback() {}
 
 	private void upsert(ReplaceOptions options, String kpiId, List<Document> columns) {
 		Document doc =
