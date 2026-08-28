@@ -171,7 +171,13 @@ public class FlowEfficiencySlingshotServiceImpl
 		LinkedHashMap<String, List<DataCount>> dataCountMap =
 				setDataCountMap(rangeAndStatusWiseJiraIssueMap, flowEfficiencyMap, leafNode, issueTypesSet);
 		populateExcelDataObject(
-				requestTrackerId, excelData, flowEfficiencyMap, waitTimeList, totalTimeList, issueGroupMap);
+				requestTrackerId,
+				excelData,
+				flowEfficiencyMap,
+				waitTimeList,
+				totalTimeList,
+				issueGroupMap,
+				leafNode != null ? leafNode.getProjectFilter().getName() : "");
 		if (leafNode != null) leafNode.setValue(dataCountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =
@@ -447,11 +453,12 @@ public class FlowEfficiencySlingshotServiceImpl
 			LinkedHashMap<JiraIssueCustomHistory, Double> flowEfficiencyMap,
 			List<String> waitTimeList,
 			List<String> totalTimeList,
-			Map<String, LinkedHashMap<String, String>> issueGroupMap) {
+			Map<String, LinkedHashMap<String, String>> issueGroupMap,
+			String projectName) {
 
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateFlowEfficiency(
-					flowEfficiencyMap, waitTimeList, totalTimeList, excelData, issueGroupMap);
+					flowEfficiencyMap, waitTimeList, totalTimeList, excelData, issueGroupMap, projectName);
 		}
 	}
 

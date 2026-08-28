@@ -551,7 +551,7 @@ public class StoryHygieneKpiSlingshotServiceImpl
 
 		List<KPIExcelData> excelRows = new ArrayList<>();
 		KPIExcelUtility.populateStoryHygieneExcelData(
-				excelRows, sprintName != null ? sprintName : sprintId, issueVerdicts);
+				excelRows, projectName, sprintName != null ? sprintName : sprintId, issueVerdicts);
 
 		return new SprintHygieneOutcome(dataCount, excelRows, passedIssues, (int) totalIssues);
 	}

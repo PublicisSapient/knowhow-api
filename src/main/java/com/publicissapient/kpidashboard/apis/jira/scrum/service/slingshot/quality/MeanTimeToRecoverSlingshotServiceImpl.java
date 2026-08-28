@@ -475,7 +475,7 @@ public class MeanTimeToRecoverSlingshotServiceImpl
 			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			KPIExcelUtility.populateMeanTimeToRecoverSlingshotExcelData(
-					meanTimeRecoverMapTimeWise, excelData);
+					meanTimeRecoverMapTimeWise, excelData, trendLineName);
 		}
 	}
 

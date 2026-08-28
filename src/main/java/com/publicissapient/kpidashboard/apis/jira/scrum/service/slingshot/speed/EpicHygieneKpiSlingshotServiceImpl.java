@@ -254,7 +254,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 					basicProjectConfigId,
 					EpicHygieneData.COLLECTION_NAME,
 					storedSnapshot.getCalculationDate());
-			publish(kpiElement, storedVerdicts, storedEpicCount);
+			publish(kpiElement, storedVerdicts, storedEpicCount, node.getProjectFilter().getName());
 			node.setValue(storedVerdicts);
 			return;
 		}
@@ -276,7 +276,7 @@ public class EpicHygieneKpiSlingshotServiceImpl
 			log.info(
 					"Epic Hygiene (kpi312): no Epics found in the configured window for {}",
 					basicProjectConfigId);
-			publish(kpiElement, List.of(), 0);
+			publish(kpiElement, List.of(), 0, node.getProjectFilter().getName());
 			return;
 		}
 
@@ -299,7 +299,9 @@ public class EpicHygieneKpiSlingshotServiceImpl
 
 		List<EpicHygieneResponseDTO> orderedVerdicts = orderVerdicts(completeVerdicts);
 
-		List<IterationKpiData> cards = publish(kpiElement, orderedVerdicts, sampledEpics.size());
+		List<IterationKpiData> cards =
+				publish(
+						kpiElement, orderedVerdicts, sampledEpics.size(), node.getProjectFilter().getName());
 		node.setValue(orderedVerdicts);
 
 		// Write the snapshot back so the next request — including the Excel download —
@@ -663,13 +665,16 @@ public class EpicHygieneKpiSlingshotServiceImpl
 	 * @return the published cards, so the caller can store them verbatim in the snapshot
 	 */
 	private List<IterationKpiData> publish(
-			KpiElement kpiElement, List<EpicHygieneResponseDTO> verdicts, int totalEpicsConsidered) {
+			KpiElement kpiElement,
+			List<EpicHygieneResponseDTO> verdicts,
+			int totalEpicsConsidered,
+			String projectName) {
 
 		// This KPI has no trend line, so the drill-down rows ARE its payload: they are
 		// published on every request (not just the Excel one) and surfaced on
 		// /jira/kpi.
 		List<KPIExcelData> excelRows = new ArrayList<>();
-		KPIExcelUtility.populateEpicHygieneExcelData(excelRows, verdicts);
+		KPIExcelUtility.populateEpicHygieneExcelData(excelRows, verdicts, projectName);
 		kpiElement.setExcelData(excelRows);
 		kpiElement.setExcelColumns(KPIExcelColumn.EPIC_HYGIENE.getColumns());
 		List<IterationKpiData> kpiDataList = new ArrayList<>();

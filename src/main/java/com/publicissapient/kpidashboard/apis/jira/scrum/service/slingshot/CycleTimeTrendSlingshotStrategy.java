@@ -181,9 +181,10 @@ public abstract class CycleTimeTrendSlingshotStrategy {
 	protected void populateExcelDataObject(
 			String requestTrackerId,
 			List<CycleTimeValidationData> cycleTimeList,
-			List<KPIExcelData> excelData) {
+			List<KPIExcelData> excelData,
+			String projectName) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateCycleTimeSlingshot(cycleTimeList, excelData);
+			KPIExcelUtility.populateCycleTimeSlingshot(projectName, cycleTimeList, excelData);
 		}
 	}
 }

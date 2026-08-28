@@ -177,18 +177,20 @@ public class CycleTimeSlingshotServiceImpl
 							configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 					List<JiraIssueCustomHistory> jiraIssueCustomHistoryList =
 							(List<JiraIssueCustomHistory>) resultMap.get(basicProjectConfigId.toString());
+					List<CycleTimeValidationData> nodeItems = new ArrayList<>();
 					Map<String, List<DataValue>> cycleMap =
 							getCycleTimeDataCount(
-									jiraIssueCustomHistoryList,
-									fieldMapping,
-									issueTypeFilter,
-									cycleTimeValidationDataList);
+									jiraIssueCustomHistoryList, fieldMapping, issueTypeFilter, nodeItems);
+					cycleTimeValidationDataList.addAll(nodeItems);
+					populateExcelDataObject(
+							kpiRequest.getRequestTrackerId(),
+							nodeItems,
+							excelData,
+							leafNode.getProjectFilter().getName());
 					Map<String, List<DataCount>> dataCountMap =
 							getDataCountObject(leafNode.getProjectFilter().getName(), cycleMap, label);
 					mapTmp.get(leafNode.getId()).setValue(dataCountMap);
 				});
-		populateExcelDataObject(
-				kpiRequest.getRequestTrackerId(), cycleTimeValidationDataList, excelData);
 		IterationKpiFiltersOptions filter1 =
 				new IterationKpiFiltersOptions(SEARCH_BY_DURATION, durationFilter);
 		IterationKpiFiltersOptions filter2 =
@@ -372,9 +374,10 @@ public class CycleTimeSlingshotServiceImpl
 	private void populateExcelDataObject(
 			String requestTrackerId,
 			List<CycleTimeValidationData> cycleTimeList,
-			List<KPIExcelData> excelData) {
+			List<KPIExcelData> excelData,
+			String projectName) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
-			KPIExcelUtility.populateCycleTimeSlingshot(cycleTimeList, excelData);
+			KPIExcelUtility.populateCycleTimeSlingshot(projectName, cycleTimeList, excelData);
 		}
 	}
 }
