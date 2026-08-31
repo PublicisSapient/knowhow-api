@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
  * <ul>
  *   <li>Renames "Project Name" → "Project" (consistent with kpi214)
  *   <li>Adds "Repository Name" column
- *   <li>Renames "Job Name / Pipeline Name" → "Job/Pipeline Name" (consistent with kpi214)
+ *   <li>Renames "Job Name / Pipeline Name" → "Job / Pipeline / Workflow" (consistent with kpi214)
  *   <li>Renames "Environment" → "Deployed Environment" (consistent with kpi214)
  *   <li>Adds "Deployment Status" column
  *   <li>Renames "Start Date Time (UTC)" → "Deployment Date (UTC)" (consistent with kpi214)
@@ -66,7 +66,7 @@ public class DeploymentFrequencySlingshotColumnRefineChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job/Pipeline Name")
+												.append(COLUMN_NAME, "Job / Pipeline / Workflow")
 												.append(ORDER, 4)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

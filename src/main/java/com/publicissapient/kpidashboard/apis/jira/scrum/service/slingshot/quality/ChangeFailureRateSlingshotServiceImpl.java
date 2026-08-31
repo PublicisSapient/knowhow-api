@@ -294,6 +294,7 @@ public class ChangeFailureRateSlingshotServiceImpl
 			if (collectExcel) {
 				KPIExcelUtility.populateChangeFailureRateSlingshotExcelData(
 						groupExcelRows,
+						trendLineName,
 						dateLabel,
 						jobName,
 						branchName,

@@ -106,13 +106,21 @@ public enum KPIExcelColumn {
 					"Mean Time To Merge (In Hours)")),
 	PR_THROUGHPUT_SLINGSHOT(
 			"kpi208",
-			Arrays.asList("Project", "Repo", "Branch", "Days/Weeks", "Developer", "No of Merge")),
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repository",
+					"Branch",
+					"Developer",
+					"Email/Username",
+					"Merge Request Url",
+					"No of Merge")),
 	PR_CYCLE_TIME_SLINGSHOT(
 			"kpi209",
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
-					"Repo",
+					"Repository",
 					"Branch",
 					"Developer",
 					"Email/Username",
@@ -167,6 +175,7 @@ public enum KPIExcelColumn {
 			"kpi205",
 			Arrays.asList(
 					"Days/Weeks",
+					"Project",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",
@@ -1200,14 +1209,22 @@ public enum KPIExcelColumn {
 
 	CYCLE_TIME_SLINGSHOT(
 			"kpi202",
-			Arrays.asList("Issue ID", "Issue Type", "Issue Description", "Status", "Group Map")),
+			Arrays.asList(
+					"Project", "Issue ID", "Issue Type", "Issue Description", "Status", "Group Map")),
 	CYCLE_TIME_TREND_SLINGSHOT(
 			"kpi204",
 			Arrays.asList(
-					"Issue ID", "Issue Type", "Issue Description", "Sprint Name", "Status", "Group Map")),
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Sprint Name",
+					"Status",
+					"Group Map")),
 	FLOW_EFFICIENCY_SLINGSHOT(
 			"kpi203",
 			Arrays.asList(
+					"Project",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",
@@ -1222,7 +1239,7 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
-					"Repo",
+					"Repository",
 					"Branch",
 					"Developer",
 					"Email/Username",
@@ -1236,7 +1253,7 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
-					"Repo",
+					"Repository",
 					"Branch",
 					"Developer",
 					"Email/Username",
@@ -1247,19 +1264,20 @@ public enum KPIExcelColumn {
 			"kpi212",
 			Arrays.asList(
 					"Days/Weeks",
-					"Project Name",
-					"Job Name / Pipeline Name",
+					"Project",
+					"Job / Pipeline / Workflow",
 					"Branch",
-					"Start Date",
-					"Build Url",
-					"Build Status")),
+					"Total Builds",
+					"Successful Builds",
+					"Failed Builds",
+					"Build Success Rate %")),
 	DEPLOYMENT_FREQUENCY_SLINGSHOT(
 			"kpi213",
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
-					"Repository Name",
-					"Job/Pipeline Name",
+					"Repository",
+					"Job / Pipeline / Workflow",
 					"Deployed Environment",
 					"Deployment Status",
 					"Deployment Date (UTC)",
@@ -1269,11 +1287,11 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
-					"Repository Name",
+					"Repository",
 					"Source Branch",
 					"Author",
 					"Final Pull Request",
-					"Job/Pipeline Name",
+					"Job / Pipeline / Workflow",
 					"Deployed Environment",
 					"First Commit Date (UTC)",
 					"Deployment / Merged Date (UTC)",
@@ -1282,7 +1300,8 @@ public enum KPIExcelColumn {
 			"kpi215",
 			Arrays.asList(
 					"Days/Weeks",
-					"Repo",
+					"Project",
+					"Repository",
 					"Branch",
 					"Developer",
 					"Email/Username",
@@ -1294,6 +1313,7 @@ public enum KPIExcelColumn {
 			"kpi216",
 			Arrays.asList(
 					"Days/Weeks",
+					"Project",
 					"Sprint Name",
 					"Defect ID",
 					"Description",
@@ -1308,6 +1328,7 @@ public enum KPIExcelColumn {
 			"kpi217",
 			Arrays.asList(
 					"Days/Weeks",
+					"Project",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",
@@ -1318,7 +1339,8 @@ public enum KPIExcelColumn {
 			"kpi218",
 			Arrays.asList(
 					"Days/Weeks",
-					"Workflow",
+					"Project",
+					"Job / Pipeline / Workflow",
 					"Branch",
 					"Suite Name",
 					"Total Builds",
@@ -1331,7 +1353,8 @@ public enum KPIExcelColumn {
 			"kpi219",
 			Arrays.asList(
 					"Days/Weeks",
-					"Workflow",
+					"Project",
+					"Job / Pipeline / Workflow",
 					"Branch",
 					"Total Builds",
 					"Successful Builds",
@@ -1343,7 +1366,8 @@ public enum KPIExcelColumn {
 			"kpi220",
 			Arrays.asList(
 					"Days/Weeks",
-					"Workflow",
+					"Project",
+					"Job / Pipeline / Workflow",
 					"Branch",
 					"Suite Name",
 					"Total Builds",
@@ -1355,7 +1379,8 @@ public enum KPIExcelColumn {
 			"kpi221",
 			Arrays.asList(
 					"Days/Weeks",
-					"Workflow",
+					"Project",
+					"Job / Pipeline / Workflow",
 					"Branch",
 					"Total Builds",
 					"Successful Builds",
@@ -1364,6 +1389,7 @@ public enum KPIExcelColumn {
 	STORY_HYGIENE(
 			"kpi311",
 			Arrays.asList(
+					"Project",
 					"Sprint Name",
 					"Issue Id",
 					"Issue Type",
@@ -1374,6 +1400,7 @@ public enum KPIExcelColumn {
 	EPIC_HYGIENE(
 			"kpi312",
 			Arrays.asList(
+					"Project",
 					"Epic ID",
 					"Epic Name",
 					"Status",
@@ -1386,6 +1413,26 @@ public enum KPIExcelColumn {
 					"Readiness Score",
 					"Overall Status",
 					"Recommendations")),
+	REFINEMENT_CYCLE_TIME_SLINGSHOT(
+			"kpi222",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Start Time",
+					"Ready Time",
+					"Refinement Cycle Time (Days)")),
+	SECURITY_VULNERABILITY_LEAD_TIME(
+			"kpi223",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Repository",
+					"Severity",
+					"Alert Count",
+					"Mean Lead Time (Days)")),
 	;
 
 	// @formatter:on

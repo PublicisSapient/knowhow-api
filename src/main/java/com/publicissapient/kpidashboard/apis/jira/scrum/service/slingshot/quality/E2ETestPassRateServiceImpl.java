@@ -224,7 +224,8 @@ public class E2ETestPassRateServiceImpl
 				int totalSkipped = (Integer) extras.getOrDefault("totalSkipped", 0);
 				KPIExcelData row = new KPIExcelData();
 				row.setDaysWeeks(dc.getDate());
-				row.setWorkflow(meta[0]);
+				row.setProject(trendLineName);
+				row.setJobPipelineName(meta[0]);
 				row.setSuiteName(meta[1]);
 				row.setBranch(meta[2]);
 				row.setTotalBuilds(String.valueOf(builds));

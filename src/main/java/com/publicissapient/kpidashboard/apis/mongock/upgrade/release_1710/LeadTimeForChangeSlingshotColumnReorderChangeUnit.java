@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
  *   <li>Renames "Repo" → "Repository Name"
  *   <li>Renames "Branch" → "Source Branch"
  *   <li>Renames "Merge Request Url" → "Final Pull Request"
- *   <li>Renames "Job Name / Pipeline Name" → "Job/Pipeline Name"
+ *   <li>Renames "Job Name / Pipeline Name" → "Job / Pipeline / Workflow"
  *   <li>Renames "Environment" → "Deployed Environment"
  *   <li>Reorders columns: Days/Weeks, Project, Repository Name, Source Branch, Author, Final Pull
  *       Request, Job/Pipeline Name, Deployed Environment, First Commit Date (UTC), Deployment Date
@@ -82,7 +82,7 @@ public class LeadTimeForChangeSlingshotColumnReorderChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job/Pipeline Name")
+												.append(COLUMN_NAME, "Job / Pipeline / Workflow")
 												.append(ORDER, 7)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),

@@ -388,7 +388,8 @@ public class KPIExcelUtility {
 			List<KPIExcelData> excelDataList,
 			FieldMapping fieldMapping,
 			List<JiraIssue> totalStoryWoDrop,
-			String daysWeeks) {
+			String daysWeeks,
+			String projectName) {
 
 		Map<String, String> labelWiseValidationData =
 				dsrValidationDataList.stream()
@@ -406,6 +407,7 @@ public class KPIExcelUtility {
 						label = StringUtils.capitalize(labelWiseValidationData.get(defectId));
 					}
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					excelData.setDaysWeeks(daysWeeks);
 					excelData.setSprintName(sprint);
 					excelData.setDescription(checkEmptyName(jiraIssue));
@@ -836,7 +838,7 @@ public class KPIExcelUtility {
 							testCaseType = Constant.EMPTY_STRING; // fallback
 						}
 
-						// ✅ Calculate average execution time in seconds
+						// âœ… Calculate average execution time in seconds
 						double avgExecutionTimeSec = 0.0;
 						if (CollectionUtils.isNotEmpty(testIssue.getExecutions())) {
 							avgExecutionTimeSec =
@@ -846,7 +848,7 @@ public class KPIExcelUtility {
 													// ms
 													.average()
 													.orElse(0.0)
-											/ 1000.0; // convert ms → sec
+											/ 1000.0; // convert ms â†’ sec
 						}
 
 						// Populate Excel Data
@@ -1029,7 +1031,8 @@ public class KPIExcelUtility {
 	public static void populateSprintVelocitySlingshot(
 			Map<String, Set<JiraIssue>> jiraIssuesByWeek,
 			List<KPIExcelData> kpiExcelData,
-			FieldMapping fieldMapping) {
+			FieldMapping fieldMapping,
+			String projectName) {
 
 		if (MapUtils.isNotEmpty(jiraIssuesByWeek)) {
 			DateTimeFormatter displayFormatter =
@@ -1060,6 +1063,7 @@ public class KPIExcelUtility {
 				Set<JiraIssue> issueSet = sortedEntries.get(i).getValue();
 				for (JiraIssue jiraIssue : issueSet) {
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					setSpeedKPIExcelData(jiraIssue.getSprintName(), jiraIssue, fieldMapping, excelData);
 					excelData.setDaysWeeks(weekLabel);
 					excelData.setIssueStatus(null);
@@ -1233,9 +1237,12 @@ public class KPIExcelUtility {
 	}
 
 	public static void populateCycleTimeSlingshot(
-			List<CycleTimeValidationData> cycleTimeList, List<KPIExcelData> excelDataList) {
+			String projectName,
+			List<CycleTimeValidationData> cycleTimeList,
+			List<KPIExcelData> excelDataList) {
 		for (CycleTimeValidationData cycleTime : cycleTimeList) {
 			KPIExcelData excelData = new KPIExcelData();
+			excelData.setProject(projectName);
 			Map<String, String> storyId = new HashMap<>();
 			storyId.put(cycleTime.getIssueNumber(), cycleTime.getUrl());
 			excelData.setIssueID(storyId);
@@ -1578,22 +1585,25 @@ public class KPIExcelUtility {
 	}
 
 	public static void populateBuildSuccessRate(
-			List<KPIExcelData> kpiExcelData, String projectName, BuildFrequencyInfo buildFrequencyInfo) {
-
-		for (int i = 0; i < buildFrequencyInfo.getBuildJobList().size(); i++) {
-			KPIExcelData excelData = new KPIExcelData();
-			excelData.setProject(projectName);
-			excelData.setJobName(buildFrequencyInfo.getBuildJobList().get(i));
-			Map<String, String> buildUrl = new HashMap<>();
-			buildUrl.put(
-					buildFrequencyInfo.getBuildUrlList().get(i), buildFrequencyInfo.getBuildUrlList().get(i));
-			excelData.setBuildUrl(buildUrl);
-			excelData.setStartDate(buildFrequencyInfo.getBuildStartTimeList().get(i));
-			excelData.setDaysWeeks(buildFrequencyInfo.getWeeksList().get(i));
-			excelData.setBuildStatus(buildFrequencyInfo.getStatusList().get(i));
-			excelData.setBranch(buildFrequencyInfo.getBuildBranchList().get(i));
-			kpiExcelData.add(excelData);
-		}
+			List<KPIExcelData> kpiExcelData,
+			String projectName,
+			String daysWeeks,
+			String jobName,
+			String branch,
+			int totalBuilds,
+			int successBuilds,
+			int failedBuilds,
+			double buildSuccessRate) {
+		KPIExcelData row = new KPIExcelData();
+		row.setProject(projectName);
+		row.setDaysWeeks(daysWeeks);
+		row.setJobPipelineName(jobName);
+		row.setBranch(branch);
+		row.setTotalBuilds(String.valueOf(totalBuilds));
+		row.setSuccessfulBuilds(String.valueOf(successBuilds));
+		row.setFailedBuilds(String.valueOf(failedBuilds));
+		row.setBuildSuccessRate(String.format("%.2f", buildSuccessRate));
+		kpiExcelData.add(row);
 	}
 
 	/**
@@ -1602,6 +1612,7 @@ public class KPIExcelUtility {
 	 */
 	public static void populateChangeFailureRateSlingshotExcelData(
 			List<KPIExcelData> kpiExcelData,
+			String projectName,
 			String daysWeeks,
 			String jobName,
 			String branch,
@@ -1611,7 +1622,8 @@ public class KPIExcelUtility {
 			double changeFailureRate) {
 		KPIExcelData row = new KPIExcelData();
 		row.setDaysWeeks(daysWeeks);
-		row.setWorkflow(jobName);
+		row.setProject(projectName);
+		row.setJobPipelineName(jobName);
 		row.setBranch(branch);
 		row.setTotalBuilds(String.valueOf(totalBuilds));
 		row.setSuccessfulBuilds(String.valueOf(successBuilds));
@@ -1730,7 +1742,7 @@ public class KPIExcelUtility {
 												KPIExcelData excelData = new KPIExcelData();
 												excelData.setDaysWeeks(repoToolValidationData.getDate());
 												excelData.setProject(repoToolValidationData.getProjectName());
-												excelData.setRepo(repoToolValidationData.getRepoUrl());
+												excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 												excelData.setBranch(repoToolValidationData.getBranchName());
 												excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 												excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1750,7 +1762,7 @@ public class KPIExcelUtility {
 							KPIExcelData excelData = new KPIExcelData();
 							excelData.setDaysWeeks(repoToolValidationData.getDate());
 							excelData.setProject(repoToolValidationData.getProjectName());
-							excelData.setRepo(repoToolValidationData.getRepoUrl());
+							excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 							excelData.setBranch(repoToolValidationData.getBranchName());
 							excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 							excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1860,7 +1872,7 @@ public class KPIExcelUtility {
 						KPIExcelData excelData = new KPIExcelData();
 						excelData.setDaysWeeks(repoToolValidationData.getDate());
 						excelData.setProject(repoToolValidationData.getProjectName());
-						excelData.setRepo(repoToolValidationData.getRepoUrl());
+						excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 						excelData.setBranch(repoToolValidationData.getBranchName());
 						excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 						excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1891,7 +1903,7 @@ public class KPIExcelUtility {
 							repoToolValidationData -> {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDaysWeeks(repoToolValidationData.getDate());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
@@ -1922,7 +1934,7 @@ public class KPIExcelUtility {
 							repoToolValidationData -> {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -1955,7 +1967,7 @@ public class KPIExcelUtility {
 								KPIExcelData excelData = new KPIExcelData();
 								excelData.setDaysWeeks(repoToolValidationData.getDate());
 								excelData.setProject(repoToolValidationData.getProjectName());
-								excelData.setRepo(repoToolValidationData.getRepoUrl());
+								excelData.setRepositoryName(repoToolValidationData.getRepoUrl());
 								excelData.setBranch(repoToolValidationData.getBranchName());
 								excelData.setDeveloper(repoToolValidationData.getDeveloperName());
 								excelData.setEmailUsername(repoToolValidationData.getDeveloperEmail());
@@ -3016,13 +3028,15 @@ public class KPIExcelUtility {
 	 */
 	public static void populateMeanTimeToRecoverSlingshotExcelData(
 			Map<String, List<MeanTimeRecoverData>> meanTimeRecoverMapTimeWise,
-			List<KPIExcelData> kpiExcelData) {
+			List<KPIExcelData> kpiExcelData,
+			String projectName) {
 		if (MapUtils.isNotEmpty(meanTimeRecoverMapTimeWise)) {
 			meanTimeRecoverMapTimeWise.forEach(
 					(weekOrMonthName, meanRecoverListCurrentTime) ->
 							meanRecoverListCurrentTime.forEach(
 									meanTimeRecoverData -> {
 										KPIExcelData excelData = new KPIExcelData();
+										excelData.setProject(projectName);
 										excelData.setDaysWeeks(meanTimeRecoverData.getDate());
 										Map<String, String> issueDetails = new HashMap<>();
 										issueDetails.put(
@@ -3112,11 +3126,13 @@ public class KPIExcelUtility {
 			List<String> waitTimeList,
 			List<String> totalTimeList,
 			List<KPIExcelData> excelDataList,
-			Map<String, LinkedHashMap<String, String>> issueGroupMap) {
+			Map<String, LinkedHashMap<String, String>> issueGroupMap,
+			String projectName) {
 		AtomicInteger i = new AtomicInteger();
 		flowEfficiency.forEach(
 				(issue, value) -> {
 					KPIExcelData kpiExcelData = new KPIExcelData();
+					kpiExcelData.setProject(projectName);
 					Map<String, String> url = new HashMap<>();
 					url.put(issue.getStoryID(), checkEmptyURL(issue));
 					kpiExcelData.setIssueID(url);
@@ -3463,6 +3479,7 @@ public class KPIExcelUtility {
 	 */
 	public static void populateStoryHygieneExcelData(
 			List<KPIExcelData> kpiExcelData,
+			String projectName,
 			String sprintId,
 			List<HygieneKpiResponseDTO> hygieneKpiResponseDTOList) {
 		if (CollectionUtils.isEmpty(hygieneKpiResponseDTOList)) {
@@ -3493,6 +3510,7 @@ public class KPIExcelUtility {
 					allRules.forEach(rule -> ruleResult.putIfAbsent(rule, "N/A"));
 
 					KPIExcelData excelData = new KPIExcelData();
+					excelData.setProject(projectName);
 					excelData.setSprintName(sprintId);
 					String issueKey = hygieneKpiResponseDTO.getIssueKey();
 					Map<String, String> issueIdMap = new HashMap<>();
@@ -3523,7 +3541,9 @@ public class KPIExcelUtility {
 	 * @param epicVerdicts per-Epic readiness results parsed from the LLM
 	 */
 	public static void populateEpicHygieneExcelData(
-			List<KPIExcelData> kpiExcelData, List<EpicHygieneResponseDTO> epicVerdicts) {
+			List<KPIExcelData> kpiExcelData,
+			List<EpicHygieneResponseDTO> epicVerdicts,
+			String projectName) {
 		if (CollectionUtils.isEmpty(epicVerdicts)) {
 			return;
 		}
@@ -3555,6 +3575,7 @@ public class KPIExcelUtility {
 							}
 
 							KPIExcelData excelData = new KPIExcelData();
+							excelData.setProject(projectName);
 							Map<String, String> epicIdMap = new HashMap<>();
 							epicIdMap.put(
 									epicVerdict.getEpicKey(), Objects.toString(epicVerdict.getEpicUrl(), ""));

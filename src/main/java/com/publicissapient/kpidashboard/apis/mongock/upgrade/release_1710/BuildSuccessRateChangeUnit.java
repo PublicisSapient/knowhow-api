@@ -94,7 +94,7 @@ public class BuildSuccessRateChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Job Name / Pipeline Name")
+												.append(COLUMN_NAME, "Job / Pipeline / Workflow")
 												.append(ORDER, 3)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
@@ -104,18 +104,23 @@ public class BuildSuccessRateChangeUnit {
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Start Date")
+												.append(COLUMN_NAME, "Total Builds")
 												.append(ORDER, 5)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Build URL")
+												.append(COLUMN_NAME, "Successful Builds")
 												.append(ORDER, 6)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true),
 										new Document()
-												.append(COLUMN_NAME, "Build Status")
+												.append(COLUMN_NAME, "Failed Builds")
 												.append(ORDER, 7)
+												.append(IS_SHOWN, true)
+												.append(IS_DEFAULT, true),
+										new Document()
+												.append(COLUMN_NAME, "Build Success Rate %")
+												.append(ORDER, 8)
 												.append(IS_SHOWN, true)
 												.append(IS_DEFAULT, true)));
 
