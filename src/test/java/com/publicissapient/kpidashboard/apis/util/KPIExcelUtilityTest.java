@@ -1949,7 +1949,8 @@ public class KPIExcelUtilityTest {
 								82,
 								"READY",
 								epicDimension("Business Clarity", 80),
-								epicDimension("Scope Definition", 84))));
+								epicDimension("Scope Definition", 84))),
+				"");
 
 		assertEquals(1, excelData.size());
 		KPIExcelData row = excelData.get(0);
@@ -1977,7 +1978,8 @@ public class KPIExcelUtilityTest {
 								"READY",
 								epicDimension("Business Clarity", 80),
 								epicDimension("Risk Readiness", 80)),
-						epicVerdict("EPIC-2", 40, "NOT READY", epicDimension("Business Clarity", 40))));
+						epicVerdict("EPIC-2", 40, "NOT READY", epicDimension("Business Clarity", 40))),
+				"");
 
 		assertEquals(2, excelData.size());
 		// The dimension only the first Epic was graded on still exists as a column on
@@ -1993,7 +1995,8 @@ public class KPIExcelUtilityTest {
 		KPIExcelUtility.populateEpicHygieneExcelData(
 				excelData,
 				Collections.singletonList(
-						epicVerdict("EPIC-1", 0, "NOT READY", epicDimension("Business Clarity", null))));
+						epicVerdict("EPIC-1", 0, "NOT READY", epicDimension("Business Clarity", null))),
+				"");
 
 		assertEquals("N/A", excelData.get(0).getGroupMap().get("Business Clarity"));
 	}
@@ -2002,8 +2005,8 @@ public class KPIExcelUtilityTest {
 	public void testPopulateEpicHygieneExcelData_nullOrEmptyInputAddsNoRows() {
 		List<KPIExcelData> excelData = new ArrayList<>();
 
-		KPIExcelUtility.populateEpicHygieneExcelData(excelData, null);
-		KPIExcelUtility.populateEpicHygieneExcelData(excelData, new ArrayList<>());
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, null, "");
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, new ArrayList<>(), "");
 
 		assertTrue(excelData.isEmpty());
 	}
@@ -2015,7 +2018,7 @@ public class KPIExcelUtilityTest {
 		verdict.setResults(null);
 		verdict.setEpicUrl(null);
 
-		KPIExcelUtility.populateEpicHygieneExcelData(excelData, Collections.singletonList(verdict));
+		KPIExcelUtility.populateEpicHygieneExcelData(excelData, Collections.singletonList(verdict), "");
 
 		assertEquals(1, excelData.size());
 		assertEquals("", excelData.get(0).getEpicID().get("EPIC-1"));
@@ -2038,7 +2041,8 @@ public class KPIExcelUtilityTest {
 								70,
 								"READY",
 								epicDimension("Risk Readiness", 70),
-								epicDimension("Business Clarity", 70))));
+								epicDimension("Business Clarity", 70))),
+				"");
 
 		// Fixed order, never the order the LLM returned
 		assertEquals(
@@ -2058,7 +2062,8 @@ public class KPIExcelUtilityTest {
 								80,
 								"READY",
 								epicDimension("Business Clarity", 80),
-								epicDimension("Delivery Readiness", 80))));
+								epicDimension("Delivery Readiness", 80))),
+				"");
 
 		assertEquals(
 				EpicReadinessDimension.displayNames().size(), excelData.get(0).getGroupMap().size());

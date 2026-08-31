@@ -524,7 +524,10 @@ public class UserBoardConfigServiceImpl implements UserBoardConfigService {
 		else asPerCategoryBoard.setBoardSlug(boardName.toLowerCase());
 		List<BoardKpisDTO> boardKpisList = new ArrayList<>();
 		kpiMasterRepository.findByKpiCategoryAndKanban(boardName, kanban).stream()
-				.sorted(Comparator.comparing(KpiMaster::getDefaultOrder))
+				.sorted(
+						Comparator.comparing(
+										KpiMaster::getKpiSubCategoryOrder, Comparator.nullsLast(Integer::compareTo))
+								.thenComparing(KpiMaster::getDefaultOrder))
 				.forEach(kpiMaster -> setKpiUserBoardDefaultFromKpiMaster(boardKpisList, kpiMaster));
 		asPerCategoryBoard.setKpis(boardKpisList);
 		asPerCategoryBoardList.add(asPerCategoryBoard);

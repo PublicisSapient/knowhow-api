@@ -5536,6 +5536,54 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "jiraStoryIdentificationKPI222",
+    "fieldLabel" : "Issue type to include in Refinement Cycle Time",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "section" : "Issue Types Mapping",
+    "tooltip" : {
+      "definition" : "All issue types to measure refinement for (e.g., Story, Bug, Task). Leave blank to include all types."
+    }
+  },
+  {
+    "fieldName" : "jiraStatusToStartRefinementKPI222",
+    "fieldLabel" : "Status(es) marking start of refinement (optional)",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 8,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "tooltip" : {
+      "definition" : "Optional. Workflow statuses that mark when active refinement begins (e.g., In Refinement, Being Groomed). When configured, cycle time is measured from the first transition to one of these statuses. When left blank, issue creation date is used as the start."
+    }
+  },
+  {
+    "fieldName" : "jiraStatusForRefinementKPI222",
+    "fieldLabel" : "Status(es) marking Definition of Ready met",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 9,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "tooltip" : {
+      "definition" : "All workflow statuses that represent an issue meeting the Definition of Ready (e.g., Ready, Ready for Dev, Refined). The first transition to any of these statuses is used to compute cycle time."
+    }
+  },
+  {
+    "fieldName" : "thresholdValueKPI222",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "chips",
@@ -5773,6 +5821,20 @@
     "nodeSpecific" : false
   },
 
+  {
+    "fieldName" : "thresholdValueKPI223",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target lead time in days for Critical severity alerts. Shown as a reference line on the chart. Healthy benchmark: Critical < 7 days. Leave empty to use the default maturity line."
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
   {
     "fieldName" : "jiraFieldsSelectionKPI312",
     "fieldLabel" : "Epic readiness rules",

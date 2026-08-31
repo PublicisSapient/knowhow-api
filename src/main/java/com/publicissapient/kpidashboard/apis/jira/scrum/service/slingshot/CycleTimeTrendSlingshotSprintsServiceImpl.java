@@ -115,7 +115,8 @@ public class CycleTimeTrendSlingshotSprintsServiceImpl extends CycleTimeTrendSli
 					datacountMap.put(key, dataCountList);
 				});
 
-		populateExcelDataObject(requestTrackerId, cycleTimeList, excelData);
+		populateExcelDataObject(
+				requestTrackerId, cycleTimeList, excelData, leafNode.getProjectFilter().getName());
 		leafNode.setValue(datacountMap);
 		// Create kpi level filters
 		IterationKpiFiltersOptions filter1 =

@@ -485,6 +485,9 @@ public class KPIExcelData {
 	@JsonProperty("Flaky Rate %")
 	private String flakyRate;
 
+	@JsonProperty("Build Success Rate %")
+	private String buildSuccessRate;
+
 	@JsonProperty("Change Failure Rate %")
 	private String changeFailureRate;
 
@@ -608,6 +611,12 @@ public class KPIExcelData {
 	@JsonProperty("Labels")
 	private List<String> labels;
 
+	@JsonProperty("Ready Time")
+	private String readyTime;
+
+	@JsonProperty("Refinement Cycle Time (Days)")
+	private String refinementCycleTime;
+
 	@JsonProperty("Closed Time")
 	private String closedDate;
 
@@ -644,7 +653,7 @@ public class KPIExcelData {
 	@JsonProperty("Lead Time (Hrs)")
 	private String leadTimeForChangeHrs;
 
-	@JsonProperty("Repository Name")
+	@JsonProperty("Repository")
 	private String repositoryName;
 
 	@JsonProperty("Source Branch")
@@ -656,7 +665,7 @@ public class KPIExcelData {
 	@JsonProperty("Final Pull Request")
 	private Map<String, String> finalPullRequest;
 
-	@JsonProperty("Job/Pipeline Name")
+	@JsonProperty("Job / Pipeline / Workflow")
 	private String jobPipelineName;
 
 	@JsonProperty("Deployed Environment")
@@ -683,6 +692,16 @@ public class KPIExcelData {
 
 	@JsonProperty("Readiness Score")
 	private Integer readinessScore;
+
+	// ---- Security Vulnerability Lead Time KPI (kpi223) fields ----
+	@JsonProperty("Severity")
+	private String securityAlertSeverity;
+
+	@JsonProperty("Alert Count")
+	private String alertCount;
+
+	@JsonProperty("Mean Lead Time (Days)")
+	private String meanLeadTimeDays;
 
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
