@@ -329,11 +329,11 @@ public class RefinementCycleTimeSlingshotServiceImpl
 							Math.max(0, Duration.between(startTime, readyTime).toMinutes()) / 1440.0;
 					daysDuration = Math.round(daysDuration * 100.0) / 100.0;
 
-					// bucket by createdTime so the issue always lands in its creation week
+					// bucket by readyTime so each bucket reflects completed refinement cycles
 					String bucketKey =
 							weekOrMonth.equalsIgnoreCase(CommonConstant.WEEK)
-									? buildWeekLabel(createdTime)
-									: createdTime.getYear() + Constant.DASH + createdTime.getMonthValue();
+									? buildWeekLabel(readyTime)
+									: readyTime.getYear() + Constant.DASH + readyTime.getMonthValue();
 
 					if (weekBuckets.containsKey(bucketKey)) {
 						weekBuckets.get(bucketKey).add(daysDuration);
