@@ -349,6 +349,8 @@ public enum KPICode {
 	REFINEMENT_CYCLE_TIME_SLINGSHOT("kpi222", KPISource.JIRA.name()),
 	/** Security Vulnerability Lead Time */
 	SECURITY_VULNERABILITY_LEAD_TIME("kpi223", KPISource.JENKINS.name()),
+	/** Backlog Aging (Slingshot / Intake) */
+	BACKLOG_AGING_SLINGSHOT("kpi224", KPISource.JIRA.name()),
 	STORY_HYGIENE("kpi311", KPISource.JIRA.name()),
 	/** Epic Hygiene / Readiness */
 	EPIC_HYGIENE("kpi312", KPISource.JIRA.name());
