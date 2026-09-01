@@ -97,7 +97,7 @@ public class BacklogAgingSlingshotChangeUnit {
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
-						.append("kpiWidth", 100)
+						.append("kpiWidth", 50)
 						.append("kpiSubCategoryOrder", 1);
 
 		mongoTemplate
