@@ -5584,6 +5584,56 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "jiraIssueTypeKPI224",
+    "fieldLabel" : "Issue type to include in Backlog Aging",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "section" : "Issue Types Mapping",
+    "tooltip" : {
+      "definition" : "All issue types whose backlog age should be measured (e.g., Story, Bug, Task). Leave blank to include all types."
+    }
+  },
+  {
+    "fieldName" : "jiraBacklogStatusKPI224",
+    "fieldLabel" : "Status(es) that represent the Backlog",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 10,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "mandatory" : false,
+    "tooltip" : {
+      "definition" : "Workflow statuses that mean an item is still sitting in the backlog and has not been picked up (e.g., Backlog, To Do, Open). Only issues currently in one of these statuses are aged. When left blank, 'Backlog', 'To Do', 'Open' and 'New' are used."
+    }
+  },
+  {
+    "fieldName" : "jiraStatusForRefinedKPI224",
+    "fieldLabel" : "Status(es) that mean the item is already refined (optional)",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 11,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "mandatory" : false,
+    "tooltip" : {
+      "definition" : "Optional. Workflow statuses that indicate an item has already been refined / met the Definition of Ready (e.g., Ready, Refined). Issues in these statuses are excluded from the aging distribution."
+    }
+  },
+  {
+    "fieldName" : "thresholdValueKPI224",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "chips",

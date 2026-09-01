@@ -73,7 +73,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.PI_PREDICTABILITY.name(),
 							KPICode.MEAN_TIME_TO_RECOVER_SLINGSHOT.name(),
 							KPICode.STORY_HYGIENE.name(),
-							KPICode.REFINEMENT_CYCLE_TIME_SLINGSHOT.name()));
+							KPICode.REFINEMENT_CYCLE_TIME_SLINGSHOT.name(),
+							KPICode.BACKLOG_AGING_SLINGSHOT.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(

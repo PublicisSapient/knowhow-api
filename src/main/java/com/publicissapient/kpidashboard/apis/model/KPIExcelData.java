@@ -703,6 +703,13 @@ public class KPIExcelData {
 	@JsonProperty("Mean Lead Time (Days)")
 	private String meanLeadTimeDays;
 
+	// ---- Backlog Aging KPI (kpi224) fields ----
+	@JsonProperty("Aging Bucket")
+	private String agingBucket;
+
+	@JsonProperty("Age (Days)")
+	private String ageInDays;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

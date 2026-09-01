@@ -6095,6 +6095,37 @@
     "kpiSubCategoryOrder": 4
   },
   {
+    "kpiId": "kpi224",
+    "kpiName": "Backlog Aging",
+    "isDeleted": "False",
+    "defaultOrder": 2,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Intake",
+    "kpiUnit": "Count",
+    "chartType": "stacked-bar-chart",
+    "xAxisLabel": "Age (Days)",
+    "yAxisLabel": "Issue Count",
+    "showTrend": false,
+    "isPositiveTrend": false,
+    "calculateMaturity": false,
+    "hideOverallFilter": false,
+    "kpiSource": "Jira",
+    "thresholdValue": 10,
+    "kanban": false,
+    "groupId": 315,
+    "kpiInfo": {
+      "definition": "Distribution of how long items have been sitting in the backlog without being refined or closed. For every issue whose current status is one of the configured backlog statuses (e.g. Backlog, To Do) the age is computed as now() - created date, and the issue is plotted in one of four buckets: 0-30, 30-90, 90-180 and 180+ days. Each bucket carries a drill-down by issue type. Stale backlogs are mostly noise — but the noise hides real demand. A healthy backlog has a working set that turns over and a clear policy for retiring items older than ~6 months, so a heavy 180+ bucket is the signal to act on."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "sum",
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "kpiWidth": 100,
+    "kpiSubCategoryOrder": 1
+  },
+  {
     "kpiId": "kpi311",
     "kpiName": "Story Hygiene",
     "isDeleted": "False",
