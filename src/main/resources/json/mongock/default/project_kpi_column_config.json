@@ -3741,56 +3741,74 @@
     "kpiId" : "kpi205",
     "kpiColumnDetails" : [
       {
-        "columnName" : "Week",
+        "columnName" : "Days/Weeks",
         "order" : 1,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Squad",
+        "columnName" : "Issue Description",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Priority",
+        "columnName" : "Sprint Name",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Story Points",
+        "columnName" : "Squad",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Original Time Estimate (in hours)",
+        "columnName" : "Priority",
         "order" : 8,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Time Spent (in hours)",
+        "columnName" : "Story Points",
         "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Status",
+        "order" : 10,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Original Time Estimate (in hours)",
+        "order" : 11,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Time Spent (in hours)",
+        "order" : 12,
         "isShown" : true,
         "isDefault" : true
       }
@@ -3933,26 +3951,38 @@
     "kpiId" : "kpi202",
     "kpiColumnDetails" : [
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 1,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Group Map",
+        "columnName" : "Issue Description",
         "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Status",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Group Map",
+        "order" : 6,
         "isShown" : true,
         "isDefault" : true
       }
@@ -3963,44 +3993,62 @@
     "kpiId" : "kpi203",
     "kpiColumnDetails" : [
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 1,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Size (In Story Points)",
+        "columnName" : "Issue Description",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Wait Time",
+        "columnName" : "Size (In Story Points)",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Total Time",
+        "columnName" : "Status",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Flow Efficiency",
+        "columnName" : "Wait Time",
         "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Total Time",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Flow Efficiency",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Group Map",
+        "order" : 10,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4011,26 +4059,44 @@
     "kpiId" : "kpi204",
     "kpiColumnDetails" : [
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 1,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Group Map",
+        "columnName" : "Issue Description",
         "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Sprint Name",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Status",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Group Map",
+        "order" : 7,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4143,62 +4209,68 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Sprint Name",
+        "columnName" : "Project",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Defect ID",
+        "columnName" : "Sprint Name",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Description",
+        "columnName" : "Defect ID",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Escaped Defect",
+        "columnName" : "Description",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Escaped defect identifier",
+        "columnName" : "Escaped Defect",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Defect Priority",
+        "columnName" : "Escaped defect identifier",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Defect Status",
+        "columnName" : "Defect Priority",
         "order" : 8,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Story ID",
+        "columnName" : "Defect Status",
         "order" : 9,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Squad",
+        "columnName" : "Story ID",
         "order" : 10,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Squad",
+        "order" : 11,
         "isShown" : true,
         "isDefault" : false
       },
       {
         "columnName" : "Time Spent (in hours)",
-        "order" : 11,
+        "order" : 12,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4215,38 +4287,44 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Created Time",
+        "columnName" : "Issue Description",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Closed Time",
+        "columnName" : "Created Time",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Time to Recover (In Hours)",
+        "columnName" : "Closed Time",
         "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Time to Recover (In Hours)",
+        "order" : 8,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4263,38 +4341,44 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Start Time",
+        "columnName" : "Issue Description",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Ready Time",
+        "columnName" : "Start Time",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Refinement Cycle Time (Days)",
+        "columnName" : "Ready Time",
         "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Refinement Cycle Time (Days)",
+        "order" : 8,
         "isShown" : true,
         "isDefault" : true
       }
@@ -4945,41 +5029,44 @@
   {
     "kpiId": "kpi311",
     "kpiColumnDetails": [
-      { "columnName": "Sprint Name",     "order": 1, "isShown": true,  "isDefault": true  },
-      { "columnName": "Issue ID",        "order": 2, "isShown": true,  "isDefault": true  },
-      { "columnName": "Issue Type",      "order": 3, "isShown": true,  "isDefault": true  },
-      { "columnName": "Assignee",        "order": 4, "isShown": true,  "isDefault": true  },
-      { "columnName": "Hygiene Score",   "order": 5, "isShown": true,  "isDefault": true  },
-      { "columnName": "Overall Status",  "order": 6, "isShown": true,  "isDefault": true  },
-      { "columnName": "Recommendations", "order": 7, "isShown": true,  "isDefault": true  }
+      { "columnName": "Project",         "order": 1, "isShown": true,  "isDefault": true  },
+      { "columnName": "Sprint Name",     "order": 2, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue Id",        "order": 3, "isShown": true,  "isDefault": true  },
+      { "columnName": "Issue Type",      "order": 4, "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",        "order": 5, "isShown": true,  "isDefault": true  },
+      { "columnName": "Hygiene Score",   "order": 6, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",  "order": 7, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations", "order": 8, "isShown": true,  "isDefault": true  }
     ]
   },
   {
     "basicProjectConfigId": null,
     "kpiId": "kpi223",
     "kpiColumnDetails": [
-      { "columnName": "Days/Weeks",           "order": 1, "isShown": true, "isDefault": true },
-      { "columnName": "Repository",      "order": 2, "isShown": true, "isDefault": true },
-      { "columnName": "Severity",             "order": 3, "isShown": true, "isDefault": true },
-      { "columnName": "Alert Count",          "order": 4, "isShown": true, "isDefault": true },
-      { "columnName": "Mean Lead Time (Days)","order": 5, "isShown": true, "isDefault": true }
+      { "columnName": "Days/Weeks",            "order": 1, "isShown": true, "isDefault": true },
+      { "columnName": "Project",               "order": 2, "isShown": true, "isDefault": true },
+      { "columnName": "Repository",            "order": 3, "isShown": true, "isDefault": true },
+      { "columnName": "Severity",              "order": 4, "isShown": true, "isDefault": true },
+      { "columnName": "Alert Count",           "order": 5, "isShown": true, "isDefault": true },
+      { "columnName": "Mean Lead Time (Days)", "order": 6, "isShown": true, "isDefault": true }
     ]
   },
   {
     "kpiId": "kpi312",
     "kpiColumnDetails": [
-      { "columnName": "Epic ID",              "order": 1,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Epic Name",            "order": 2,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Status",               "order": 3,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Assignee",             "order": 4,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Business Clarity",     "order": 5,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Scope Definition",     "order": 6,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Solution Readiness",   "order": 7,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Dependency Readiness", "order": 8,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Risk Readiness",       "order": 9,  "isShown": true,  "isDefault": true  },
-      { "columnName": "Readiness Score",      "order": 10, "isShown": true,  "isDefault": true  },
-      { "columnName": "Overall Status",       "order": 11, "isShown": true,  "isDefault": true  },
-      { "columnName": "Recommendations",      "order": 12, "isShown": true,  "isDefault": true  }
+      { "columnName": "Project",              "order": 1,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Epic ID",              "order": 2,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Epic Name",            "order": 3,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Status",               "order": 4,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Assignee",             "order": 5,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Business Clarity",     "order": 6,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Scope Definition",     "order": 7,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Solution Readiness",   "order": 8,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Dependency Readiness", "order": 9,  "isShown": true,  "isDefault": true  },
+      { "columnName": "Risk Readiness",       "order": 10, "isShown": true,  "isDefault": true  },
+      { "columnName": "Readiness Score",      "order": 11, "isShown": true,  "isDefault": true  },
+      { "columnName": "Overall Status",       "order": 12, "isShown": true,  "isDefault": true  },
+      { "columnName": "Recommendations",      "order": 13, "isShown": true,  "isDefault": true  }
     ]
   }
 ]

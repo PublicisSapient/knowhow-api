@@ -888,7 +888,8 @@ public class DefectEscapeRateSlingshotServiceImpl
 					excelData,
 					fieldMapping,
 					totalStoryWoDrop,
-					daysWeeks);
+					daysWeeks,
+					node.getProjectFilter().getName());
 		}
 	}
 

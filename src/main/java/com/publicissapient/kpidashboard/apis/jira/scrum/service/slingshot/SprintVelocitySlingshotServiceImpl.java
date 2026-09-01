@@ -579,7 +579,8 @@ public class SprintVelocitySlingshotServiceImpl
 			FieldMapping fieldMapping) {
 		if (requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())
 				&& MapUtils.isNotEmpty(jiraIssuesByWeek)) {
-			KPIExcelUtility.populateSprintVelocitySlingshot(jiraIssuesByWeek, excelData, fieldMapping);
+			KPIExcelUtility.populateSprintVelocitySlingshot(
+					jiraIssuesByWeek, excelData, fieldMapping, node.getProjectFilter().getName());
 		}
 	}
 
