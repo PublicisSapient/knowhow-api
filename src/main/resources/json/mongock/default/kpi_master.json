@@ -6071,11 +6071,11 @@
     "isPositiveTrend": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "-90",
+      "90-",
       "30-90",
       "15-30",
       "7-15",
-      "7-"
+      "-7"
     ],
     "hideOverallFilter": true,
     "kpiSource": "Jenkins",
@@ -6124,6 +6124,44 @@
     "lowerThresholdBG": "white",
     "kpiWidth": 100,
     "kpiSubCategoryOrder": 1
+  },
+  {
+    "kpiId": "kpi225",
+    "kpiName": "Mid-Sprint Re-Refinement Rate",
+    "isDeleted": "False",
+    "defaultOrder": 3,
+    "kpiSubCategoryOrder": 1,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Intake",
+    "kpiUnit": "%",
+    "chartType": "line",
+    "xAxisLabel": "Sprints",
+    "yAxisLabel": "%",
+    "showTrend": true,
+    "isPositiveTrend": false,
+    "calculateMaturity": true,
+    "maturityRange": [
+      "20-",
+      "15-20",
+      "10-15",
+      "5-10",
+      "-5"
+    ],
+    "hideOverallFilter": false,
+    "kpiSource": "Jira",
+    "thresholdValue": 5.0,
+    "kanban": false,
+    "groupId": 316,
+    "kpiInfo": {
+      "definition": "% of stories that move backward to a refinement state (after dev has started) relative to the count of stories that entered development in the same period. A rate above 5% indicates systematic DOR gaps; above 15% signals that refinement is not completing before sprint start."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "forecastModel": "thetaMethod"
   },
   {
     "kpiId": "kpi311",

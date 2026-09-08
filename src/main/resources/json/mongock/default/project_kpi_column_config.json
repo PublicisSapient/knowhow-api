@@ -4440,6 +4440,66 @@
   },
   {
     "basicProjectConfigId" : null,
+    "kpiId" : "kpi225",
+    "kpiColumnDetails" : [
+      {
+        "columnName" : "Days/Weeks",
+        "order" : 1,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Project",
+        "order" : 2,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue ID",
+        "order" : 3,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Type",
+        "order" : 4,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Issue Description",
+        "order" : 5,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Dev Start Date",
+        "order" : 6,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "First Return Date",
+        "order" : 7,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Return-to Status",
+        "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Return Count",
+        "order" : 9,
+        "isShown" : true,
+        "isDefault" : true
+      }
+    ]
+  },
+  {
+    "basicProjectConfigId" : null,
     "kpiId" : "kpi218",
     "kpiColumnDetails" : [
       {
