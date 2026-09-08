@@ -951,6 +951,14 @@ public enum FieldMappingEnum {
 					"jiraBacklogStatusKPI224",
 					"jiraStatusForRefinedKPI224",
 					"thresholdValueKPI224")),
+	KPI225(
+			"Mid-Sprint Re-Refinement Rate",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraStoryIdentificationKPI225",
+					"jiraStatusStartDevKPI225",
+					"jiraStatusReturnToRefinementKPI225",
+					"thresholdValueKPI225")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),

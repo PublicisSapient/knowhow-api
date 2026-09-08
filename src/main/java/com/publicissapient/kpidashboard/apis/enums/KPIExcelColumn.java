@@ -1444,6 +1444,18 @@ public enum KPIExcelColumn {
 					"Priority",
 					"Created Date",
 					"Age (Days)")),
+	MID_SPRINT_RE_REFINEMENT_RATE_SLINGSHOT(
+			"kpi225",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Dev Start Date",
+					"First Return Date",
+					"Return-to Status",
+					"Return Count")),
 	;
 
 	// @formatter:on

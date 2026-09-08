@@ -617,6 +617,18 @@ public class KPIExcelData {
 	@JsonProperty("Refinement Cycle Time (Days)")
 	private String refinementCycleTime;
 
+	@JsonProperty("Dev Start Date")
+	private String devStartDate;
+
+	@JsonProperty("First Return Date")
+	private String firstReturnDate;
+
+	@JsonProperty("Return-to Status")
+	private String returnToStatus;
+
+	@JsonProperty("Return Count")
+	private String returnCount;
+
 	@JsonProperty("Closed Time")
 	private String closedDate;
 
