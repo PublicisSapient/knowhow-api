@@ -6126,6 +6126,46 @@
     "kpiSubCategoryOrder": 1
   },
   {
+    "kpiId": "kpi225",
+    "kpiName": "Refinement-to-Defect Linkage",
+    "isDeleted": "False",
+    "defaultOrder": 8,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Quality",
+    "kpiUnit": "%",
+    "chartType": "line",
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Percentage",
+    "showTrend": true,
+    "isPositiveTrend": false,
+    "calculateMaturity": true,
+    "maturityRange": [
+      "40-",
+      "30-40",
+      "20-30",
+      "10-20",
+      "-10"
+    ],
+    "hideOverallFilter": true,
+    "kpiSource": "Jira",
+    "maxValue": 100,
+    "thresholdValue": 15,
+    "kanban": false,
+    "groupId": 74,
+    "kpiInfo": {
+      "definition": "Percentage of production defects whose root cause traces back to a missed, ambiguous or wrong acceptance criterion at Definition of Ready: refinement_root_cause_count / total_defects. This is the only metric in the blueprint that requires manual tagging - at incident review every production defect is classified with one root cause out of refinement, design, code, infra or external, and KnowHow reads that classification from the Jira RCA field configured under 'Root Cause'. It is included because no automated method captures the signal, and the value of closing the loop between refinement and production is large. Every data point also reports Root Cause Coverage %, so a low linkage score sitting on low coverage reads as 'we do not know' rather than 'we are fine'."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "isTrendCalculative": false,
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "kpiWidth": 100,
+    "kpiSubCategoryOrder": 8
+  },
+  {
     "kpiId": "kpi311",
     "kpiName": "Story Hygiene",
     "isDeleted": "False",

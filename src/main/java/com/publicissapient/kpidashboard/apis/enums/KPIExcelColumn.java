@@ -1444,6 +1444,19 @@ public enum KPIExcelColumn {
 					"Priority",
 					"Created Date",
 					"Age (Days)")),
+	REFINEMENT_TO_DEFECT_LINKAGE(
+			"kpi225",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Priority",
+					"Status",
+					"Created Date",
+					"Root Cause",
+					"Root Cause Category")),
 	;
 
 	// @formatter:on
