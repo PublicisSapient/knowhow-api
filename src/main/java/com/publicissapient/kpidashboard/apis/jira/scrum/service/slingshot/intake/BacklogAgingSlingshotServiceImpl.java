@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,10 @@ import com.publicissapient.kpidashboard.apis.model.Node;
 import com.publicissapient.kpidashboard.apis.model.TreeAggregatorDetail;
 import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
+import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
+import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
+import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueCustomHistoryRepository;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
@@ -87,20 +91,40 @@ public class BacklogAgingSlingshotServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
 
 	private static final String BACKLOG_ISSUE_DATA = "backlogIssueData";
+	private static final String BACKLOG_START_DATE_MAP = "backlogStartDateMap";
 
 	/** Drill-down bucket used when an issue carries no resolvable issue type. */
 	private static final String UNKNOWN_ISSUE_TYPE = "Other";
 
-	private static final String X_AXIS_LABEL = "Age (Days)";
+	private static final String X_AXIS_LABEL = "";
 
-	private static final String BUCKET_0_30 = "0-30 Days";
-	private static final String BUCKET_30_90 = "30-90 Days";
-	private static final String BUCKET_90_180 = "90-180 Days";
-	private static final String BUCKET_180_PLUS = "180+ Days";
+	private static final String BUCKET_0_30 = "0-4 Weeks";
+	private static final String BUCKET_30_90 = "4-13 Weeks";
+	private static final String BUCKET_90_180 = "13-26 Weeks";
+	private static final String BUCKET_180_PLUS = "26+ Weeks";
+
+	/** Day-range labels shown in the hover tooltip alongside the week-based bucket names. */
+	private static final String BUCKET_0_30_DAYS = "0-30 days";
+
+	private static final String BUCKET_30_90_DAYS = "30-90 days";
+	private static final String BUCKET_90_180_DAYS = "90-180 days";
+	private static final String BUCKET_180_PLUS_DAYS = "180+ days";
 
 	/** Fixed histogram buckets, ordered youngest → oldest. */
 	private static final List<String> AGE_BUCKETS =
 			List.of(BUCKET_0_30, BUCKET_30_90, BUCKET_90_180, BUCKET_180_PLUS);
+
+	/** Maps each week-label bucket to its underlying day range, for hover context. */
+	private static final Map<String, String> BUCKET_DAY_RANGE =
+			Map.of(
+					BUCKET_0_30,
+					BUCKET_0_30_DAYS,
+					BUCKET_30_90,
+					BUCKET_30_90_DAYS,
+					BUCKET_90_180,
+					BUCKET_90_180_DAYS,
+					BUCKET_180_PLUS,
+					BUCKET_180_PLUS_DAYS);
 
 	private static final double BUCKET_1_UPPER_BOUND = 30d;
 	private static final double BUCKET_2_UPPER_BOUND = 90d;
@@ -114,12 +138,14 @@ public class BacklogAgingSlingshotServiceImpl
 	private static final String HOVER_BACKLOG_SHARE = "% of Backlog";
 	private static final String HOVER_MEDIAN_AGE = "Median Age (Days)";
 	private static final String HOVER_OLDEST_AGE = "Oldest (Days)";
+	private static final String HOVER_BUCKET_RANGE = "Range (Days)";
 
 	private static final DateTimeFormatter DISPLAY_DATE_FORMATTER =
 			DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_FORMAT, Locale.ENGLISH);
 
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueRepository jiraIssueRepository;
+	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 
 	@Override
 	public String getQualifierType() {
@@ -161,6 +187,11 @@ public class BacklogAgingSlingshotServiceImpl
 			List<Node> leafNodeList, String startDate, String endDate, KpiRequest kpiRequest) {
 		Map<String, Object> resultListMap = new HashMap<>();
 		Map<String, List<JiraIssue>> projectWiseBacklog = new LinkedHashMap<>();
+		// per-project map of issueNumber -> first-entered-backlog date (only populated
+		// when
+		// jiraStatusToStartBacklogKPI224 is configured; fall back to createdDate when
+		// absent)
+		Map<String, Map<String, LocalDateTime>> projectWiseStartDates = new LinkedHashMap<>();
 
 		CollectionUtils.emptyIfNull(leafNodeList)
 				.forEach(
@@ -196,9 +227,26 @@ public class BacklogAgingSlingshotServiceImpl
 									leafNode.getProjectFilter().getName());
 
 							projectWiseBacklog.put(basicProjectConfigId.toString(), backlogIssues);
+
+							// When the project has configured backlog-start statuses, resolve the
+							// first-transition date from issue history so age is measured from when the
+							// item
+							// actually entered the backlog rather than from creation date.
+							Set<String> backlogStartStatuses =
+									lowerCaseSet(getBacklogStartStatuses(fieldMapping));
+							if (!backlogStartStatuses.isEmpty() && !backlogIssues.isEmpty()) {
+								List<String> issueNumbers =
+										backlogIssues.stream().map(JiraIssue::getNumber).toList();
+								List<JiraIssueCustomHistory> histories =
+										jiraIssueCustomHistoryRepository.findByStoryIDIn(issueNumbers);
+								Map<String, LocalDateTime> startDates =
+										resolveBacklogEntryDates(histories, backlogStartStatuses);
+								projectWiseStartDates.put(basicProjectConfigId.toString(), startDates);
+							}
 						});
 
 		resultListMap.put(BACKLOG_ISSUE_DATA, projectWiseBacklog);
+		resultListMap.put(BACKLOG_START_DATE_MAP, projectWiseStartDates);
 		return resultListMap;
 	}
 
@@ -237,6 +285,11 @@ public class BacklogAgingSlingshotServiceImpl
 		Map<String, List<JiraIssue>> projectWiseBacklog =
 				(Map<String, List<JiraIssue>>) resultMap.get(BACKLOG_ISSUE_DATA);
 
+		@SuppressWarnings("unchecked")
+		Map<String, Map<String, LocalDateTime>> projectWiseStartDates =
+				(Map<String, Map<String, LocalDateTime>>)
+						resultMap.getOrDefault(BACKLOG_START_DATE_MAP, new HashMap<>());
+
 		LocalDateTime now = DateUtil.getTodayTime();
 
 		projectLeafNodeList.forEach(
@@ -248,11 +301,14 @@ public class BacklogAgingSlingshotServiceImpl
 					List<JiraIssue> backlogIssues =
 							projectWiseBacklog.getOrDefault(basicProjectConfigId, new ArrayList<>());
 
-					List<BacklogAgingRecord> records = buildRecords(backlogIssues, now);
+					Map<String, LocalDateTime> startDateOverrides =
+							projectWiseStartDates.getOrDefault(basicProjectConfigId, new HashMap<>());
+
+					List<BacklogAgingRecord> records = buildRecords(backlogIssues, startDateOverrides, now);
 
 					mapTmp.get(node.getId()).setValue(buildBucketDataCounts(projectName, records));
 
-					populateExcelData(requestTrackerId, excelData, records);
+					populateExcelData(requestTrackerId, excelData, records, projectName);
 				});
 
 		kpiElement.setExcelData(excelData);
@@ -260,23 +316,30 @@ public class BacklogAgingSlingshotServiceImpl
 	}
 
 	/**
-	 * Converts the raw backlog issues into aging records, dropping any issue for which the creation
-	 * date is missing or unparseable.
+	 * Converts the raw backlog issues into aging records, dropping any issue for which the start date
+	 * is missing or unparseable. When {@code startDateOverrides} contains an entry for an issue the
+	 * override date is used as the start of aging; otherwise the issue's creation date is the
+	 * fallback.
 	 */
-	private List<BacklogAgingRecord> buildRecords(List<JiraIssue> backlogIssues, LocalDateTime now) {
+	private List<BacklogAgingRecord> buildRecords(
+			List<JiraIssue> backlogIssues,
+			Map<String, LocalDateTime> startDateOverrides,
+			LocalDateTime now) {
 		List<BacklogAgingRecord> records = new ArrayList<>();
 		CollectionUtils.emptyIfNull(backlogIssues)
 				.forEach(
 						issue -> {
-							LocalDateTime createdOn = parseCreatedDate(issue.getCreatedDate());
-							if (createdOn == null) {
+							LocalDateTime startOn =
+									startDateOverrides.containsKey(issue.getNumber())
+											? startDateOverrides.get(issue.getNumber())
+											: parseCreatedDate(issue.getCreatedDate());
+							if (startOn == null) {
 								log.debug(
-										"Backlog Aging (kpi224): skipping issue {} — unparseable created date '{}'",
-										issue.getNumber(),
-										issue.getCreatedDate());
+										"Backlog Aging (kpi224): skipping issue {} — no resolvable start date",
+										issue.getNumber());
 								return;
 							}
-							double ageInDays = ageInDays(createdOn, now);
+							double ageInDays = ageInDays(startOn, now);
 							records.add(
 									new BacklogAgingRecord(
 											issue.getNumber(),
@@ -285,7 +348,7 @@ public class BacklogAgingSlingshotServiceImpl
 											issue.getName(),
 											issue.getStatus(),
 											issue.getPriority(),
-											createdOn.toLocalDate().format(DISPLAY_DATE_FORMATTER),
+											startOn.toLocalDate().format(DISPLAY_DATE_FORMATTER),
 											ageInDays,
 											resolveBucket(ageInDays)));
 						});
@@ -325,6 +388,7 @@ public class BacklogAgingSlingshotServiceImpl
 					Map<String, Object> hoverValue = new LinkedHashMap<>();
 					hoverValue.put(HOVER_ISSUE_COUNT, count);
 					hoverValue.put(HOVER_BACKLOG_SHARE, total == 0 ? 0.0 : round((count * 100d) / total));
+					hoverValue.put(HOVER_BUCKET_RANGE, BUCKET_DAY_RANGE.get(bucket));
 					hoverValue.put(
 							HOVER_MEDIAN_AGE,
 							median(bucketRecords.stream().map(BacklogAgingRecord::ageInDays).toList()));
@@ -449,6 +513,44 @@ public class BacklogAgingSlingshotServiceImpl
 						fieldMapping.getJiraStatusForRefinedKPI224(), new ArrayList<>());
 	}
 
+	private List<String> getBacklogStartStatuses(FieldMapping fieldMapping) {
+		return fieldMapping == null
+				? new ArrayList<>()
+				: ObjectUtils.defaultIfNull(
+						fieldMapping.getJiraStatusToStartBacklogKPI224(), new ArrayList<>());
+	}
+
+	/**
+	 * For each issue in {@code histories}, finds the earliest status-transition log entry whose
+	 * {@code changedTo} value is in {@code backlogStartStatuses} and returns a map of {@code
+	 * issueNumber -> firstBacklogEntryDate}. Issues where no such transition is found are omitted;
+	 * the caller falls back to {@code createdDate} for those.
+	 */
+	private Map<String, LocalDateTime> resolveBacklogEntryDates(
+			List<JiraIssueCustomHistory> histories, Set<String> backlogStartStatuses) {
+		Map<String, LocalDateTime> result = new HashMap<>();
+		CollectionUtils.emptyIfNull(histories)
+				.forEach(
+						history -> {
+							if (CollectionUtils.isEmpty(history.getStatusUpdationLog())) {
+								return;
+							}
+							Optional<JiraHistoryChangeLog> firstEntry =
+									history.getStatusUpdationLog().stream()
+											.filter(
+													log ->
+															log.getChangedTo() != null
+																	&& backlogStartStatuses.contains(
+																			log.getChangedTo().toString().toLowerCase(Locale.ROOT)))
+											.findFirst();
+							firstEntry.ifPresent(
+									log ->
+											result.put(
+													history.getStoryID(), DateUtil.localDateTimeToUTC(log.getUpdatedOn())));
+						});
+		return result;
+	}
+
 	private static Set<String> lowerCaseSet(List<String> values) {
 		return CollectionUtils.emptyIfNull(values).stream()
 				.filter(StringUtils::isNotBlank)
@@ -504,17 +606,21 @@ public class BacklogAgingSlingshotServiceImpl
 	}
 
 	private void populateExcelData(
-			String requestTrackerId, List<KPIExcelData> excelData, List<BacklogAgingRecord> records) {
+			String requestTrackerId,
+			List<KPIExcelData> excelData,
+			List<BacklogAgingRecord> records,
+			String projectName) {
 		if (StringUtils.isEmpty(requestTrackerId)
 				|| !requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			return;
 		}
 		records.stream()
-				.sorted(Comparator.comparingDouble(BacklogAgingRecord::ageInDays).reversed())
+				.sorted(Comparator.comparingDouble(BacklogAgingRecord::ageInDays))
 				.forEach(
 						issueRecord -> {
 							KPIExcelData row = new KPIExcelData();
 							row.setAgingBucket(issueRecord.bucket());
+							row.setProject(projectName);
 							row.setIssueID(
 									Map.of(issueRecord.issueId(), StringUtils.defaultString(issueRecord.url())));
 							row.setIssueType(issueRecord.issueType());

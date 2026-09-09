@@ -73,7 +73,7 @@ import com.publicissapient.kpidashboard.common.model.jira.JiraIssue;
 import com.publicissapient.kpidashboard.common.repository.jira.JiraIssueRepository;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
 
-/** Tests for {@link RefinementToDefectLinkageServiceImpl} (kpi225 — Slingshot / Quality). */
+/** Tests for {@link RefinementToDefectLinkageServiceImpl} (kpi226 — Slingshot / Quality). */
 @RunWith(MockitoJUnitRunner.class)
 public class RefinementToDefectLinkageServiceImplTest {
 
@@ -166,7 +166,7 @@ public class RefinementToDefectLinkageServiceImplTest {
 	@Test
 	public void testCalculateThresholdValueUsesProjectOverride() {
 		FieldMapping mapping = new FieldMapping();
-		mapping.setThresholdValueKPI225("20");
+		mapping.setThresholdValueKPI226("20");
 		assertEquals(Double.valueOf(20.0d), service.calculateThresholdValue(mapping));
 	}
 
@@ -270,7 +270,7 @@ public class RefinementToDefectLinkageServiceImplTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testFetchKPIDataFromDbUsesConfiguredDefectIssueTypes() throws ApplicationException {
-		fieldMapping.setJiraIssueTypeKPI225(new ArrayList<>(Arrays.asList("Bug", "Incident")));
+		fieldMapping.setJiraIssueTypeKPI226(new ArrayList<>(Arrays.asList("Bug", "Incident")));
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByTypeNameInAndBasicProjectConfigIdAndCreatedDateBetweenWithFields(
 						any(), anyString(), anyString(), anyString(), any()))
@@ -337,8 +337,8 @@ public class RefinementToDefectLinkageServiceImplTest {
 	@SuppressWarnings("unchecked")
 	public void testFetchKPIDataFromDbSupportsLabelBasedProductionDefects()
 			throws ApplicationException {
-		fieldMapping.setJiraProductionDefectIdentificationKPI225("Labels");
-		fieldMapping.setJiraProductionDefectValueKPI225(
+		fieldMapping.setJiraProductionDefectIdentificationKPI226("Labels");
+		fieldMapping.setJiraProductionDefectValueKPI226(
 				new ArrayList<>(Collections.singletonList("PROD_DEFECT")));
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 
@@ -428,7 +428,7 @@ public class RefinementToDefectLinkageServiceImplTest {
 	@SuppressWarnings("unchecked")
 	public void testGetKpiDataHonoursProjectConfiguredRefinementRootCauses()
 			throws ApplicationException {
-		fieldMapping.setJiraRefinementRootCauseValuesKPI225(
+		fieldMapping.setJiraRefinementRootCauseValuesKPI226(
 				new ArrayList<>(Arrays.asList("Missing Acceptance Criteria", "Ambiguous AC")));
 		when(configHelperService.getFieldMappingMap()).thenReturn(fieldMappingMap);
 		when(jiraIssueRepository.findByTypeNameInAndBasicProjectConfigIdAndCreatedDateBetweenWithFields(

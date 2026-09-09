@@ -69,7 +69,7 @@ import com.publicissapient.kpidashboard.common.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Refinement-to-Defect Linkage (kpi225) — Slingshot / Quality.
+ * Refinement-to-Defect Linkage (kpi226) — Slingshot / Quality.
  *
  * <p>Percentage of production defects whose root cause traces back to a missed, ambiguous or wrong
  * acceptance criterion at Definition of Ready:
@@ -261,7 +261,7 @@ public class RefinementToDefectLinkageServiceImpl
 											.toList();
 
 							log.info(
-									"Refinement-to-Defect Linkage (kpi225) -> {} production defect(s) out of {} defect(s) for project {}",
+									"Refinement-to-Defect Linkage (kpi226) -> {} production defect(s) out of {} defect(s) for project {}",
 									productionDefects.size(),
 									defects.size(),
 									leafNode.getProjectFilter().getName());
@@ -286,7 +286,7 @@ public class RefinementToDefectLinkageServiceImpl
 	@Override
 	public Double calculateThresholdValue(FieldMapping fieldMapping) {
 		return calculateThresholdValue(
-				fieldMapping.getThresholdValueKPI225(), KPICode.REFINEMENT_TO_DEFECT_LINKAGE.getKpiId());
+				fieldMapping.getThresholdValueKPI226(), KPICode.REFINEMENT_TO_DEFECT_LINKAGE.getKpiId());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -364,7 +364,7 @@ public class RefinementToDefectLinkageServiceImpl
 							LocalDateTime createdOn = parseCreatedDate(defect.getCreatedDate());
 							if (createdOn == null) {
 								log.debug(
-										"Refinement-to-Defect Linkage (kpi225): skipping defect {} — unparseable created date '{}'",
+										"Refinement-to-Defect Linkage (kpi226): skipping defect {} — unparseable created date '{}'",
 										defect.getNumber(),
 										defect.getCreatedDate());
 								return;
@@ -526,8 +526,8 @@ public class RefinementToDefectLinkageServiceImpl
 			return defect.isProductionDefect();
 		}
 		String identification =
-				StringUtils.trimToEmpty(fieldMapping.getJiraProductionDefectIdentificationKPI225());
-		Set<String> configuredValues = lowerCaseSet(fieldMapping.getJiraProductionDefectValueKPI225());
+				StringUtils.trimToEmpty(fieldMapping.getJiraProductionDefectIdentificationKPI226());
+		Set<String> configuredValues = lowerCaseSet(fieldMapping.getJiraProductionDefectValueKPI226());
 
 		if (CommonConstant.LABELS.equalsIgnoreCase(identification)
 				&& CollectionUtils.isNotEmpty(configuredValues)) {
@@ -542,7 +542,7 @@ public class RefinementToDefectLinkageServiceImpl
 		List<String> configured =
 				fieldMapping == null
 						? new ArrayList<>()
-						: ObjectUtils.defaultIfNull(fieldMapping.getJiraIssueTypeKPI225(), new ArrayList<>());
+						: ObjectUtils.defaultIfNull(fieldMapping.getJiraIssueTypeKPI226(), new ArrayList<>());
 		List<String> effective =
 				CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_DEFECT_ISSUE_TYPES;
 		return effective.stream()
@@ -556,7 +556,7 @@ public class RefinementToDefectLinkageServiceImpl
 				fieldMapping == null
 						? new ArrayList<>()
 						: ObjectUtils.defaultIfNull(
-								fieldMapping.getJiraRefinementRootCauseValuesKPI225(), new ArrayList<>());
+								fieldMapping.getJiraRefinementRootCauseValuesKPI226(), new ArrayList<>());
 		List<String> effective =
 				CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_REFINEMENT_ROOT_CAUSES;
 		return lowerCaseSet(effective);

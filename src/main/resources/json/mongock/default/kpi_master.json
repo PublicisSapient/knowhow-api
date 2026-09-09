@@ -6071,11 +6071,11 @@
     "isPositiveTrend": false,
     "calculateMaturity": true,
     "maturityRange": [
-      "-90",
+      "90-",
       "30-90",
       "15-30",
       "7-15",
-      "7-"
+      "-7"
     ],
     "hideOverallFilter": true,
     "kpiSource": "Jenkins",
@@ -6098,12 +6098,12 @@
     "kpiId": "kpi224",
     "kpiName": "Backlog Aging",
     "isDeleted": "False",
-    "defaultOrder": 2,
+    "defaultOrder": 6,
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Intake",
     "kpiUnit": "Count",
     "chartType": "stacked-bar-chart",
-    "xAxisLabel": "Age (Days)",
+    "xAxisLabel": "Aging Bucket",
     "yAxisLabel": "Issue Count",
     "showTrend": false,
     "isPositiveTrend": false,
@@ -6114,7 +6114,7 @@
     "kanban": false,
     "groupId": 315,
     "kpiInfo": {
-      "definition": "Distribution of how long items have been sitting in the backlog without being refined or closed. For every issue whose current status is one of the configured backlog statuses (e.g. Backlog, To Do) the age is computed as now() - created date, and the issue is plotted in one of four buckets: 0-30, 30-90, 90-180 and 180+ days. Each bucket carries a drill-down by issue type. Stale backlogs are mostly noise — but the noise hides real demand. A healthy backlog has a working set that turns over and a clear policy for retiring items older than ~6 months, so a heavy 180+ bucket is the signal to act on."
+      "definition": "Distribution of how long items have been sitting in the backlog without being refined or closed. For every issue whose current status is one of the configured backlog statuses (e.g. Backlog, To Do) the age is computed as now() - created date, and the issue is plotted in one of four buckets: 0-4 Weeks, 4-13 Weeks, 13-26 Weeks and 26+ Weeks. Each bucket carries a drill-down by issue type. Stale backlogs are mostly noise — but the noise hides real demand. A healthy backlog has a working set that turns over and a clear policy for retiring items older than ~6 months, so a heavy 26+ Weeks bucket is the signal to act on."
     },
     "kpiFilter": null,
     "aggregationCriteria": "sum",
@@ -6122,11 +6122,48 @@
     "combinedKpiSource": "Jira/Azure/Rally",
     "upperThresholdBG": "red",
     "lowerThresholdBG": "white",
-    "kpiWidth": 100,
-    "kpiSubCategoryOrder": 1
+    "kpiSubCategoryOrder": 6
   },
   {
     "kpiId": "kpi225",
+    "kpiName": "Mid-Sprint Re-Refinement Rate",
+    "isDeleted": "False",
+    "defaultOrder": 3,
+    "kpiSubCategoryOrder": 3,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Intake",
+    "kpiUnit": "%",
+    "chartType": "line",
+    "xAxisLabel": "Sprints",
+    "yAxisLabel": "Percentage",
+    "showTrend": true,
+    "isPositiveTrend": false,
+    "calculateMaturity": true,
+    "maturityRange": [
+      "20-",
+      "15-20",
+      "10-15",
+      "5-10",
+      "-5"
+    ],
+    "hideOverallFilter": false,
+    "kpiSource": "Jira",
+    "thresholdValue": 5.0,
+    "kanban": false,
+    "groupId": 316,
+    "kpiInfo": {
+      "definition": "% of stories that move backward to a refinement state (after dev has started) relative to the count of stories that entered development in the same period. A rate above 5% indicates systematic DOR gaps; above 15% signals that refinement is not completing before sprint start."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "red",
+    "lowerThresholdBG": "white",
+    "forecastModel": "thetaMethod"
+  },
+  {
+    "kpiId": "kpi226",
     "kpiName": "Refinement-to-Defect Linkage",
     "isDeleted": "False",
     "defaultOrder": 8,

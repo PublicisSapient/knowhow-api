@@ -31,10 +31,13 @@ import io.mongock.api.annotations.Execution;
 import io.mongock.api.annotations.RollbackExecution;
 
 /**
- * Seeds the Refinement-to-Defect Linkage KPI (kpi225) — Slingshot / Quality.
+ * Seeds the Refinement-to-Defect Linkage KPI (kpi226) — Slingshot / Quality.
  *
  * <p>Registers the kpi_master document, the excel column configuration and the five field mapping
  * structure entries that drive the project level configuration screen.
+ *
+ * <p>Note: kpi225 belongs to Mid-Sprint Re-Refinement Rate, seeded by {@code
+ * BacklogAgingSlingshotChangeUnit}.
  */
 @ChangeUnit(
 		id = "refinement_to_defect_linkage_kpi_insert",
@@ -43,12 +46,15 @@ import io.mongock.api.annotations.RollbackExecution;
 		systemVersion = "17.1.0")
 public class RefinementToDefectLinkageChangeUnit {
 
-	private static final String KPI_ID = "kpi225";
+	private static final String KPI_ID = "kpi226";
+	private static final String KPI_NAME = "Refinement-to-Defect Linkage";
 	private static final String KPI_ID_FIELD = "kpiId";
+	private static final String KPI_NAME_FIELD = "kpiName";
 	private static final String KPI_MASTER_COLLECTION = "kpi_master";
 	private static final String KPI_COLUMN_CONFIGS_COLLECTION = "kpi_column_configs";
 	private static final String FIELD_MAPPING_STRUCTURE_COLLECTION = "field_mapping_structure";
 	private static final String COLUMN_NAME = "columnName";
+	private static final String ROOT_CAUSE_CATEGORY_COLUMN = "Root Cause Category";
 	private static final String ORDER = "order";
 	private static final String IS_SHOWN = "isShown";
 	private static final String IS_DEFAULT = "isDefault";
@@ -70,13 +76,14 @@ public class RefinementToDefectLinkageChangeUnit {
 	private static final String VALUE = "value";
 	private static final String LABELS_OPTION = "Labels";
 	private static final String DEFECT_MAPPING_SECTION = "Defects Mapping";
+	private static final String IN = "$in";
 
-	private static final String ISSUE_TYPE_FIELD = "jiraIssueTypeKPI225";
+	private static final String ISSUE_TYPE_FIELD = "jiraIssueTypeKPI226";
 	private static final String PRODUCTION_DEFECT_IDENTIFICATION_FIELD =
-			"jiraProductionDefectIdentificationKPI225";
-	private static final String PRODUCTION_DEFECT_VALUE_FIELD = "jiraProductionDefectValueKPI225";
-	private static final String REFINEMENT_ROOT_CAUSE_FIELD = "jiraRefinementRootCauseValuesKPI225";
-	private static final String THRESHOLD_FIELD = "thresholdValueKPI225";
+			"jiraProductionDefectIdentificationKPI226";
+	private static final String PRODUCTION_DEFECT_VALUE_FIELD = "jiraProductionDefectValueKPI226";
+	private static final String REFINEMENT_ROOT_CAUSE_FIELD = "jiraRefinementRootCauseValuesKPI226";
+	private static final String THRESHOLD_FIELD = "thresholdValueKPI226";
 
 	private static final String KPI_DEFINITION =
 			"Percentage of production defects whose root cause traces back to a missed, ambiguous or wrong acceptance "
@@ -99,7 +106,7 @@ public class RefinementToDefectLinkageChangeUnit {
 		Document kpiMaster =
 				new Document()
 						.append(KPI_ID_FIELD, KPI_ID)
-						.append("kpiName", "Refinement-to-Defect Linkage")
+						.append(KPI_NAME_FIELD, KPI_NAME)
 						.append("isDeleted", "False")
 						.append("defaultOrder", 8)
 						.append("kpiCategory", "Slingshot")
@@ -153,7 +160,7 @@ public class RefinementToDefectLinkageChangeUnit {
 										column("Status", 7),
 										column("Created Date", 8),
 										column("Root Cause", 9),
-										column("Root Cause Category", 10)));
+										column(ROOT_CAUSE_CATEGORY_COLUMN, 10)));
 
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
@@ -294,6 +301,6 @@ public class RefinementToDefectLinkageChangeUnit {
 						THRESHOLD_FIELD);
 		mongoTemplate
 				.getCollection(FIELD_MAPPING_STRUCTURE_COLLECTION)
-				.deleteMany(new Document(FIELD_NAME, new Document("$in", fieldNames)));
+				.deleteMany(new Document(FIELD_NAME, new Document(IN, fieldNames)));
 	}
 }
