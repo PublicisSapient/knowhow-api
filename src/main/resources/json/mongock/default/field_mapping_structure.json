@@ -5643,7 +5643,7 @@
   },
   {
     "fieldName" : "jiraBacklogStatusKPI224",
-    "fieldLabel" : "Status(es) that represent the Backlog",
+    "fieldLabel" : "Active backlog statuses",
     "fieldType" : "chips",
     "fieldCategory" : "workflow",
     "fieldDisplayOrder" : 10,
@@ -5651,12 +5651,12 @@
     "section" : "WorkFlow Status Mapping",
     "mandatory" : false,
     "tooltip" : {
-      "definition" : "Workflow statuses that mean an item is still sitting in the backlog and has not been picked up (e.g., Backlog, To Do, Open). Only issues currently in one of these statuses are aged. When left blank, 'Backlog', 'To Do', 'Open' and 'New' are used."
+      "definition" : "Issues currently in one of these statuses are included and aged (e.g., Open, To Do, Backlog). Defaults to Open, To Do, Backlog and New when left blank."
     }
   },
   {
-    "fieldName" : "jiraStatusForRefinedKPI224",
-    "fieldLabel" : "Status(es) that mean the item is already refined (optional)",
+    "fieldName" : "jiraStatusToStartBacklogKPI224",
+    "fieldLabel" : "Age starts from (optional)",
     "fieldType" : "chips",
     "fieldCategory" : "workflow",
     "fieldDisplayOrder" : 11,
@@ -5664,7 +5664,20 @@
     "section" : "WorkFlow Status Mapping",
     "mandatory" : false,
     "tooltip" : {
-      "definition" : "Optional. Workflow statuses that indicate an item has already been refined / met the Definition of Ready (e.g., Ready, Refined). Issues in these statuses are excluded from the aging distribution."
+      "definition" : "Optional. When set, age is measured from the first time an issue transitioned into one of these statuses instead of its creation date. Use this when issues are created before they formally enter the backlog."
+    }
+  },
+  {
+    "fieldName" : "jiraStatusForRefinedKPI224",
+    "fieldLabel" : "Age ends at (optional)",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 12,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "mandatory" : false,
+    "tooltip" : {
+      "definition" : "Optional. Issues currently in one of these statuses are considered already refined and are excluded from the aging chart (e.g., Ready for Sprint, Refined)."
     }
   },
   {

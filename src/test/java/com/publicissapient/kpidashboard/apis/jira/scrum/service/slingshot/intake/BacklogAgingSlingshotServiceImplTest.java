@@ -76,10 +76,10 @@ public class BacklogAgingSlingshotServiceImplTest {
 
 	private static final ObjectId PROJECT_CONFIG_ID = new ObjectId("6335363749794a18e8a4479b");
 	private static final String HIERARCHY_LEVEL_ONE = "hierarchyLevelOne";
-	private static final String BUCKET_0_30 = "0-30 Days";
-	private static final String BUCKET_30_90 = "30-90 Days";
-	private static final String BUCKET_90_180 = "90-180 Days";
-	private static final String BUCKET_180_PLUS = "180+ Days";
+	private static final String BUCKET_0_30 = "0-4 Weeks";
+	private static final String BUCKET_30_90 = "4-13 Weeks";
+	private static final String BUCKET_90_180 = "13-26 Weeks";
+	private static final String BUCKET_180_PLUS = "26+ Weeks";
 
 	@Mock private CacheService cacheService;
 	@Mock private ConfigHelperService configHelperService;
@@ -317,7 +317,7 @@ public class BacklogAgingSlingshotServiceImplTest {
 		assertEquals(
 				List.of(BUCKET_0_30, BUCKET_30_90, BUCKET_90_180, BUCKET_180_PLUS),
 				result.getxAxisValues());
-		assertEquals("Age (Days)", result.getLabelXAxis());
+		assertEquals("", result.getLabelXAxis());
 
 		List<DataCount> trendValues = (List<DataCount>) result.getTrendValueList();
 		Map<String, Double> bucketWiseCount = flattenBuckets(trendValues);
@@ -528,9 +528,9 @@ public class BacklogAgingSlingshotServiceImplTest {
 		List<KPIExcelData> excelData = result.getExcelData();
 		assertNotNull(excelData);
 		assertEquals(2, excelData.size());
-		// oldest first
-		assertEquals(BUCKET_180_PLUS, excelData.get(0).getAgingBucket());
-		assertEquals(BUCKET_0_30, excelData.get(1).getAgingBucket());
+		// youngest first
+		assertEquals(BUCKET_0_30, excelData.get(0).getAgingBucket());
+		assertEquals(BUCKET_180_PLUS, excelData.get(1).getAgingBucket());
 		assertNotNull(excelData.get(0).getAgeInDays());
 		assertEquals("Backlog", excelData.get(0).getStatus());
 		assertEquals(KPIExcelColumn.BACKLOG_AGING_SLINGSHOT.getColumns(), result.getExcelColumns());
