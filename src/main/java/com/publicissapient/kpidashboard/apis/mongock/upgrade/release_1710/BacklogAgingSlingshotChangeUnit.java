@@ -64,10 +64,10 @@ public class BacklogAgingSlingshotChangeUnit {
 			"Distribution of how long items have been sitting in the backlog without being refined or closed. "
 					+ "For every issue whose current status is one of the configured backlog statuses (e.g. Backlog, To Do) "
 					+ "the age is computed as now() - created date, and the issue is plotted in one of four buckets: "
-					+ "0-30, 30-90, 90-180 and 180+ days. Each bucket carries a drill-down by issue type. "
+					+ "0-4 Weeks, 4-13 Weeks, 13-26 Weeks and 26+ Weeks. Each bucket carries a drill-down by issue type. "
 					+ "Stale backlogs are mostly noise — but the noise hides real demand. "
 					+ "A healthy backlog has a working set that turns over and a clear policy for retiring items older than ~6 months, "
-					+ "so a heavy 180+ bucket is the signal to act on.";
+					+ "so a heavy 26+ Weeks bucket is the signal to act on.";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
