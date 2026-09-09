@@ -949,6 +949,7 @@ public enum FieldMappingEnum {
 			List.of(
 					"jiraIssueTypeKPI224",
 					"jiraBacklogStatusKPI224",
+					"jiraStatusToStartBacklogKPI224",
 					"jiraStatusForRefinedKPI224",
 					"thresholdValueKPI224")),
 	KPI225(

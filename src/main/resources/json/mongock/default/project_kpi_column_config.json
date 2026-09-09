@@ -4395,44 +4395,50 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Project",
         "order" : 2,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Status",
+        "columnName" : "Issue Description",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Priority",
+        "columnName" : "Status",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Created Date",
+        "columnName" : "Priority",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Age (Days)",
+        "columnName" : "Created Date",
         "order" : 8,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "Age (Days)",
+        "order" : 9,
         "isShown" : true,
         "isDefault" : true
       }
