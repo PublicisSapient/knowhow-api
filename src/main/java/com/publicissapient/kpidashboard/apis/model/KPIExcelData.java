@@ -722,6 +722,10 @@ public class KPIExcelData {
 	@JsonProperty("Age (Days)")
 	private String ageInDays;
 
+	// ---- Refinement-to-Defect Linkage KPI (kpi226) fields ----
+	@JsonProperty("Root Cause Category")
+	private String rootCauseCategory;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

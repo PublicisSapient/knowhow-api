@@ -960,6 +960,15 @@ public enum FieldMappingEnum {
 					"jiraStatusStartDevKPI225",
 					"jiraStatusReturnToRefinementKPI225",
 					"thresholdValueKPI225")),
+	KPI226(
+			"Refinement-to-Defect Linkage",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraIssueTypeKPI225",
+					"jiraProductionDefectIdentificationKPI225",
+					"jiraProductionDefectValueKPI225",
+					"jiraRefinementRootCauseValuesKPI225",
+					"thresholdValueKPI225")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),

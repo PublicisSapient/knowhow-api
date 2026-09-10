@@ -5695,6 +5695,80 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "jiraIssueTypeKPI226",
+    "fieldLabel" : "Issue type to identify Defects",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 1,
+    "section" : "Issue Types Mapping",
+    "mandatory" : false,
+    "tooltip" : {
+      "definition" : "All issue types that represent a defect (e.g., Bug, Defect). When left blank, 'Bug' and 'Defect' are used."
+    }
+  },
+  {
+    "fieldName" : "jiraProductionDefectIdentificationKPI226",
+    "fieldLabel" : "Production defect identification",
+    "fieldType" : "radiobutton",
+    "fieldDisplayOrder" : 2,
+    "sectionOrder" : 5,
+    "section" : "Defects Mapping",
+    "mandatory" : false,
+    "options" : [
+      {
+        "label" : "Labels",
+        "value" : "Labels"
+      },
+      {
+        "label" : "Production Defect Mapping",
+        "value" : "ProductionDefectMapping"
+      }
+    ],
+    "nestedFields" : [
+      {
+        "fieldName" : "jiraProductionDefectValueKPI226",
+        "fieldLabel" : "Production Defect Values",
+        "fieldType" : "chips",
+        "filterGroup" : [
+          "Labels"
+        ],
+        "tooltip" : {
+          "definition" : "Jira labels that mark a defect as found in production. Example: PROD_DEFECT, Prod-Escape <hr>"
+        }
+      }
+    ],
+    "tooltip" : {
+      "definition" : "How a defect is recognised as having escaped to production:<br>1. Labels : match the label value(s) configured below.<br>2. Production Defect Mapping : reuse the project's existing global Production Defect configuration (Production Defect Identifier / Value), which the Jira processor already evaluates.<hr>"
+    }
+  },
+  {
+    "fieldName" : "jiraRefinementRootCauseValuesKPI226",
+    "fieldLabel" : "Root cause value(s) that mean 'Refinement'",
+    "fieldType" : "chips",
+    "fieldDisplayOrder" : 4,
+    "sectionOrder" : 5,
+    "section" : "Defects Mapping",
+    "mandatory" : false,
+    "tooltip" : {
+      "definition" : "Values of the Jira Root Cause (RCA) field that mean the defect was caused by a missed, ambiguous or wrong acceptance criterion at DOR (e.g., Refinement, Missing Acceptance Criteria, Requirement Gap). These form the numerator of the KPI. The RCA field itself is configured once under 'Root Cause' in the Defects Mapping section. When left blank, 'Refinement' is used."
+    }
+  },
+  {
+    "fieldName" : "thresholdValueKPI226",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "chips",

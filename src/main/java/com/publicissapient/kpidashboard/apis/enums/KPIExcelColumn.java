@@ -1457,6 +1457,19 @@ public enum KPIExcelColumn {
 					"First Return Date",
 					"Return-to Status",
 					"Return Count")),
+	REFINEMENT_TO_DEFECT_LINKAGE(
+			"kpi226",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Priority",
+					"Status",
+					"Created Date",
+					"Root Cause",
+					"Root Cause Category")),
 	;
 
 	// @formatter:on
