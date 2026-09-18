@@ -6166,9 +6166,9 @@
     "kpiId": "kpi226",
     "kpiName": "Refinement-to-Defect Linkage",
     "isDeleted": "False",
-    "defaultOrder": 8,
+    "defaultOrder": 5,
     "kpiCategory": "Slingshot",
-    "kpiSubCategory": "Quality",
+    "kpiSubCategory": "Intake",
     "kpiUnit": "%",
     "chartType": "line",
     "xAxisLabel": "Weeks",
@@ -6199,8 +6199,9 @@
     "combinedKpiSource": "Jira/Azure/Rally",
     "upperThresholdBG": "red",
     "lowerThresholdBG": "white",
+    "forecastModel": "thetaMethod",
     "kpiWidth": 100,
-    "kpiSubCategoryOrder": 8
+    "kpiSubCategoryOrder": 5
   },
   {
     "kpiId": "kpi311",

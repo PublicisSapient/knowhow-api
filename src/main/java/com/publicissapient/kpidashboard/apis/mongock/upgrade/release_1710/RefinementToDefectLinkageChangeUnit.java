@@ -108,7 +108,7 @@ public class RefinementToDefectLinkageChangeUnit {
 						.append(KPI_ID_FIELD, KPI_ID)
 						.append(KPI_NAME_FIELD, KPI_NAME)
 						.append("isDeleted", "False")
-						.append("defaultOrder", 8)
+						.append("defaultOrder", 5)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Intake")
 						.append("kpiUnit", "%")
@@ -134,8 +134,9 @@ public class RefinementToDefectLinkageChangeUnit {
 						.append("combinedKpiSource", "Jira/Azure/Rally")
 						.append("upperThresholdBG", "red")
 						.append("lowerThresholdBG", "white")
+						.append("forecastModel", "thetaMethod")
 						.append("kpiWidth", 50)
-						.append("kpiSubCategoryOrder", 8);
+						.append("kpiSubCategoryOrder", 5);
 
 		mongoTemplate
 				.getCollection(KPI_MASTER_COLLECTION)
