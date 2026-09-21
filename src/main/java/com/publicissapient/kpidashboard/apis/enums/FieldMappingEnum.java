@@ -88,6 +88,7 @@ public enum FieldMappingEnum {
 					"jiraSubTaskDefectType",
 					"jiraSubTaskIdentification",
 					"includeActiveSprintInBacklogKPI",
+					"jiraAcceptanceCriteriaCustomField",
 					"priorityP1",
 					"priorityP2",
 					"priorityP3",
@@ -117,6 +118,7 @@ public enum FieldMappingEnum {
 					"jiraStoryPointsCustomField",
 					"kanbanRCACountIssueType",
 					"jiraSubTaskDefectType",
+					"jiraAcceptanceCriteriaCustomField",
 					"priorityP1",
 					"priorityP2",
 					"priorityP3",
@@ -969,6 +971,15 @@ public enum FieldMappingEnum {
 					"jiraProductionDefectValueKPI226",
 					"jiraRefinementRootCauseValuesKPI226",
 					"thresholdValueKPI226")),
+	KPI227(
+			"Acceptance Criteria Coverage",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraStoryIdentificationKPI227",
+					"jiraStatusForInProgressKPI227",
+					"acceptanceCriteriaFormatKPI227",
+					"jiraAcceptanceCriteriaCustomField",
+					"thresholdValueKPI227")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),
