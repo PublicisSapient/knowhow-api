@@ -43,7 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import com.publicissapient.kpidashboard.apis.appsetting.service.ConfigHelperService;
 import com.publicissapient.kpidashboard.apis.constant.Constant;
@@ -109,7 +109,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Data source: {@code jira_issue_custom_history} + {@code jira_issue} — no new processor
  * required.
  */
-@Component
+@Service
 @Slf4j
 public class AcceptanceCriteriaCoverageServiceImpl
 		extends JiraKPIService<Double, List<Object>, Map<String, Object>> {
@@ -421,23 +421,56 @@ public class AcceptanceCriteriaCoverageServiceImpl
 							AcceptanceCriteriaCounter.count(
 									issue == null ? null : issue.getAcceptanceCriteria(), format);
 
-					records.add(
-							new StoryRecord(
-									storyId,
-									issue != null ? issue.getUrl() : history != null ? history.getUrl() : null,
-									issue != null
-											? StringUtils.defaultString(issue.getTypeName())
-											: history != null ? StringUtils.defaultString(history.getStoryType()) : "",
-									issue != null
-											? issue.getName()
-											: history != null ? history.getDescription() : null,
-									issue != null ? issue.getStatus() : null,
-									transition,
-									result.count(),
-									result.format().name(),
-									band(result.count())));
+					records.add(toStoryRecord(storyId, issue, history, transition, result));
 				});
 		return records;
+	}
+
+	/**
+	 * Builds the per-story projection from whichever document describes the story.
+	 *
+	 * <p>The issue document is the preferred source and the history document is the fallback, used
+	 * when the issue is no longer in {@code jira_issue} — deleted in Jira, or excluded by a later
+	 * change to the configured story types. The story still entered In Progress, so dropping it would
+	 * silently shrink the denominator and inflate the average.
+	 *
+	 * <p>One source is chosen for all the descriptive attributes rather than each attribute falling
+	 * back independently, so a story is never described by a mix of the two.
+	 */
+	private static StoryRecord toStoryRecord(
+			String storyId,
+			JiraIssue issue,
+			JiraIssueCustomHistory history,
+			LocalDateTime transition,
+			AcceptanceCriteriaCounter.Result result) {
+
+		String url = null;
+		String issueType = "";
+		String description = null;
+
+		if (issue != null) {
+			url = issue.getUrl();
+			issueType = StringUtils.defaultString(issue.getTypeName());
+			description = issue.getName();
+		} else if (history != null) {
+			url = history.getUrl();
+			issueType = StringUtils.defaultString(history.getStoryType());
+			description = history.getDescription();
+		}
+
+		// Status is only ever carried by the issue document.
+		String status = issue == null ? null : issue.getStatus();
+
+		return new StoryRecord(
+				storyId,
+				url,
+				issueType,
+				description,
+				status,
+				transition,
+				result.count(),
+				result.format().name(),
+				band(result.count()));
 	}
 
 	// ────────────────────────────────────────────────────────────────────────
@@ -454,11 +487,11 @@ public class AcceptanceCriteriaCoverageServiceImpl
 		Map<String, List<StoryRecord>> byPeriod = emptyPeriods(weekOrMonth, periodCount);
 		CollectionUtils.emptyIfNull(records)
 				.forEach(
-						record ->
+						story ->
 								byPeriod.computeIfPresent(
-										periodLabel(weekOrMonth, record.startedOn()),
+										periodLabel(weekOrMonth, story.startedOn()),
 										(period, bucket) -> {
-											bucket.add(record);
+											bucket.add(story);
 											return bucket;
 										}));
 
@@ -468,7 +501,7 @@ public class AcceptanceCriteriaCoverageServiceImpl
 					long stories = periodRecords.size();
 					long totalCriteria = periodRecords.stream().mapToLong(StoryRecord::criteriaCount).sum();
 					long withoutCriteria =
-							periodRecords.stream().filter(record -> record.criteriaCount() == 0).count();
+							periodRecords.stream().filter(story -> story.criteriaCount() == 0).count();
 
 					double average = stories == 0 ? 0d : round((double) totalCriteria / stories);
 
@@ -669,22 +702,22 @@ public class AcceptanceCriteriaCoverageServiceImpl
 		records.stream()
 				.sorted(Comparator.comparing(StoryRecord::startedOn).thenComparing(StoryRecord::storyId))
 				.forEach(
-						record -> {
+						story -> {
 							KPIExcelData row = new KPIExcelData();
-							row.setDaysWeeks(periodLabel(weekOrMonth, record.startedOn()));
+							row.setDaysWeeks(periodLabel(weekOrMonth, story.startedOn()));
 							row.setProject(projectName);
-							row.setIssueID(Map.of(record.storyId(), StringUtils.defaultString(record.url())));
-							row.setIssueType(record.issueType());
-							row.setIssueDesc(record.description());
-							row.setStatus(record.status());
+							row.setIssueID(Map.of(story.storyId(), StringUtils.defaultString(story.url())));
+							row.setIssueType(story.issueType());
+							row.setIssueDesc(story.description());
+							row.setStatus(story.status());
 							row.setInProgressDate(
 									DateUtil.dateTimeConverter(
-											record.startedOn().toLocalDate().toString(),
+											story.startedOn().toLocalDate().toString(),
 											DateUtil.DATE_FORMAT,
 											DateUtil.DISPLAY_DATE_FORMAT));
-							row.setAcceptanceCriteriaCount(String.valueOf(record.criteriaCount()));
-							row.setAcceptanceCriteriaFormat(record.format());
-							row.setAcceptanceCriteriaBand(record.band());
+							row.setAcceptanceCriteriaCount(String.valueOf(story.criteriaCount()));
+							row.setAcceptanceCriteriaFormat(story.format());
+							row.setAcceptanceCriteriaBand(story.band());
 							excelData.add(row);
 						});
 	}
