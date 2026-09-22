@@ -943,6 +943,32 @@ public enum FieldMappingEnum {
 			"Security Vulnerability Lead Time",
 			KPISource.JENKINS.name(),
 			List.of("thresholdValueKPI223")),
+	KPI224(
+			"Backlog Aging",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraIssueTypeKPI224",
+					"jiraBacklogStatusKPI224",
+					"jiraStatusToStartBacklogKPI224",
+					"jiraStatusForRefinedKPI224",
+					"thresholdValueKPI224")),
+	KPI225(
+			"Mid-Sprint Re-Refinement Rate",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraStoryIdentificationKPI225",
+					"jiraStatusStartDevKPI225",
+					"jiraStatusReturnToRefinementKPI225",
+					"thresholdValueKPI225")),
+	KPI226(
+			"Refinement-to-Defect Linkage",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraIssueTypeKPI226",
+					"jiraProductionDefectIdentificationKPI226",
+					"jiraProductionDefectValueKPI226",
+					"jiraRefinementRootCauseValuesKPI226",
+					"thresholdValueKPI226")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),

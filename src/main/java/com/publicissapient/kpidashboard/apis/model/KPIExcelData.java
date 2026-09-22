@@ -617,6 +617,18 @@ public class KPIExcelData {
 	@JsonProperty("Refinement Cycle Time (Days)")
 	private String refinementCycleTime;
 
+	@JsonProperty("Dev Start Date")
+	private String devStartDate;
+
+	@JsonProperty("First Return Date")
+	private String firstReturnDate;
+
+	@JsonProperty("Return-to Status")
+	private String returnToStatus;
+
+	@JsonProperty("Return Count")
+	private String returnCount;
+
 	@JsonProperty("Closed Time")
 	private String closedDate;
 
@@ -702,6 +714,17 @@ public class KPIExcelData {
 
 	@JsonProperty("Mean Lead Time (Days)")
 	private String meanLeadTimeDays;
+
+	// ---- Backlog Aging KPI (kpi224) fields ----
+	@JsonProperty("Aging Bucket")
+	private String agingBucket;
+
+	@JsonProperty("Age (Days)")
+	private String ageInDays;
+
+	// ---- Refinement-to-Defect Linkage KPI (kpi226) fields ----
+	@JsonProperty("Root Cause Category")
+	private String rootCauseCategory;
 
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
