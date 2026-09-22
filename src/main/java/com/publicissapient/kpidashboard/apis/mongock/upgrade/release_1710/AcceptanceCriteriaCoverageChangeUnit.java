@@ -134,7 +134,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 						.append("upperThresholdBG", "white")
 						.append("lowerThresholdBG", "red")
 						.append("forecastModel", "thetaMethod")
-						.append("kpiWidth", 100)
+						.append("kpiWidth", 50)
 						.append("kpiSubCategoryOrder", 7);
 
 		mongoTemplate
