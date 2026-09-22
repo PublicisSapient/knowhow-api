@@ -1433,6 +1433,43 @@ public enum KPIExcelColumn {
 					"Severity",
 					"Alert Count",
 					"Mean Lead Time (Days)")),
+	BACKLOG_AGING_SLINGSHOT(
+			"kpi224",
+			Arrays.asList(
+					"Aging Bucket",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Status",
+					"Priority",
+					"Created Date",
+					"Age (Days)")),
+	MID_SPRINT_RE_REFINEMENT_RATE_SLINGSHOT(
+			"kpi225",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Dev Start Date",
+					"First Return Date",
+					"Return-to Status",
+					"Return Count")),
+	REFINEMENT_TO_DEFECT_LINKAGE(
+			"kpi226",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Priority",
+					"Status",
+					"Created Date",
+					"Root Cause",
+					"Root Cause Category")),
 	;
 
 	// @formatter:on
