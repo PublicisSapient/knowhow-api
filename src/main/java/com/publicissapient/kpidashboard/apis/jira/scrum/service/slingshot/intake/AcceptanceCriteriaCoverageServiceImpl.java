@@ -468,8 +468,7 @@ public class AcceptanceCriteriaCoverageServiceImpl
 
 		Map<String, JiraIssue> issuesByNumber =
 				jiraIssueRepository
-						.findByNumberInAndBasicProjectConfigId(
-								startedOn.keySet().stream().toList(), projectId)
+						.findByNumberInAndBasicProjectConfigId(startedOn.keySet().stream().toList(), projectId)
 						.stream()
 						.collect(
 								Collectors.toMap(JiraIssue::getNumber, issue -> issue, (first, second) -> first));
