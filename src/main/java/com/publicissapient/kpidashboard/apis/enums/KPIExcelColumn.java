@@ -1470,6 +1470,19 @@ public enum KPIExcelColumn {
 					"Created Date",
 					"Root Cause",
 					"Root Cause Category")),
+	ACCEPTANCE_CRITERIA_COVERAGE(
+			"kpi227",
+			Arrays.asList(
+					"Days/Weeks",
+					"Project",
+					"Issue ID",
+					"Issue Type",
+					"Issue Description",
+					"Status",
+					"In Progress Date",
+					"Acceptance Criteria Count",
+					"Acceptance Criteria Format",
+					"Coverage Band")),
 	;
 
 	// @formatter:on

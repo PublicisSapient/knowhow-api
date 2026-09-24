@@ -726,6 +726,19 @@ public class KPIExcelData {
 	@JsonProperty("Root Cause Category")
 	private String rootCauseCategory;
 
+	// ---- Acceptance Criteria Coverage KPI (kpi227) fields ----
+	@JsonProperty("In Progress Date")
+	private String inProgressDate;
+
+	@JsonProperty("Acceptance Criteria Count")
+	private String acceptanceCriteriaCount;
+
+	@JsonProperty("Acceptance Criteria Format")
+	private String acceptanceCriteriaFormat;
+
+	@JsonProperty("Coverage Band")
+	private String acceptanceCriteriaBand;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore
