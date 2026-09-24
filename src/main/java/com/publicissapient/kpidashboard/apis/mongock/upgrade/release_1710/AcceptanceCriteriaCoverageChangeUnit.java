@@ -193,7 +193,11 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 								new Document()
 										.append(
 												DEFINITION,
-												"All issue types that should carry acceptance criteria (e.g., Story, Enabler). "
+												"All issue types that should carry acceptance criteria. "
+														+ "Not every project tracks work as 'Story' - if the board delivers work as Task, "
+														+ "QA Task, Enabler and so on, list those instead, otherwise this KPI reports nothing. "
+														+ "Existing projects were given a starting value copied from their other story based "
+														+ "KPIs; change it freely, nothing will overwrite it. "
 														+ "When left blank, 'Story' is used. <hr>")));
 
 		upsertFieldMapping(
@@ -215,6 +219,8 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 												"Workflow statuses that mean development has started (e.g., In Progress, In Development). "
 														+ "The <b>first</b> transition into any of these is the moment the acceptance criteria are counted, "
 														+ "so a story that bounces in and out of In Progress is still counted only once. "
+														+ "Existing projects were given a starting value copied from their other in progress "
+														+ "KPIs; change it freely, nothing will overwrite it. "
 														+ "When left blank, 'In Progress' is used. <hr>")));
 
 		upsertFieldMapping(

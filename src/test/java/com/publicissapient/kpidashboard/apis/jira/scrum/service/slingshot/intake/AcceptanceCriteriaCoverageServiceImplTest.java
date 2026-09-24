@@ -34,7 +34,9 @@ import org.junit.jupiter.api.Test;
 import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.intake.AcceptanceCriteriaCoverageServiceImpl.CoverageBandValue;
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.intake.AcceptanceCriteriaCoverageServiceImpl.StoryRecord;
+import com.publicissapient.kpidashboard.apis.util.AcceptanceCriteriaCounter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
 import com.publicissapient.kpidashboard.common.util.DateUtil;
@@ -117,6 +119,91 @@ class AcceptanceCriteriaCoverageServiceImplTest {
 						List.of(history), Set.of("in progress"));
 
 		assertTrue(startedOn.containsKey("STORY-2"));
+	}
+
+	@Test
+	@DisplayName("the KPI reads only its own mapping, never another KPI's")
+	void readsOnlyItsOwnMapping() {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraStatusForInProgressKPI227(List.of("Construction"));
+		fieldMapping.setJiraStoryIdentificationKPI227(List.of("Task", "QA Task"));
+		// a neighbouring KPI saying something different must not leak in
+		fieldMapping.setJiraStatusForInProgressKPI148(List.of("In Development"));
+		fieldMapping.setJiraStoryIdentificationKPI129(List.of("Story"));
+
+		assertEquals(
+				Set.of("Construction"),
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(fieldMapping));
+		assertEquals(
+				Set.of("Task", "QA Task"),
+				AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(fieldMapping));
+	}
+
+	@Test
+	@DisplayName("an unset mapping falls back to the documented default, not to another KPI")
+	void unsetMappingUsesDefaults() {
+		// The migration seeds these fields once, so the value stays visible and
+		// editable in the
+		// project configuration. Nothing is resolved from a neighbouring KPI at read
+		// time.
+		FieldMapping borrowsNothing = new FieldMapping();
+		borrowsNothing.setJiraStatusForInProgressKPI148(List.of("In Development"));
+		borrowsNothing.setJiraStoryIdentificationKPI129(List.of("Enabler"));
+
+		assertEquals(
+				Set.of("In Progress"),
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(borrowsNothing));
+		assertEquals(
+				Set.of("Story"), AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(borrowsNothing));
+	}
+
+	@Test
+	@DisplayName("an empty list is treated as unset rather than as an answer")
+	void emptyListIsUnset() {
+		FieldMapping fieldMapping = new FieldMapping();
+		fieldMapping.setJiraStatusForInProgressKPI227(new ArrayList<>());
+
+		assertEquals(
+				Set.of("In Progress"),
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(fieldMapping));
+	}
+
+	@Test
+	@DisplayName("a missing field mapping does not blow up")
+	void nullFieldMappingIsSafe() {
+		assertEquals(
+				Set.of("In Progress"),
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(null));
+		assertEquals(Set.of("Story"), AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(null));
+	}
+
+	@Test
+	@DisplayName("a story with no jira_issue document is still counted, from its history")
+	void missingIssueFallsBackToHistory() {
+		// jira_issue and jira_issue_custom_history are written together by the
+		// processor, so a
+		// history without its issue means the issue was removed afterwards. The story
+		// still
+		// entered In Progress, so dropping it would shrink the denominator and inflate
+		// the average.
+		JiraIssueCustomHistory history = history("STORY-8");
+		history.setStoryType("QA Task");
+		history.setUrl("http://jira/STORY-8");
+		history.setDescription("from history");
+
+		StoryRecord story =
+				AcceptanceCriteriaCoverageServiceImpl.toStoryRecord(
+						"STORY-8",
+						null,
+						history,
+						LocalDateTime.of(2026, 3, 4, 10, 0),
+						AcceptanceCriteriaCounter.count(null, AcceptanceCriteriaCounter.Format.AUTO));
+
+		assertEquals("QA Task", story.issueType());
+		assertEquals("http://jira/STORY-8", story.url());
+		assertEquals("from history", story.description());
+		assertEquals(0, story.criteriaCount());
+		assertEquals(AcceptanceCriteriaCoverageServiceImpl.BAND_NONE, story.band());
 	}
 
 	@Test

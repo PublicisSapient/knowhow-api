@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -318,6 +319,30 @@ public class AcceptanceCriteriaCoverageServiceImpl
 			String startDate,
 			String endDate) {
 
+		List<JiraIssueCustomHistory> histories =
+				queryHistories(projectId, storyTypes, inProgressStatuses, startDate, endDate);
+
+		if (CollectionUtils.isEmpty(histories)) {
+			reportEmptyResult(projectId, storyTypes, inProgressStatuses, startDate, endDate);
+		} else {
+			log.debug(
+					"Acceptance Criteria Coverage (kpi227) -> {} history record(s) for project {} using status {} and issue type {}",
+					histories.size(),
+					projectId,
+					inProgressStatuses,
+					storyTypes);
+		}
+		return histories;
+	}
+
+	/** The query itself. {@code storyTypes} may be empty, which drops the issue type filter. */
+	private List<JiraIssueCustomHistory> queryHistories(
+			String projectId,
+			Set<String> storyTypes,
+			Set<String> inProgressStatuses,
+			String startDate,
+			String endDate) {
+
 		Map<String, List<String>> mapOfFilters = new LinkedHashMap<>();
 		mapOfFilters.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), List.of(projectId));
@@ -337,6 +362,56 @@ public class AcceptanceCriteriaCoverageServiceImpl
 
 		return jiraIssueCustomHistoryRepository.findByFilterAndFromStatusMapWithDateFilter(
 				mapOfFilters, uniqueProjectMap, startDate, endDate);
+	}
+
+	/**
+	 * Explains an empty result by re-running the query without the issue type filter.
+	 *
+	 * <p>Status names and issue type names are both matched exactly (case insensitively) against what
+	 * the board recorded, and the combined query cannot say which of the two failed — yet they mean
+	 * very different things. A wrong status means nothing was ever sampled; a wrong issue type means
+	 * the transitions were found and then all discarded. Dropping the issue type filter separates the
+	 * two and lets the log name the values that would have worked. The extra round trip only happens
+	 * when the KPI already has nothing to show.
+	 */
+	private void reportEmptyResult(
+			String projectId,
+			Set<String> storyTypes,
+			Set<String> inProgressStatuses,
+			String startDate,
+			String endDate) {
+
+		List<JiraIssueCustomHistory> withoutTypeFilter =
+				queryHistories(projectId, Collections.emptySet(), inProgressStatuses, startDate, endDate);
+
+		if (CollectionUtils.isEmpty(withoutTypeFilter)) {
+			log.warn(
+					"Acceptance Criteria Coverage (kpi227) -> project {}: no issue of any type entered status {} between {} and {}."
+							+ " Map 'Status to identify In Progress' to the status names this board actually uses.",
+					projectId,
+					inProgressStatuses,
+					startDate,
+					endDate);
+			return;
+		}
+
+		Set<String> availableTypes =
+				withoutTypeFilter.stream()
+						.map(JiraIssueCustomHistory::getStoryType)
+						.filter(StringUtils::isNotBlank)
+						.collect(Collectors.toCollection(LinkedHashSet::new));
+
+		log.warn(
+				"Acceptance Criteria Coverage (kpi227) -> project {}: {} issue(s) entered status {} between {} and {},"
+						+ " but none matched the issue type filter {}. The types actually present are {}."
+						+ " Map 'Issue types to identify Story' to one of those.",
+				projectId,
+				withoutTypeFilter.size(),
+				inProgressStatuses,
+				startDate,
+				endDate,
+				storyTypes,
+				availableTypes);
 	}
 
 	/**
@@ -393,11 +468,13 @@ public class AcceptanceCriteriaCoverageServiceImpl
 
 		Map<String, JiraIssue> issuesByNumber =
 				jiraIssueRepository
-						.findByNumberInAndBasicProjectConfigIdWithFields(
-								startedOn.keySet(), projectId, PROJECTION_FIELDS)
+						.findByNumberInAndBasicProjectConfigId(
+								startedOn.keySet().stream().toList(), projectId)
 						.stream()
 						.collect(
 								Collectors.toMap(JiraIssue::getNumber, issue -> issue, (first, second) -> first));
+
+		reportMissingIssues(projectId, startedOn.keySet(), issuesByNumber);
 
 		AcceptanceCriteriaCounter.Format format =
 				AcceptanceCriteriaCounter.parseFormat(
@@ -427,6 +504,38 @@ public class AcceptanceCriteriaCoverageServiceImpl
 	}
 
 	/**
+	 * Warns when stories that entered In Progress have no matching {@code jira_issue} document.
+	 *
+	 * <p>The processor writes {@code jira_issue} and {@code jira_issue_custom_history} together, so a
+	 * history record without its issue means one of two things: the issue was removed from {@code
+	 * jira_issue} afterwards — deleted in Jira, or dropped when the project's configured issue types
+	 * changed — or the two documents disagree about the project they belong to.
+	 *
+	 * <p>Either way the story is still counted, using the history document for its description, but
+	 * its acceptance criteria are unreadable and it lands in the "None (0)" band. Silently averaging
+	 * those in would understate the whole project, so it is called out.
+	 */
+	private static void reportMissingIssues(
+			String projectId, Set<String> expected, Map<String, JiraIssue> found) {
+
+		if (found.size() == expected.size()) {
+			return;
+		}
+		List<String> missing =
+				expected.stream().filter(number -> !found.containsKey(number)).sorted().toList();
+
+		log.warn(
+				"Acceptance Criteria Coverage (kpi227) -> project {}: {} of {} story(ies) that entered In Progress"
+						+ " have no jira_issue document, so their acceptance criteria cannot be read and they count as"
+						+ " zero. Check that these issue keys exist in jira_issue with a matching"
+						+ " basicProjectConfigId: {}",
+				projectId,
+				missing.size(),
+				expected.size(),
+				missing.stream().limit(10).toList());
+	}
+
+	/**
 	 * Builds the per-story projection from whichever document describes the story.
 	 *
 	 * <p>The issue document is the preferred source and the history document is the fallback, used
@@ -437,7 +546,7 @@ public class AcceptanceCriteriaCoverageServiceImpl
 	 * <p>One source is chosen for all the descriptive attributes rather than each attribute falling
 	 * back independently, so a story is never described by a mix of the two.
 	 */
-	private static StoryRecord toStoryRecord(
+	static StoryRecord toStoryRecord(
 			String storyId,
 			JiraIssue issue,
 			JiraIssueCustomHistory history,
@@ -598,21 +707,29 @@ public class AcceptanceCriteriaCoverageServiceImpl
 		return BAND_OVER_SPECIFIED;
 	}
 
-	private Set<String> resolveStoryTypes(FieldMapping fieldMapping) {
+	/**
+	 * Issue types treated as stories, read only from this KPI's own mapping.
+	 *
+	 * <p>Projects that existed before this release are given a starting value by {@code
+	 * AcceptanceCriteriaCoverageBackfillChangeUnit}, which copies the issue types they already use
+	 * for the other story based KPIs. That copy happens once, at migration, so the value is visible
+	 * and editable in the project configuration. Resolving it at read time instead would make this
+	 * KPI silently depend on another KPI's configuration while its own field still displayed as
+	 * blank.
+	 */
+	static Set<String> resolveStoryTypes(FieldMapping fieldMapping) {
 		List<String> configured =
-				fieldMapping == null
-						? new ArrayList<>()
-						: ObjectUtils.defaultIfNull(
-								fieldMapping.getJiraStoryIdentificationKPI227(), new ArrayList<>());
+				fieldMapping == null ? null : fieldMapping.getJiraStoryIdentificationKPI227();
 		return trimmedSet(CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_STORY_TYPES);
 	}
 
-	private Set<String> resolveInProgressStatuses(FieldMapping fieldMapping) {
+	/**
+	 * Statuses that mean development started, read only from this KPI's own mapping. See {@link
+	 * #resolveStoryTypes(FieldMapping)} for why nothing else is consulted.
+	 */
+	static Set<String> resolveInProgressStatuses(FieldMapping fieldMapping) {
 		List<String> configured =
-				fieldMapping == null
-						? new ArrayList<>()
-						: ObjectUtils.defaultIfNull(
-								fieldMapping.getJiraStatusForInProgressKPI227(), new ArrayList<>());
+				fieldMapping == null ? null : fieldMapping.getJiraStatusForInProgressKPI227();
 		return trimmedSet(
 				CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_IN_PROGRESS_STATUSES);
 	}
