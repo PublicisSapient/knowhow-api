@@ -727,9 +727,6 @@ public class KPIExcelData {
 	private String rootCauseCategory;
 
 	// ---- Acceptance Criteria Coverage KPI (kpi227) fields ----
-	@JsonProperty("In Progress Date")
-	private String inProgressDate;
-
 	@JsonProperty("Acceptance Criteria Count")
 	private String acceptanceCriteriaCount;
 
