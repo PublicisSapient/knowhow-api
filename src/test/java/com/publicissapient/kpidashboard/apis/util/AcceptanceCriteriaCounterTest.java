@@ -125,6 +125,61 @@ class AcceptanceCriteriaCounterTest {
 	}
 
 	@Test
+	@DisplayName("Jira Server wiki lists count top level items only, nesting by marker depth")
+	void wikiListsCountTopLevelOnly() {
+		String numbered =
+				"""
+				h3. Acceptance Criteria
+				# The user can log in
+				## with email
+				## with SSO
+				# The user can log out
+				#* even when idle
+				""";
+		String bulleted =
+				"""
+				* Report opens
+				** from the menu
+				* Report exports
+				""";
+
+		Result numberedResult = AcceptanceCriteriaCounter.count(numbered, Format.AUTO);
+		assertEquals(2, numberedResult.count());
+		assertEquals(Format.LIST, numberedResult.format());
+		assertEquals(2, AcceptanceCriteriaCounter.count(bulleted, Format.LIST).count());
+	}
+
+	@Test
+	@DisplayName("wiki bold text is not mistaken for a nested list item")
+	void wikiBoldIsNotAList() {
+		String text = """
+				* *Login* works
+				* *Logout* works
+				""";
+
+		assertEquals(2, AcceptanceCriteriaCounter.count(text, Format.LIST).count());
+	}
+
+	@Test
+	@DisplayName("Jira Cloud lists as flattened by the processor: markers and 2-space nesting")
+	void flattenedCloudLists() {
+		String text =
+				"""
+				Acceptance Criteria
+				- parent
+					1. child one
+					2. child two
+				- sibling
+				[x] done task
+				[ ] open task
+				""";
+
+		Result result = AcceptanceCriteriaCounter.count(text, Format.AUTO);
+		assertEquals(4, result.count());
+		assertEquals(Format.LIST, result.format());
+	}
+
+	@Test
 	@DisplayName("plain prose falls back to one criterion per line")
 	void plainLines() {
 		String text =

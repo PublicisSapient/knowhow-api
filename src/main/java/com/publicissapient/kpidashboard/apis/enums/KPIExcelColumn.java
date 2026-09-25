@@ -1479,10 +1479,10 @@ public enum KPIExcelColumn {
 					"Issue Type",
 					"Issue Description",
 					"Status",
-					"In Progress Date",
-					"Acceptance Criteria Count",
+					"Dev Start Date",
 					"Acceptance Criteria Format",
-					"Coverage Band")),
+					"Coverage Band",
+					"Acceptance Criteria Count")),
 	;
 
 	// @formatter:on

@@ -97,18 +97,16 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>There is deliberately no target value.</b> The right number of acceptance criteria depends
  * on story size, so the trend is what matters, not the absolute number. To make that readable each
  * data point carries a drill-down with the full distribution across five bands — None (0), Thin
- * (1-2), Healthy (3-5), Detailed (6-7) and Over-specified (8+) — plus a hover showing the share of
+ * (1), Healthy (2-5), Detailed (6-7) and Over-specified (8+) — plus a hover showing the share of
  * stories that started work with no acceptance criteria at all. A team consistently shipping 0–1
  * criteria per story is carrying quality risk; a team at 8+ is over-specifying.
  *
- * <p><b>Known limitation:</b> Jira's changelog does not retain the historical value of a custom
- * text field, and the processor does not snapshot it, so the criteria counted are the ones on the
- * story <em>today</em>. Criteria added after development started are therefore included. The
- * transition still decides <em>which</em> stories are counted and in <em>which</em> period, which
- * is what makes the trend meaningful.
+ * <p>The criteria are counted as they stood at that transition, rebuilt from the field's change log
+ * ({@code jira_issue_custom_history.acceptanceCriteriaUpdationLog}, captured by the Jira processor)
+ * — criteria added after development started do not count. A story whose criteria were never
+ * edited, or whose history predates that capture, falls back to the text on the story today.
  *
- * <p>Data source: {@code jira_issue_custom_history} + {@code jira_issue} — no new processor
- * required.
+ * <p>Data source: {@code jira_issue_custom_history} + {@code jira_issue}.
  */
 @Service
 @Slf4j
@@ -126,19 +124,13 @@ public class AcceptanceCriteriaCoverageServiceImpl
 	/** Coverage bands, in the order they are always reported. */
 	static final String BAND_NONE = "None (0)";
 
-	static final String BAND_THIN = "Thin (1-2)";
-	static final String BAND_HEALTHY = "Healthy (3-5)";
+	static final String BAND_THIN = "Thin (1)";
+	static final String BAND_HEALTHY = "Healthy (2-5)";
 	static final String BAND_DETAILED = "Detailed (6-7)";
 	static final String BAND_OVER_SPECIFIED = "Over-specified (8+)";
 
 	private static final List<String> BAND_ORDER =
 			List.of(BAND_NONE, BAND_THIN, BAND_HEALTHY, BAND_DETAILED, BAND_OVER_SPECIFIED);
-
-	/** Issue types treated as stories when a project has not configured any. */
-	private static final List<String> DEFAULT_STORY_TYPES = List.of("Story");
-
-	/** Statuses that mean "work started" when a project has not configured any. */
-	private static final List<String> DEFAULT_IN_PROGRESS_STATUSES = List.of("In Progress");
 
 	private static final int DEFAULT_WEEK_COUNT = 12;
 
@@ -207,18 +199,23 @@ public class AcceptanceCriteriaCoverageServiceImpl
 							FieldMapping fieldMapping =
 									configHelperService.getFieldMappingMap().get(basicProjectConfigId);
 
+							Set<String> storyTypes = resolveStoryTypes(fieldMapping);
 							Set<String> inProgressStatuses = resolveInProgressStatuses(fieldMapping);
+
+							// Nothing is assumed: without both mappings the project is left out of the
+							// result entirely and the KPI shows no data for it.
+							if (storyTypes.isEmpty() || inProgressStatuses.isEmpty()) {
+								log.debug(
+										"Acceptance Criteria Coverage (kpi227) -> project {} skipped: issue types or In Progress statuses not configured",
+										projectId);
+								return;
+							}
 
 							// One call per project: the status list and the story types are project
 							// specific, and folding several projects into a single query would AND
 							// their configurations together.
 							List<JiraIssueCustomHistory> histories =
-									fetchHistories(
-											projectId,
-											resolveStoryTypes(fieldMapping),
-											inProgressStatuses,
-											startDate,
-											endDate);
+									fetchHistories(projectId, storyTypes, inProgressStatuses, startDate, endDate);
 
 							Map<String, LocalDateTime> startedOn =
 									firstInProgressTransition(histories, lowerCaseSet(inProgressStatuses));
@@ -290,7 +287,12 @@ public class AcceptanceCriteriaCoverageServiceImpl
 					String projectName = node.getProjectFilter().getName();
 					String projectId = node.getProjectFilter().getBasicProjectConfigId().toString();
 
-					List<StoryRecord> records = projectWiseRecords.getOrDefault(projectId, new ArrayList<>());
+					List<StoryRecord> records = projectWiseRecords.get(projectId);
+					if (records == null) {
+						// mappings not configured: no data points, no excel rows
+						mapTmp.get(node.getId()).setValue(new ArrayList<DataCount>());
+						return;
+					}
 
 					mapTmp
 							.get(node.getId())
@@ -493,13 +495,61 @@ public class AcceptanceCriteriaCoverageServiceImpl
 					JiraIssue issue = issuesByNumber.get(storyId);
 					JiraIssueCustomHistory history = historyByStory.get(storyId);
 
+					String currentText = issue == null ? null : issue.getAcceptanceCriteria();
 					AcceptanceCriteriaCounter.Result result =
 							AcceptanceCriteriaCounter.count(
-									issue == null ? null : issue.getAcceptanceCriteria(), format);
+									acceptanceCriteriaAt(history, transition, currentText), format);
 
 					records.add(toStoryRecord(storyId, issue, history, transition, result));
 				});
 		return records;
+	}
+
+	/**
+	 * The acceptance criteria text as it stood at {@code moment} — the story's first transition into
+	 * In Progress — rebuilt from the field's change log:
+	 *
+	 * <ul>
+	 *   <li>edited at or before the moment: the text written by the last such edit;
+	 *   <li>edited only afterwards: the text the first later edit replaced;
+	 *   <li>never edited (or no change log captured yet): the text on the story today.
+	 * </ul>
+	 */
+	static String acceptanceCriteriaAt(
+			JiraIssueCustomHistory history, LocalDateTime moment, String currentText) {
+		List<JiraHistoryChangeLog> edits =
+				history == null ? null : history.getAcceptanceCriteriaUpdationLog();
+		if (CollectionUtils.isEmpty(edits) || moment == null) {
+			return currentText;
+		}
+
+		JiraHistoryChangeLog lastBefore = null;
+		LocalDateTime lastBeforeAt = null;
+		JiraHistoryChangeLog firstAfter = null;
+		LocalDateTime firstAfterAt = null;
+		for (JiraHistoryChangeLog edit : edits) {
+			LocalDateTime editedAt = edit == null ? null : safeUpdatedOn(edit);
+			if (editedAt == null) {
+				continue;
+			}
+			if (!editedAt.isAfter(moment)) {
+				if (lastBeforeAt == null || editedAt.isAfter(lastBeforeAt)) {
+					lastBefore = edit;
+					lastBeforeAt = editedAt;
+				}
+			} else if (firstAfterAt == null || editedAt.isBefore(firstAfterAt)) {
+				firstAfter = edit;
+				firstAfterAt = editedAt;
+			}
+		}
+
+		if (lastBefore != null) {
+			return lastBefore.getChangedTo();
+		}
+		if (firstAfter != null) {
+			return firstAfter.getChangedFrom();
+		}
+		return currentText;
 	}
 
 	/**
@@ -577,7 +627,7 @@ public class AcceptanceCriteriaCoverageServiceImpl
 				status,
 				transition,
 				result.count(),
-				result.format().name(),
+				formatLabel(result.format()),
 				band(result.count()));
 	}
 
@@ -613,23 +663,15 @@ public class AcceptanceCriteriaCoverageServiceImpl
 
 					double average = stories == 0 ? 0d : round((double) totalCriteria / stories);
 
-					Map<String, Object> hoverValue = new LinkedHashMap<>();
-					hoverValue.put(HOVER_STORIES, stories);
-					hoverValue.put(HOVER_TOTAL_CRITERIA, totalCriteria);
-					hoverValue.put(HOVER_WITHOUT_CRITERIA, withoutCriteria);
-					hoverValue.put(
-							HOVER_WITHOUT_CRITERIA_PERCENT,
-							stories == 0 ? 0d : round((withoutCriteria * 100d) / stories));
-
 					DataCount dataCount = new DataCount();
 					dataCount.setSProjectName(projectName);
 					dataCount.setDate(period);
 					dataCount.setSSprintID(period);
 					dataCount.setSSprintName(period);
 					dataCount.setValue(average);
-					dataCount.setData(String.valueOf(average));
+					dataCount.setData(twoDecimals(average));
 					dataCount.setKpiGroup(CommonConstant.OVERALL);
-					dataCount.setHoverValue(hoverValue);
+					dataCount.setHoverValue(hoverValue(stories, totalCriteria, withoutCriteria));
 					dataCount.setDrillDown(buildBandDrillDown(periodRecords));
 					dataCountList.add(dataCount);
 				});
@@ -655,6 +697,55 @@ public class AcceptanceCriteriaCoverageServiceImpl
 		return bands.stream()
 				.map(band -> new CoverageBandValue(band, countByBand.getOrDefault(band, 0L)))
 				.collect(Collectors.toCollection(ArrayList::new));
+	}
+
+	/**
+	 * Recomputes every rolled-up data point as {@code total_acceptance_criteria /
+	 * stories_that_entered_in_progress}.
+	 *
+	 * <p>The generic roll-up averages the children's averages, so a project with 2 stories would
+	 * weigh as much as one with 40. The hover counts, however, are summed across children, so the
+	 * pooled totals are already on each aggregated data point — the value and the "without AC" share
+	 * are derived from them here.
+	 */
+	@Override
+	public List<DataCount> calculateAggregatedValue(
+			List<DataCount> aggregatedValueList, Node node, KPICode kpiCode) {
+		List<DataCount> aggregated = super.calculateAggregatedValue(aggregatedValueList, node, kpiCode);
+		CollectionUtils.emptyIfNull(aggregated)
+				.forEach(AcceptanceCriteriaCoverageServiceImpl::applyPooledAverage);
+		return aggregated;
+	}
+
+	static void applyPooledAverage(DataCount dataCount) {
+		Map<String, Object> hover = dataCount == null ? null : dataCount.getHoverValue();
+		if (MapUtils.isEmpty(hover) || !hover.containsKey(HOVER_STORIES)) {
+			return;
+		}
+		long stories = asLong(hover.get(HOVER_STORIES));
+		long totalCriteria = asLong(hover.get(HOVER_TOTAL_CRITERIA));
+		long withoutCriteria = asLong(hover.get(HOVER_WITHOUT_CRITERIA));
+		double average = stories == 0 ? 0d : round((double) totalCriteria / stories);
+
+		dataCount.setValue(average);
+		dataCount.setData(twoDecimals(average));
+		dataCount.setHoverValue(hoverValue(stories, totalCriteria, withoutCriteria));
+	}
+
+	private static Map<String, Object> hoverValue(
+			long stories, long totalCriteria, long withoutCriteria) {
+		Map<String, Object> hoverValue = new LinkedHashMap<>();
+		hoverValue.put(HOVER_STORIES, stories);
+		hoverValue.put(HOVER_TOTAL_CRITERIA, totalCriteria);
+		hoverValue.put(HOVER_WITHOUT_CRITERIA, withoutCriteria);
+		hoverValue.put(
+				HOVER_WITHOUT_CRITERIA_PERCENT,
+				twoDecimals(stories == 0 ? 0d : (withoutCriteria * 100d) / stories));
+		return hoverValue;
+	}
+
+	private static long asLong(Object value) {
+		return value instanceof Number number ? number.longValue() : 0L;
 	}
 
 	/** Merges the per-project band distributions when several projects roll up into one node. */
@@ -687,14 +778,14 @@ public class AcceptanceCriteriaCoverageServiceImpl
 
 	/**
 	 * Places a story in a coverage band. There is no universal target, but the extremes are
-	 * informative: nothing at all or a single criterion is a quality risk, eight or more usually
-	 * means the story should have been split.
+	 * informative: nothing at all (None) or a single criterion (Thin) is the 0-1 quality risk the
+	 * definition calls out, eight or more usually means the story should have been split.
 	 */
 	static String band(int criteriaCount) {
 		if (criteriaCount <= 0) {
 			return BAND_NONE;
 		}
-		if (criteriaCount <= 2) {
+		if (criteriaCount == 1) {
 			return BAND_THIN;
 		}
 		if (criteriaCount <= 5) {
@@ -707,30 +798,22 @@ public class AcceptanceCriteriaCoverageServiceImpl
 	}
 
 	/**
-	 * Issue types treated as stories, read only from this KPI's own mapping.
-	 *
-	 * <p>Projects that existed before this release are given a starting value by {@code
-	 * AcceptanceCriteriaCoverageBackfillChangeUnit}, which copies the issue types they already use
-	 * for the other story based KPIs. That copy happens once, at migration, so the value is visible
-	 * and editable in the project configuration. Resolving it at read time instead would make this
-	 * KPI silently depend on another KPI's configuration while its own field still displayed as
-	 * blank.
+	 * Issue types treated as stories, exactly as configured in this KPI's own mapping. Nothing is
+	 * assumed and no other KPI's mapping is consulted: an unconfigured (or blank-only) mapping gives
+	 * an empty set, and the project then reports no data.
 	 */
 	static Set<String> resolveStoryTypes(FieldMapping fieldMapping) {
-		List<String> configured =
-				fieldMapping == null ? null : fieldMapping.getJiraStoryIdentificationKPI227();
-		return trimmedSet(CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_STORY_TYPES);
+		return trimmedSet(
+				fieldMapping == null ? null : fieldMapping.getJiraStoryIdentificationKPI227());
 	}
 
 	/**
-	 * Statuses that mean development started, read only from this KPI's own mapping. See {@link
-	 * #resolveStoryTypes(FieldMapping)} for why nothing else is consulted.
+	 * Statuses that mean development started, exactly as configured. See {@link
+	 * #resolveStoryTypes(FieldMapping)}.
 	 */
 	static Set<String> resolveInProgressStatuses(FieldMapping fieldMapping) {
-		List<String> configured =
-				fieldMapping == null ? null : fieldMapping.getJiraStatusForInProgressKPI227();
 		return trimmedSet(
-				CollectionUtils.isNotEmpty(configured) ? configured : DEFAULT_IN_PROGRESS_STATUSES);
+				fieldMapping == null ? null : fieldMapping.getJiraStatusForInProgressKPI227());
 	}
 
 	private static Set<String> trimmedSet(List<String> values) {
@@ -800,6 +883,25 @@ public class AcceptanceCriteriaCoverageServiceImpl
 		return Math.round(value * 100d) / 100d;
 	}
 
+	/** Readable form of the detected format, worded like the field mapping options. */
+	static String formatLabel(AcceptanceCriteriaCounter.Format format) {
+		if (format == null) {
+			return "-";
+		}
+		return switch (format) {
+			case GHERKIN -> "Gherkin scenarios";
+			case LIST -> "Bulleted / numbered list";
+			case LINE -> "One criterion per line";
+			case AUTO -> "Detect automatically";
+			case NONE -> "-";
+		};
+	}
+
+	/** Display form with exactly two decimals ({@code 2.50}, not {@code 2.5}). */
+	private static String twoDecimals(double value) {
+		return String.format(Locale.ROOT, "%.2f", round(value));
+	}
+
 	// ────────────────────────────────────────────────────────────────────────
 	// Excel
 	// ────────────────────────────────────────────────────────────────────────
@@ -826,14 +928,14 @@ public class AcceptanceCriteriaCoverageServiceImpl
 							row.setIssueType(story.issueType());
 							row.setIssueDesc(story.description());
 							row.setStatus(story.status());
-							row.setInProgressDate(
+							row.setDevStartDate(
 									DateUtil.dateTimeConverter(
 											story.startedOn().toLocalDate().toString(),
 											DateUtil.DATE_FORMAT,
 											DateUtil.DISPLAY_DATE_FORMAT));
-							row.setAcceptanceCriteriaCount(String.valueOf(story.criteriaCount()));
 							row.setAcceptanceCriteriaFormat(story.format());
 							row.setAcceptanceCriteriaBand(story.band());
+							row.setAcceptanceCriteriaCount(String.valueOf(story.criteriaCount()));
 							excelData.add(row);
 						});
 	}

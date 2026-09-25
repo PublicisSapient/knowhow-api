@@ -36,6 +36,7 @@ import com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.intake
 import com.publicissapient.kpidashboard.apis.jira.scrum.service.slingshot.intake.AcceptanceCriteriaCoverageServiceImpl.StoryRecord;
 import com.publicissapient.kpidashboard.apis.util.AcceptanceCriteriaCounter;
 import com.publicissapient.kpidashboard.common.constant.CommonConstant;
+import com.publicissapient.kpidashboard.common.model.application.DataCount;
 import com.publicissapient.kpidashboard.common.model.application.FieldMapping;
 import com.publicissapient.kpidashboard.common.model.jira.JiraHistoryChangeLog;
 import com.publicissapient.kpidashboard.common.model.jira.JiraIssueCustomHistory;
@@ -64,7 +65,7 @@ class AcceptanceCriteriaCoverageServiceImplTest {
 				AcceptanceCriteriaCoverageServiceImpl.BAND_THIN,
 				AcceptanceCriteriaCoverageServiceImpl.band(1));
 		assertEquals(
-				AcceptanceCriteriaCoverageServiceImpl.BAND_THIN,
+				AcceptanceCriteriaCoverageServiceImpl.BAND_HEALTHY,
 				AcceptanceCriteriaCoverageServiceImpl.band(2));
 		assertEquals(
 				AcceptanceCriteriaCoverageServiceImpl.BAND_HEALTHY,
@@ -140,41 +141,34 @@ class AcceptanceCriteriaCoverageServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("an unset mapping falls back to the documented default, not to another KPI")
-	void unsetMappingUsesDefaults() {
-		// The migration seeds these fields once, so the value stays visible and
-		// editable in the
-		// project configuration. Nothing is resolved from a neighbouring KPI at read
-		// time.
+	@DisplayName("an unset mapping assumes nothing - no default, no other KPI's value")
+	void unsetMappingAssumesNothing() {
 		FieldMapping borrowsNothing = new FieldMapping();
 		borrowsNothing.setJiraStatusForInProgressKPI148(List.of("In Development"));
 		borrowsNothing.setJiraStoryIdentificationKPI129(List.of("Enabler"));
 
-		assertEquals(
-				Set.of("In Progress"),
-				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(borrowsNothing));
-		assertEquals(
-				Set.of("Story"), AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(borrowsNothing));
+		assertTrue(
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(borrowsNothing).isEmpty());
+		assertTrue(AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(borrowsNothing).isEmpty());
 	}
 
 	@Test
-	@DisplayName("an empty list is treated as unset rather than as an answer")
-	void emptyListIsUnset() {
+	@DisplayName("empty and blank-only lists are treated as not configured")
+	void emptyOrBlankListIsUnset() {
 		FieldMapping fieldMapping = new FieldMapping();
 		fieldMapping.setJiraStatusForInProgressKPI227(new ArrayList<>());
+		fieldMapping.setJiraStoryIdentificationKPI227(List.of(" ", ""));
 
-		assertEquals(
-				Set.of("In Progress"),
-				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(fieldMapping));
+		assertTrue(
+				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(fieldMapping).isEmpty());
+		assertTrue(AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(fieldMapping).isEmpty());
 	}
 
 	@Test
 	@DisplayName("a missing field mapping does not blow up")
 	void nullFieldMappingIsSafe() {
-		assertEquals(
-				Set.of("In Progress"),
-				AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(null));
-		assertEquals(Set.of("Story"), AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(null));
+		assertTrue(AcceptanceCriteriaCoverageServiceImpl.resolveInProgressStatuses(null).isEmpty());
+		assertTrue(AcceptanceCriteriaCoverageServiceImpl.resolveStoryTypes(null).isEmpty());
 	}
 
 	@Test
@@ -254,6 +248,70 @@ class AcceptanceCriteriaCoverageServiceImplTest {
 						List.of(history), Set.of("in progress"));
 
 		assertEquals(DateUtil.localDateTimeToUTC(realStart), startedOn.get("STORY-7"));
+	}
+
+	@Test
+	@DisplayName("a rolled-up point is total criteria / total stories, not an average of averages")
+	void pooledAverageOnRollUp() {
+		// Project A: 2 stories x 1 AC (avg 1.0); project B: 40 stories x 5 AC (avg
+		// 5.0), one without
+		// AC. The generic roll-up would report 3.0; the hover counts arrive already
+		// summed.
+		Map<String, Object> summedHover = new java.util.HashMap<>();
+		summedHover.put("Stories Entered In Progress", 42L);
+		summedHover.put("Total Acceptance Criteria", 202L);
+		summedHover.put("Stories Without Acceptance Criteria", 1L);
+		summedHover.put("Stories Without AC %", "0.00");
+
+		DataCount rolledUp = new DataCount();
+		rolledUp.setValue(3.0);
+		rolledUp.setData("3.0");
+		rolledUp.setHoverValue(summedHover);
+
+		AcceptanceCriteriaCoverageServiceImpl.applyPooledAverage(rolledUp);
+
+		assertEquals(4.81, rolledUp.getValue());
+		assertEquals("4.81", rolledUp.getData());
+		assertEquals("2.38", rolledUp.getHoverValue().get("Stories Without AC %"));
+		assertEquals(
+				List.of(
+						"Stories Entered In Progress",
+						"Total Acceptance Criteria",
+						"Stories Without Acceptance Criteria",
+						"Stories Without AC %"),
+				new ArrayList<>(rolledUp.getHoverValue().keySet()));
+	}
+
+	@Test
+	@DisplayName("periods with no stories roll up to 0.00 without dividing by zero")
+	void pooledAverageWithNoStories() {
+		Map<String, Object> hover = new java.util.HashMap<>();
+		hover.put("Stories Entered In Progress", 0L);
+		DataCount rolledUp = new DataCount();
+		rolledUp.setHoverValue(hover);
+
+		AcceptanceCriteriaCoverageServiceImpl.applyPooledAverage(rolledUp);
+
+		assertEquals(0.0, rolledUp.getValue());
+		assertEquals("0.00", rolledUp.getData());
+	}
+
+	@Test
+	@DisplayName("the detected format is shown in the wording of the field mapping options")
+	void formatLabels() {
+		assertEquals(
+				"Gherkin scenarios",
+				AcceptanceCriteriaCoverageServiceImpl.formatLabel(
+						AcceptanceCriteriaCounter.Format.GHERKIN));
+		assertEquals(
+				"Bulleted / numbered list",
+				AcceptanceCriteriaCoverageServiceImpl.formatLabel(AcceptanceCriteriaCounter.Format.LIST));
+		assertEquals(
+				"One criterion per line",
+				AcceptanceCriteriaCoverageServiceImpl.formatLabel(AcceptanceCriteriaCounter.Format.LINE));
+		assertEquals(
+				"-",
+				AcceptanceCriteriaCoverageServiceImpl.formatLabel(AcceptanceCriteriaCounter.Format.NONE));
 	}
 
 	@Test
@@ -340,6 +398,76 @@ class AcceptanceCriteriaCoverageServiceImplTest {
 				AcceptanceCriteriaCoverageServiceImpl.periodLabel(
 								CommonConstant.MONTH, LocalDateTime.of(2026, 4, 4, 10, 0))
 						.equals("2026-3"));
+	}
+
+	// ── acceptance criteria as they stood at the In Progress moment ─────────
+
+	private static final LocalDateTime DAY_1 = LocalDateTime.of(2026, 3, 1, 9, 0);
+	private static final LocalDateTime DAY_2 = LocalDateTime.of(2026, 3, 2, 9, 0);
+	private static final LocalDateTime DAY_3 = LocalDateTime.of(2026, 3, 3, 9, 0);
+	private static final LocalDateTime DAY_4 = LocalDateTime.of(2026, 3, 4, 9, 0);
+
+	@Test
+	@DisplayName("criteria edited before work started are read as the last edit left them")
+	void criteriaAtMomentUsesLastEditBefore() {
+		JiraIssueCustomHistory history =
+				acHistory(
+						acEdit("", "- a", DAY_1),
+						acEdit("- a", "- a\n- b", DAY_2),
+						acEdit("- a\n- b", "- a\n- b\n- c", DAY_4));
+
+		assertEquals(
+				"- a\n- b",
+				AcceptanceCriteriaCoverageServiceImpl.acceptanceCriteriaAt(
+						history, DateUtil.localDateTimeToUTC(DAY_3), "- a\n- b\n- c"));
+	}
+
+	@Test
+	@DisplayName("criteria only edited after work started are read as they were before that edit")
+	void criteriaAtMomentUsesValueBeforeFirstLaterEdit() {
+		JiraIssueCustomHistory history =
+				acHistory(acEdit("- a", "- a\n- b", DAY_3), acEdit("- a\n- b", "- a\n- b\n- c", DAY_4));
+
+		assertEquals(
+				"- a",
+				AcceptanceCriteriaCoverageServiceImpl.acceptanceCriteriaAt(
+						history, DateUtil.localDateTimeToUTC(DAY_2), "- a\n- b\n- c"));
+	}
+
+	@Test
+	@DisplayName("criteria first written after work started count as none at that moment")
+	void criteriaAddedAfterStartCountAsNone() {
+		JiraIssueCustomHistory history = acHistory(acEdit("", "- a\n- b", DAY_3));
+
+		assertEquals(
+				"",
+				AcceptanceCriteriaCoverageServiceImpl.acceptanceCriteriaAt(
+						history, DateUtil.localDateTimeToUTC(DAY_2), "- a\n- b"));
+	}
+
+	@Test
+	@DisplayName("never edited, or no change log captured, falls back to the current text")
+	void criteriaAtMomentFallsBackToCurrent() {
+		assertEquals(
+				"- a",
+				AcceptanceCriteriaCoverageServiceImpl.acceptanceCriteriaAt(
+						acHistory(), DateUtil.localDateTimeToUTC(DAY_2), "- a"));
+		assertEquals(
+				"- a",
+				AcceptanceCriteriaCoverageServiceImpl.acceptanceCriteriaAt(
+						null, DateUtil.localDateTimeToUTC(DAY_2), "- a"));
+	}
+
+	private static JiraIssueCustomHistory acHistory(JiraHistoryChangeLog... edits) {
+		JiraIssueCustomHistory history = new JiraIssueCustomHistory();
+		history.setAcceptanceCriteriaUpdationLog(new ArrayList<>(List.of(edits)));
+		return history;
+	}
+
+	private static JiraHistoryChangeLog acEdit(String from, String to, LocalDateTime updatedOn) {
+		JiraHistoryChangeLog edit = log(to, updatedOn);
+		edit.setChangedFrom(from);
+		return edit;
 	}
 
 	// ── helpers ─────────────────────────────────────────────────────────────

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,9 +39,10 @@ import org.apache.commons.lang3.StringUtils;
  *       continuation steps are deliberately not counted, and the {@code Examples:} data table of a
  *       Scenario Outline is not mistaken for a scenario.
  *   <li><b>List</b> — bullets ({@code -}, {@code *}, {@code •}, …), checkboxes ({@code - [ ]}),
- *       numbered items ({@code 1.}, {@code 1)}, {@code (1)}) and {@code AC1:} style prefixes. Only
- *       items at the shallowest indentation level count, so nested sub-bullets elaborating a
- *       criterion do not inflate the number.
+ *       numbered items ({@code 1.}, {@code 1)}, {@code (1)}), Jira wiki lists ({@code * item},
+ *       {@code # item}, nested {@code **} / {@code ##}) and {@code AC1:} style prefixes. Only items
+ *       at the shallowest level count — by indentation, or by marker depth for wiki lists — so
+ *       nested sub-bullets elaborating a criterion do not inflate the number.
  *   <li><b>Line</b> — the fallback: every remaining non-empty line is one criterion.
  * </ul>
  *
@@ -98,6 +100,15 @@ public final class AcceptanceCriteriaCounter {
 
 	private static final Pattern NUMBERED =
 			Pattern.compile("^\\(?\\d+\\s*[.)\\]:\\-]\\s+\\S|^\\(?[a-zA-Z]\\s*[.)]\\s+\\S");
+
+	/**
+	 * Jira Server / Data Center wiki list item: {@code * item}, {@code # item}, and nested {@code
+	 * **}, {@code ##}, {@code *#} … — the length of the marker run is the nesting depth.
+	 */
+	private static final Pattern WIKI_LIST = Pattern.compile("^([*#]+)\\s+\\S");
+
+	/** Indentation, in spaces, that one extra level of wiki list nesting stands for. */
+	private static final int WIKI_LEVEL_INDENT = 4;
 
 	private static final Pattern AC_PREFIX =
 			Pattern.compile(
@@ -217,6 +228,7 @@ public final class AcceptanceCriteriaCounter {
 	private static boolean isListItem(String text) {
 		return CHECKBOX.matcher(text).find()
 				|| BULLET.matcher(text).find()
+				|| WIKI_LIST.matcher(text).find()
 				|| NUMBERED.matcher(text).find()
 				|| AC_PREFIX.matcher(text).find();
 	}
@@ -232,7 +244,7 @@ public final class AcceptanceCriteriaCounter {
 			if (text.isEmpty() || isNoise(text)) {
 				continue;
 			}
-			lines.add(new Line(text, indentOf(raw)));
+			lines.add(new Line(text, indentOf(raw) + wikiNesting(text)));
 		}
 		return lines;
 	}
@@ -243,6 +255,15 @@ public final class AcceptanceCriteriaCounter {
 		}
 		String stripped = HEADING_DECORATION.matcher(text).replaceAll("").trim();
 		return stripped.isEmpty() || HEADINGS.contains(stripped.toLowerCase(Locale.ROOT));
+	}
+
+	/**
+	 * Wiki markup expresses nesting by repeating the marker ({@code **}, {@code ##}) rather than by
+	 * indenting, so each extra marker is treated as one level of indentation.
+	 */
+	private static int wikiNesting(String text) {
+		Matcher matcher = WIKI_LIST.matcher(text);
+		return matcher.find() ? (matcher.group(1).length() - 1) * WIKI_LEVEL_INDENT : 0;
 	}
 
 	/** Indentation width of the raw line, counting a tab as four spaces. */
