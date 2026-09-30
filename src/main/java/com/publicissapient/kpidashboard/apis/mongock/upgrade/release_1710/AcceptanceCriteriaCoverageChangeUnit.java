@@ -79,19 +79,9 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 	private static final String THRESHOLD_FIELD = "thresholdValueKPI227";
 
 	private static final String KPI_DEFINITION =
-			"Average number of acceptance criteria attached to a story at the moment it enters In Progress: "
-					+ "total_acceptance_criteria / stories_that_entered_in_progress. The sampling moment is the story's first "
-					+ "transition into one of the configured In Progress statuses, so every story is counted exactly once, in "
-					+ "the period development actually started. The criteria are read from the Jira custom field configured "
-					+ "under 'Custom field for Acceptance Criteria' and split into individual criteria, understanding Gherkin "
-					+ "scenarios, bullet / checkbox / numbered lists and plain one-per-line text. "
-					+ "There is deliberately no universal target - the right number depends on story size, so the trend is what "
-					+ "matters. Each data point carries the full distribution across five bands (None 0, Thin 1-2, Healthy 3-5, "
-					+ "Detailed 6-7, Over-specified 8+) and the share of stories that started work with no acceptance criteria at "
-					+ "all. A team consistently shipping 0-1 criteria per story is carrying quality risk; a team at 8+ is "
-					+ "over-specifying and the stories should probably be split. "
-					+ "Note: Jira does not retain the historical value of a text custom field, so the criteria counted are the "
-					+ "ones on the story today - the transition decides which stories are counted and in which period.";
+			"Average count of acceptance criteria attached to a story at the moment it enters In Progress. "
+					+ "A team consistently shipping with 0–1 ACs per story is a quality risk; "
+					+ "a team with 8+ ACs per story may be over-specifying.";
 
 	@Execution
 	public void execution(MongoTemplate mongoTemplate) {
@@ -106,13 +96,13 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 						.append(KPI_ID_FIELD, KPI_ID)
 						.append("kpiName", KPI_NAME)
 						.append("isDeleted", "False")
-						.append("defaultOrder", 7)
+						.append("defaultOrder", 4)
 						.append("kpiCategory", "Slingshot")
 						.append("kpiSubCategory", "Intake")
 						.append("kpiUnit", "Count")
 						.append("chartType", "line")
 						.append("xAxisLabel", "Weeks")
-						.append("yAxisLabel", "Acceptance Criteria per Story")
+						.append("yAxisLabel", "Count")
 						.append("showTrend", true)
 						.append("isPositiveTrend", true)
 						// No universal target - the healthy number depends on story size, so a maturity
@@ -135,7 +125,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 						.append("lowerThresholdBG", "red")
 						.append("forecastModel", "thetaMethod")
 						.append("kpiWidth", 50)
-						.append("kpiSubCategoryOrder", 7);
+						.append("kpiSubCategoryOrder", 4);
 
 		mongoTemplate
 				.getCollection(KPI_MASTER_COLLECTION)
@@ -157,10 +147,10 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 										column("Issue Type", 4),
 										column("Issue Description", 5),
 										column("Status", 6),
-										column("In Progress Date", 7),
-										column("Acceptance Criteria Count", 8),
-										column("Acceptance Criteria Format", 9),
-										column("Coverage Band", 10)));
+										column("Dev Start Date", 7),
+										column("Acceptance Criteria Format", 8),
+										column("Coverage Band", 9),
+										column("Acceptance Criteria Count", 10)));
 
 		mongoTemplate
 				.getCollection(KPI_COLUMN_CONFIGS_COLLECTION)
@@ -187,7 +177,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 						.append(FIELD_DISPLAY_ORDER, 1)
 						.append(SECTION_ORDER, 1)
 						.append(SECTION, "Issue Types Mapping")
-						.append(MANDATORY, false)
+						.append(MANDATORY, true)
 						.append(
 								TOOLTIP,
 								new Document()
@@ -196,9 +186,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 												"All issue types that should carry acceptance criteria. "
 														+ "Not every project tracks work as 'Story' - if the board delivers work as Task, "
 														+ "QA Task, Enabler and so on, list those instead, otherwise this KPI reports nothing. "
-														+ "Existing projects were given a starting value copied from their other story based "
-														+ "KPIs; change it freely, nothing will overwrite it. "
-														+ "When left blank, 'Story' is used. <hr>")));
+														+ "Required - when left blank, this KPI shows no data. <hr>")));
 
 		upsertFieldMapping(
 				mongoTemplate,
@@ -210,7 +198,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 						.append(FIELD_DISPLAY_ORDER, 10)
 						.append(SECTION_ORDER, 4)
 						.append(SECTION, "WorkFlow Status Mapping")
-						.append(MANDATORY, false)
+						.append(MANDATORY, true)
 						.append(
 								TOOLTIP,
 								new Document()
@@ -219,9 +207,7 @@ public class AcceptanceCriteriaCoverageChangeUnit {
 												"Workflow statuses that mean development has started (e.g., In Progress, In Development). "
 														+ "The <b>first</b> transition into any of these is the moment the acceptance criteria are counted, "
 														+ "so a story that bounces in and out of In Progress is still counted only once. "
-														+ "Existing projects were given a starting value copied from their other in progress "
-														+ "KPIs; change it freely, nothing will overwrite it. "
-														+ "When left blank, 'In Progress' is used. <hr>")));
+														+ "Required - when left blank, this KPI shows no data. <hr>")));
 
 		upsertFieldMapping(
 				mongoTemplate,

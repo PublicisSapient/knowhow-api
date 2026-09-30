@@ -4611,25 +4611,25 @@
         "isDefault" : true
       },
       {
-        "columnName" : "In Progress Date",
+        "columnName" : "Dev Start Date",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Acceptance Criteria Count",
+        "columnName" : "Acceptance Criteria Format",
         "order" : 8,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Acceptance Criteria Format",
+        "columnName" : "Coverage Band",
         "order" : 9,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Coverage Band",
+        "columnName" : "Acceptance Criteria Count",
         "order" : 10,
         "isShown" : true,
         "isDefault" : true
