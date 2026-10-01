@@ -520,42 +520,32 @@ public class DorAcceptanceRateServiceImpl
 			LocalDateTime from,
 			LocalDateTime to,
 			DorConfig config) {
-		int substantive = 0;
-		List<JiraHistoryChangeLog> entries = changeLog == null ? new ArrayList<>() : changeLog;
-		for (JiraHistoryChangeLog entry : entries) {
-			if (entry.getUpdatedOn() == null) {
-				continue;
-			}
-			// getUpdatedOn() already normalises to UTC - converting again would shift twice
-			LocalDateTime updatedOn = entry.getUpdatedOn();
-			if (updatedOn.isBefore(from) || updatedOn.isAfter(to)) {
-				continue;
-			}
-			if (DorRevisionAnalyzer.isSubstantive(
-					entry.getChangedFrom(), entry.getChangedTo(), config.substantiveChangePercent())) {
-				substantive++;
-			}
-		}
-		return substantive;
+		List<JiraHistoryChangeLog> entries = changeLog == null ? List.of() : changeLog;
+		return (int)
+				entries.stream()
+						.filter(entry -> entry.getUpdatedOn() != null)
+						// getUpdatedOn() already normalises to UTC - converting again would shift twice
+						.filter(
+								entry -> !entry.getUpdatedOn().isBefore(from) && !entry.getUpdatedOn().isAfter(to))
+						.filter(
+								entry ->
+										DorRevisionAnalyzer.isSubstantive(
+												entry.getChangedFrom(),
+												entry.getChangedTo(),
+												config.substantiveChangePercent()))
+						.count();
 	}
 
 	private LocalDateTime firstTransitionInto(
 			List<JiraHistoryChangeLog> statusLog, Set<String> statuses, LocalDateTime notBefore) {
-		for (JiraHistoryChangeLog entry : statusLog) {
-			if (entry.getChangedTo() == null || entry.getUpdatedOn() == null) {
-				continue;
-			}
-			if (!statuses.contains(entry.getChangedTo().toLowerCase(Locale.ROOT))) {
-				continue;
-			}
-			// getUpdatedOn() already normalises to UTC - converting again would shift twice
-			LocalDateTime updatedOn = entry.getUpdatedOn();
-			if (notBefore != null && updatedOn.isBefore(notBefore)) {
-				continue;
-			}
-			return updatedOn;
-		}
-		return null;
+		return statusLog.stream()
+				.filter(entry -> entry.getChangedTo() != null && entry.getUpdatedOn() != null)
+				.filter(entry -> statuses.contains(entry.getChangedTo().toLowerCase(Locale.ROOT)))
+				// getUpdatedOn() already normalises to UTC - converting again would shift twice
+				.map(JiraHistoryChangeLog::getUpdatedOn)
+				.filter(updatedOn -> notBefore == null || !updatedOn.isBefore(notBefore))
+				.findFirst()
+				.orElse(null);
 	}
 
 	private String currentStatus(List<JiraHistoryChangeLog> statusLog) {
