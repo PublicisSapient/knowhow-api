@@ -736,6 +736,19 @@ public class KPIExcelData {
 	@JsonProperty("Coverage Band")
 	private String acceptanceCriteriaBand;
 
+	// ---- DOR Acceptance Rate KPI (kpi228) fields ----
+	@JsonProperty("Description Revisions")
+	private String descriptionRevisions;
+
+	@JsonProperty("Acceptance Criteria Revisions")
+	private String acceptanceCriteriaRevisions;
+
+	@JsonProperty("Substantive Revisions")
+	private String substantiveRevisions;
+
+	@JsonProperty("DOR Outcome")
+	private String dorOutcome;
+
 	@JsonIgnore private LinkedHashMap<String, String> groupMap;
 
 	@JsonIgnore

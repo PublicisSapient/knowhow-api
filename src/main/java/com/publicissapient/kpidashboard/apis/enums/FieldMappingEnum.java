@@ -980,6 +980,18 @@ public enum FieldMappingEnum {
 					"acceptanceCriteriaFormatKPI227",
 					"jiraAcceptanceCriteriaCustomField",
 					"thresholdValueKPI227")),
+	KPI228(
+			"DOR Acceptance Rate",
+			KPISource.JIRA.name(),
+			List.of(
+					"jiraStoryIdentificationKPI228",
+					"jiraStatusForReadyKPI228",
+					"jiraStatusForInProgressKPI228",
+					"dorRevisionFieldsKPI228",
+					"dorSubstantiveChangePercentKPI228",
+					"dorMajorRewriteRevisionCountKPI228",
+					"jiraAcceptanceCriteriaCustomField",
+					"thresholdValueKPI228")),
 	KPI311(
 			"Story Hygiene",
 			KPISource.JIRA.name(),
