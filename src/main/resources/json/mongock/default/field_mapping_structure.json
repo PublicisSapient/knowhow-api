@@ -5841,6 +5841,112 @@
     "nodeSpecific" : false
   },
   {
+    "fieldName" : "jiraStoryIdentificationKPI228",
+    "fieldLabel" : "Issue types to measure DOR acceptance for",
+    "fieldType" : "chips",
+    "fieldCategory" : "Issue_Type",
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 1,
+    "section" : "Issue Types Mapping",
+    "mandatory" : true,
+    "tooltip" : {
+      "definition" : "All issue types that go through Definition of Ready. Not every project tracks work as 'Story' - if the board delivers work as Task, Enabler and so on, list those instead, otherwise this KPI reports nothing. Required - when left blank, this KPI shows no data. <hr>"
+    }
+  },
+  {
+    "fieldName" : "jiraStatusForReadyKPI228",
+    "fieldLabel" : "Status(es) marking a story as Ready",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 11,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "mandatory" : true,
+    "tooltip" : {
+      "definition" : "Workflow statuses that mean the story has passed Definition of Ready (e.g., Ready, Ready for Dev, Sprint Ready). The <b>first</b> transition into any of these opens the revision window. A story that was never marked Ready is excluded from this KPI entirely. Required - when left blank, this KPI shows no data. <hr>"
+    }
+  },
+  {
+    "fieldName" : "jiraStatusForInProgressKPI228",
+    "fieldLabel" : "Status(es) marking development start",
+    "fieldType" : "chips",
+    "fieldCategory" : "workflow",
+    "fieldDisplayOrder" : 12,
+    "sectionOrder" : 4,
+    "section" : "WorkFlow Status Mapping",
+    "mandatory" : true,
+    "tooltip" : {
+      "definition" : "Workflow statuses that mean development has started (e.g., In Progress, In Development). The first transition into any of these <b>after</b> the Ready transition closes the revision window and places the story in the denominator for that period. Required - when left blank, this KPI shows no data. <hr>"
+    }
+  },
+  {
+    "fieldName" : "dorRevisionFieldsKPI228",
+    "fieldLabel" : "Fields to count revisions on",
+    "placeHolderText" : "Select the fields to inspect",
+    "fieldType" : "multiselect",
+    "fieldDisplayOrder" : 7,
+    "sectionOrder" : 1,
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "mandatory" : false,
+    "nodeSpecific" : false,
+    "options" : [
+      {
+        "label" : "Description",
+        "value" : "DESCRIPTION"
+      },
+      {
+        "label" : "Acceptance Criteria",
+        "value" : "ACCEPTANCE_CRITERIA"
+      }
+    ],
+    "tooltip" : {
+      "definition" : "Which issue fields are inspected for rewrites after a story is marked Ready. Leave blank to inspect both. Acceptance Criteria is read from the field configured as 'Custom field for Acceptance Criteria' - when that is not set, only Description revisions are available. <hr>"
+    }
+  },
+  {
+    "fieldName" : "dorSubstantiveChangePercentKPI228",
+    "fieldLabel" : "Minimum change % for a substantive revision",
+    "fieldType" : "number",
+    "fieldDisplayOrder" : 8,
+    "sectionOrder" : 1,
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "mandatory" : false,
+    "nodeSpecific" : false,
+    "tooltip" : {
+      "definition" : "How much of the text must change for an edit to count as a real rewrite rather than a typo fix or a formatting tweak. Both versions are stripped of markup and punctuation and compared word by word; the edit counts when the changed share of the larger version reaches this percentage. Defaults to 20. Filling in a previously empty field always counts. <hr>"
+    }
+  },
+  {
+    "fieldName" : "dorMajorRewriteRevisionCountKPI228",
+    "fieldLabel" : "Substantive revisions allowed before a major rewrite",
+    "fieldType" : "number",
+    "fieldDisplayOrder" : 9,
+    "sectionOrder" : 1,
+    "section" : "Custom Fields Mapping",
+    "processorCommon" : false,
+    "mandatory" : false,
+    "nodeSpecific" : false,
+    "tooltip" : {
+      "definition" : "A story fails Definition of Ready when it has strictly more substantive revisions than this number. Defaults to 2, so a third substantive revision marks the story as a major rewrite. <hr>"
+    }
+  },
+  {
+    "fieldName" : "thresholdValueKPI228",
+    "fieldLabel" : "Target KPI Value",
+    "fieldType" : "number",
+    "section" : "Project Level Threshold",
+    "processorCommon" : false,
+    "tooltip" : {
+      "definition" : "Target KPI value denotes the bare minimum a project should maintain for a KPI. User should just input the number and the unit like percentage, hours will automatically be considered. If the threshold is empty, then a common target KPI line will be shown"
+    },
+    "fieldDisplayOrder" : 1,
+    "sectionOrder" : 6,
+    "mandatory" : false,
+    "nodeSpecific" : false
+  },
+  {
     "fieldName" : "e2eTestBranchKPI218",
     "fieldLabel" : "E2E Test Branch",
     "fieldType" : "chips",
