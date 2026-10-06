@@ -76,7 +76,8 @@ public abstract class ToolsKPIService<R, S> {
 							KPICode.REFINEMENT_CYCLE_TIME_SLINGSHOT.name(),
 							KPICode.BACKLOG_AGING_SLINGSHOT.name(),
 							KPICode.MID_SPRINT_RE_REFINEMENT_RATE_SLINGSHOT.name(),
-							KPICode.REFINEMENT_TO_DEFECT_LINKAGE.name()));
+							KPICode.REFINEMENT_TO_DEFECT_LINKAGE.name(),
+							KPICode.ACCEPTANCE_CRITERIA_COVERAGE.name()));
 
 	private static final Set<String> NON_LIMIT_KPIS =
 			new HashSet<>(

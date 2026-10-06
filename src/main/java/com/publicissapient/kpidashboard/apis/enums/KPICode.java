@@ -355,6 +355,10 @@ public enum KPICode {
 	MID_SPRINT_RE_REFINEMENT_RATE_SLINGSHOT("kpi225", KPISource.JIRA.name()),
 	/** Refinement-to-Defect Linkage (Slingshot / Quality) */
 	REFINEMENT_TO_DEFECT_LINKAGE("kpi226", KPISource.JIRA.name()),
+	/** Acceptance Criteria Coverage (Slingshot / Intake) */
+	ACCEPTANCE_CRITERIA_COVERAGE("kpi227", KPISource.JIRA.name()),
+	/** DOR Acceptance Rate (Slingshot / Intake) */
+	DOR_ACCEPTANCE_RATE("kpi228", KPISource.JIRA.name()),
 	STORY_HYGIENE("kpi311", KPISource.JIRA.name()),
 	/** Epic Hygiene / Readiness */
 	EPIC_HYGIENE("kpi312", KPISource.JIRA.name());
