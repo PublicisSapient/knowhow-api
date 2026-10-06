@@ -5901,7 +5901,7 @@
       }
     ],
     "tooltip" : {
-      "definition" : "Which issue fields are inspected for rewrites after a story is marked Ready. Leave blank to inspect both. Acceptance Criteria is read from the field configured as 'Custom field for Acceptance Criteria' - when that is not set, only Description revisions are available. <hr>"
+      "definition" : "Which issue fields are inspected for rewrites after a story is marked Ready. Defaults to Description. Acceptance Criteria is read from the field configured as 'Custom field for Acceptance Criteria' - when that is not set, only Description revisions are available. <hr>"
     }
   },
   {

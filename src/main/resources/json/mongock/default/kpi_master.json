@@ -6241,7 +6241,7 @@
     "kpiId": "kpi228",
     "kpiName": "DOR Acceptance Rate",
     "isDeleted": "False",
-    "defaultOrder": 7,
+    "defaultOrder": 2,
     "kpiCategory": "Slingshot",
     "kpiSubCategory": "Intake",
     "kpiUnit": "%",
@@ -6265,7 +6265,7 @@
     "kanban": false,
     "groupId": 318,
     "kpiInfo": {
-      "definition": "Percentage of refined stories that pass through Definition of Ready without a major rewrite. A story counts once it has been marked Ready and has entered development; it fails when its Description and/or Acceptance Criteria were substantively revised more than the configured number of times inside the revision window. 80%+ is healthy. Below 60% means DOR is theatre - stories are being marked Ready prematurely.",
+      "definition": "% of refined stories that pass through DOR without a major rewrite once development starts.",
       "formula": [
         {
           "lhs": "DOR Acceptance Rate",
@@ -6286,7 +6286,7 @@
     "lowerThresholdBG": "red",
     "forecastModel": "thetaMethod",
     "kpiWidth": 50,
-    "kpiSubCategoryOrder": 7
+    "kpiSubCategoryOrder": 2
   },
   {
     "kpiId": "kpi311",

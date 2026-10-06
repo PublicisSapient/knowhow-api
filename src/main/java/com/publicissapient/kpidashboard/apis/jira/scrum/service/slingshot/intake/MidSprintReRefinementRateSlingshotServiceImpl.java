@@ -142,7 +142,9 @@ public class MidSprintReRefinementRateSlingshotServiceImpl
 		weeklyGroup.setFilter(FILTER_WEEKLY);
 		weeklyGroup.setValue(weeklyDataCounts);
 
-		kpiElement.setTrendValueList(List.of(sprintGroup, weeklyGroup));
+		// Weekly first: the UI dropdown defaults to the first group, in line with other
+		// KPIs
+		kpiElement.setTrendValueList(List.of(weeklyGroup, sprintGroup));
 
 		if (!aggregatedTrend.isEmpty()
 				&& aggregatedTrend.get(0).getMaturity() != null
