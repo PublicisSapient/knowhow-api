@@ -4653,62 +4653,68 @@
         "isDefault" : true
       },
       {
-        "columnName" : "Issue ID",
+        "columnName" : "Sprint Name",
         "order" : 3,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Type",
+        "columnName" : "Issue ID",
         "order" : 4,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Issue Description",
+        "columnName" : "Issue Type",
         "order" : 5,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Status",
+        "columnName" : "Issue Description",
         "order" : 6,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Ready Time",
+        "columnName" : "Status",
         "order" : 7,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Dev Start Date",
+        "columnName" : "Ready Time",
         "order" : 8,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Description Revisions",
+        "columnName" : "Dev Start Date",
         "order" : 9,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Acceptance Criteria Revisions",
+        "columnName" : "Description Revisions",
         "order" : 10,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "Substantive Revisions",
+        "columnName" : "Acceptance Criteria Revisions",
         "order" : 11,
         "isShown" : true,
         "isDefault" : true
       },
       {
-        "columnName" : "DOR Outcome",
+        "columnName" : "Substantive Revisions",
         "order" : 12,
+        "isShown" : true,
+        "isDefault" : true
+      },
+      {
+        "columnName" : "DOR Outcome",
+        "order" : 13,
         "isShown" : true,
         "isDefault" : true
       }
