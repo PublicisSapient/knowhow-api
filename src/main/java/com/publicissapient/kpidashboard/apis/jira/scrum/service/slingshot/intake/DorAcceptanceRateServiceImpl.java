@@ -51,6 +51,7 @@ import com.publicissapient.kpidashboard.apis.enums.KPICode;
 import com.publicissapient.kpidashboard.apis.enums.KPIExcelColumn;
 import com.publicissapient.kpidashboard.apis.enums.KPISource;
 import com.publicissapient.kpidashboard.apis.errors.ApplicationException;
+import com.publicissapient.kpidashboard.apis.forecast.ForecastingManager;
 import com.publicissapient.kpidashboard.apis.jira.service.JiraKPIService;
 import com.publicissapient.kpidashboard.apis.model.KPIExcelData;
 import com.publicissapient.kpidashboard.apis.model.KpiElement;
@@ -103,13 +104,15 @@ public class DorAcceptanceRateServiceImpl
 	private static final String OUTCOME_REWRITTEN = "Major Rewrite";
 	private static final int SPRINT_DISPLAY_LIMIT = 12;
 	private static final int DEFAULT_WEEK_COUNT = 12;
-	private static final int HISTORY_FETCH_WEEKS = 26;
 	private static final DateTimeFormatter WEEK_LABEL_FORMATTER =
 			DateTimeFormatter.ofPattern(DateUtil.DISPLAY_DATE_FORMAT, Locale.ENGLISH);
 
 	@Autowired private ConfigHelperService configHelperService;
 	@Autowired private JiraIssueCustomHistoryRepository jiraIssueCustomHistoryRepository;
 	@Autowired private SprintRepository sprintRepository;
+
+	@Autowired(required = false)
+	private ForecastingManager forecastingManager;
 
 	@Override
 	public String getQualifierType() {
@@ -151,7 +154,9 @@ public class DorAcceptanceRateServiceImpl
 		weeklyGroup.setFilter(FILTER_WEEKLY);
 		weeklyGroup.setValue(weeklyDataCounts);
 
-		kpiElement.setTrendValueList(List.of(sprintGroup, weeklyGroup));
+		// Weekly first: the UI dropdown defaults to the first group, in line with other
+		// KPIs
+		kpiElement.setTrendValueList(List.of(weeklyGroup, sprintGroup));
 
 		if (!aggregatedTrend.isEmpty()
 				&& aggregatedTrend.get(0).getMaturity() != null
@@ -198,14 +203,8 @@ public class DorAcceptanceRateServiceImpl
 		mapOfFiltersFH.put(
 				JiraFeature.BASIC_PROJECT_CONFIG_ID.getFieldValueInFeature(), distinctProjectIds);
 
-		// Widen the history fetch so sprint buckets older than the weekly window are
-		// covered
-		String historyStartDate =
-				DateUtil.getTodayTime().minusWeeks(HISTORY_FETCH_WEEKS).toLocalDate().toString();
-
 		List<JiraIssueCustomHistory> historyDataList =
-				jiraIssueCustomHistoryRepository.findIssuesByCreatedDateAndType(
-						mapOfFiltersFH, uniqueProjectMapFH, historyStartDate, endDate);
+				jiraIssueCustomHistoryRepository.findForDorAnalysis(mapOfFiltersFH, uniqueProjectMapFH);
 
 		Set<ObjectId> configIds =
 				leafNodeList.stream()
@@ -255,12 +254,9 @@ public class DorAcceptanceRateServiceImpl
 						? (int) durationFilter.getOrDefault(Constant.COUNT, DEFAULT_WEEK_COUNT)
 						: DEFAULT_WEEK_COUNT;
 
-		String startDate =
-				DateUtil.getTodayTime().minusWeeks(HISTORY_FETCH_WEEKS).toLocalDate().toString();
-		String endDate = DateUtil.getTodayDate().toString();
-
-		Map<String, Object> resultMap =
-				fetchKPIDataFromDb(projectLeafNodeList, startDate, endDate, null);
+		// History is not date-bounded here; the sprint and week buckets define the
+		// reporting window
+		Map<String, Object> resultMap = fetchKPIDataFromDb(projectLeafNodeList, null, null, null);
 
 		if (MapUtils.isEmpty(resultMap)) {
 			return;
@@ -312,6 +308,7 @@ public class DorAcceptanceRateServiceImpl
 					DataCount sprintWrapper = new DataCount();
 					sprintWrapper.setData(trendLineName);
 					sprintWrapper.setValue(projectSprintCounts);
+					addForecast(sprintWrapper, projectSprintCounts);
 					sprintDataCounts.add(sprintWrapper);
 
 					// --- Weekly granularity ---
@@ -323,6 +320,7 @@ public class DorAcceptanceRateServiceImpl
 					DataCount weeklyWrapper = new DataCount();
 					weeklyWrapper.setData(trendLineName);
 					weeklyWrapper.setValue(projectWeeklyCounts);
+					addForecast(weeklyWrapper, projectWeeklyCounts);
 					weeklyDataCounts.add(weeklyWrapper);
 
 					mapTmp.get(node.getId()).setValue(projectWeeklyCounts);
@@ -334,12 +332,20 @@ public class DorAcceptanceRateServiceImpl
 		kpiElement.setExcelColumns(KPIExcelColumn.DOR_ACCEPTANCE_RATE.getColumns());
 	}
 
+	/** Set on the project wrapper: the UI reads forecasts from each series, not from the group. */
+	private void addForecast(DataCount projectWrapper, List<DataCount> history) {
+		if (forecastingManager != null && CollectionUtils.isNotEmpty(history)) {
+			forecastingManager.addForecastsToDataCount(
+					projectWrapper, history, KPICode.DOR_ACCEPTANCE_RATE.getKpiId());
+		}
+	}
+
 	private DorConfig readConfig(FieldMapping fieldMapping) {
 		if (fieldMapping == null) {
 			return new DorConfig(
 					Set.of(),
 					Set.of(),
-					EnumSet.allOf(RevisionField.class),
+					EnumSet.of(RevisionField.DESCRIPTION),
 					DorRevisionAnalyzer.DEFAULT_SUBSTANTIVE_CHANGE_PERCENT,
 					DorRevisionAnalyzer.DEFAULT_MAJOR_REWRITE_REVISION_COUNT);
 		}
@@ -352,7 +358,7 @@ public class DorAcceptanceRateServiceImpl
 						.filter(java.util.Objects::nonNull)
 						.collect(Collectors.toCollection(() -> EnumSet.noneOf(RevisionField.class)));
 		if (revisionFields.isEmpty()) {
-			revisionFields = EnumSet.allOf(RevisionField.class);
+			revisionFields = EnumSet.of(RevisionField.DESCRIPTION);
 		}
 
 		Integer configuredAllowance = fieldMapping.getDorMajorRewriteRevisionCountKPI228();
@@ -462,17 +468,19 @@ public class DorAcceptanceRateServiceImpl
 			return; // marked Ready but development never started
 		}
 
-		TimeBucket bucket =
+		// Sprint windows of parallel PODs overlap, so a story counts in every window
+		// that contains
+		// its dev start. Week buckets never overlap, so there it is a single bucket.
+		List<TimeBucket> matchingBuckets =
 				buckets.stream()
 						.filter(b -> !devStartTime.isBefore(b.start()) && !devStartTime.isAfter(b.end()))
-						.findFirst()
-						.orElse(null);
-		if (bucket == null) {
+						.toList();
+		if (matchingBuckets.isEmpty()) {
 			return;
 		}
 
-		// Revisions are always counted in the strict Definition-of-Ready window:
-		// between the first
+		// Revisions are counted in the strict Definition-of-Ready window: between the
+		// first
 		// transition into a Ready status and the first transition into a dev-start
 		// status.
 		int descriptionRevisions =
@@ -489,26 +497,27 @@ public class DorAcceptanceRateServiceImpl
 		int substantiveRevisions = descriptionRevisions + acceptanceCriteriaRevisions;
 		boolean majorRewrite = substantiveRevisions > config.majorRewriteAllowance();
 
-		counts.get(bucket.label())[0]++;
-		if (majorRewrite) {
-			counts.get(bucket.label())[1]++;
-		}
+		DorRecord record =
+				new DorRecord(
+						history.getStoryID(),
+						history.getUrl(),
+						history.getStoryType(),
+						history.getDescription(),
+						currentStatus(statusLog),
+						DateUtil.tranformUTCLocalTimeToZFormat(readyTime),
+						DateUtil.tranformUTCLocalTimeToZFormat(devStartTime),
+						descriptionRevisions,
+						acceptanceCriteriaRevisions,
+						substantiveRevisions,
+						majorRewrite ? OUTCOME_REWRITTEN : OUTCOME_PASSED);
 
-		records
-				.get(bucket.label())
-				.add(
-						new DorRecord(
-								history.getStoryID(),
-								history.getUrl(),
-								history.getStoryType(),
-								history.getDescription(),
-								currentStatus(statusLog),
-								DateUtil.tranformUTCLocalTimeToZFormat(readyTime),
-								DateUtil.tranformUTCLocalTimeToZFormat(devStartTime),
-								descriptionRevisions,
-								acceptanceCriteriaRevisions,
-								substantiveRevisions,
-								majorRewrite ? OUTCOME_REWRITTEN : OUTCOME_PASSED));
+		for (TimeBucket bucket : matchingBuckets) {
+			counts.get(bucket.label())[0]++;
+			if (majorRewrite) {
+				counts.get(bucket.label())[1]++;
+			}
+			records.get(bucket.label()).add(record);
+		}
 	}
 
 	/**
