@@ -6204,6 +6204,91 @@
     "kpiSubCategoryOrder": 5
   },
   {
+    "kpiId": "kpi227",
+    "kpiName": "Acceptance Criteria Coverage",
+    "isDeleted": "False",
+    "defaultOrder": 4,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Intake",
+    "kpiUnit": "Count",
+    "chartType": "line",
+    "xAxisLabel": "Weeks",
+    "yAxisLabel": "Count",
+    "showTrend": true,
+    "isPositiveTrend": true,
+    "calculateMaturity": false,
+    "hideOverallFilter": true,
+    "kpiSource": "Jira",
+    "maxValue": 12,
+    "thresholdValue": 3,
+    "kanban": false,
+    "groupId": 317,
+    "kpiInfo": {
+      "definition": "Average count of acceptance criteria attached to a story at the moment it enters In Progress. A team consistently shipping with 0–1 ACs per story is a quality risk; a team with 8+ ACs per story may be over-specifying."
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "isTrendCalculative": false,
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "white",
+    "lowerThresholdBG": "red",
+    "forecastModel": "thetaMethod",
+    "kpiWidth": 50,
+    "kpiSubCategoryOrder": 4
+  },
+  {
+    "kpiId": "kpi228",
+    "kpiName": "DOR Acceptance Rate",
+    "isDeleted": "False",
+    "defaultOrder": 2,
+    "kpiCategory": "Slingshot",
+    "kpiSubCategory": "Intake",
+    "kpiUnit": "%",
+    "chartType": "line",
+    "xAxisLabel": "Sprints",
+    "yAxisLabel": "Percentage",
+    "showTrend": true,
+    "isPositiveTrend": true,
+    "calculateMaturity": true,
+    "maturityRange": [
+      "-60",
+      "60-70",
+      "70-80",
+      "80-90",
+      "90-"
+    ],
+    "hideOverallFilter": true,
+    "kpiSource": "Jira",
+    "maxValue": 100,
+    "thresholdValue": 80,
+    "kanban": false,
+    "groupId": 318,
+    "kpiInfo": {
+      "definition": "% of refined stories that pass through DOR without a major rewrite once development starts.",
+      "formula": [
+        {
+          "lhs": "DOR Acceptance Rate",
+          "operator": "division",
+          "operands": [
+            "No. of stories started with at most the allowed substantive revisions",
+            "Total no. of refined stories that started development"
+          ]
+        }
+      ]
+    },
+    "kpiFilter": null,
+    "aggregationCriteria": "average",
+    "isTrendCalculative": false,
+    "isAdditionalFilterSupport": false,
+    "combinedKpiSource": "Jira/Azure/Rally",
+    "upperThresholdBG": "white",
+    "lowerThresholdBG": "red",
+    "forecastModel": "thetaMethod",
+    "kpiWidth": 50,
+    "kpiSubCategoryOrder": 2
+  },
+  {
     "kpiId": "kpi311",
     "kpiName": "Story Hygiene",
     "isDeleted": "False",
