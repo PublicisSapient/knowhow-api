@@ -1488,6 +1488,7 @@ public enum KPIExcelColumn {
 			Arrays.asList(
 					"Days/Weeks",
 					"Project",
+					"Sprint Name",
 					"Issue ID",
 					"Issue Type",
 					"Issue Description",

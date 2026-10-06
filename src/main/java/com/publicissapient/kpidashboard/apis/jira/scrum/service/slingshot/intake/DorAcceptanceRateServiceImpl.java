@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -276,6 +277,10 @@ public class DorAcceptanceRateServiceImpl
 						.filter(sprint -> sprint.getBasicProjectConfigId() != null)
 						.collect(Collectors.groupingBy(sprint -> sprint.getBasicProjectConfigId().toString()));
 
+		// Excel lists the weekly rows first (the default view), then the sprint rows
+		List<KPIExcelData> weeklyExcelData = new ArrayList<>();
+		List<KPIExcelData> sprintExcelData = new ArrayList<>();
+
 		projectLeafNodeList.forEach(
 				node -> {
 					String trendLineName = node.getProjectFilter().getName();
@@ -325,9 +330,27 @@ public class DorAcceptanceRateServiceImpl
 
 					mapTmp.get(node.getId()).setValue(projectWeeklyCounts);
 
-					populateExcelData(requestTrackerId, excelData, weeklyResult.records(), trendLineName);
+					populateExcelData(
+							requestTrackerId,
+							weeklyExcelData,
+							weeklyResult.records(),
+							trendLineName,
+							label -> label,
+							label -> null);
+
+					Map<String, String> sprintDateRanges = new HashMap<>();
+					sprintBuckets.forEach(bucket -> sprintDateRanges.put(bucket.label(), dateRange(bucket)));
+					populateExcelData(
+							requestTrackerId,
+							sprintExcelData,
+							sprintResult.records(),
+							trendLineName,
+							label -> sprintDateRanges.getOrDefault(label, label),
+							label -> label);
 				});
 
+		excelData.addAll(weeklyExcelData);
+		excelData.addAll(sprintExcelData);
 		kpiElement.setExcelData(excelData);
 		kpiElement.setExcelColumns(KPIExcelColumn.DOR_ACCEPTANCE_RATE.getColumns());
 	}
@@ -600,11 +623,14 @@ public class DorAcceptanceRateServiceImpl
 		return dataCountList;
 	}
 
+	/** Weekly rows carry the week range and no sprint name; sprint rows carry both. */
 	private void populateExcelData(
 			String requestTrackerId,
 			List<KPIExcelData> excelData,
 			Map<String, List<DorRecord>> records,
-			String projectName) {
+			String projectName,
+			Function<String, String> daysWeeksOf,
+			Function<String, String> sprintNameOf) {
 		if (!requestTrackerId.toLowerCase().contains(KPISource.EXCEL.name().toLowerCase())) {
 			return;
 		}
@@ -614,7 +640,8 @@ public class DorAcceptanceRateServiceImpl
 								record -> {
 									KPIExcelData row = new KPIExcelData();
 									row.setProject(projectName);
-									row.setDaysWeeks(label);
+									row.setDaysWeeks(daysWeeksOf.apply(label));
+									row.setSprintName(sprintNameOf.apply(label));
 									row.setIssueID(
 											Map.of(record.storyId(), record.url() == null ? "" : record.url()));
 									row.setIssueType(record.issueType());
@@ -629,6 +656,12 @@ public class DorAcceptanceRateServiceImpl
 									row.setDorOutcome(record.outcome());
 									excelData.add(row);
 								}));
+	}
+
+	private String dateRange(TimeBucket bucket) {
+		return bucket.start().toLocalDate().format(WEEK_LABEL_FORMATTER)
+				+ " to "
+				+ bucket.end().toLocalDate().format(WEEK_LABEL_FORMATTER);
 	}
 
 	private LocalDateTime parseSprintDate(String raw) {
