@@ -236,9 +236,7 @@ public class ScmPrRevertRateServiceImpl
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
 		List<ScmMergeRequests> mergedRequests =
-				mrsInRange.stream()
-						.filter(mrs -> mrs.isClosed() && "merged".equalsIgnoreCase(mrs.getState()))
-						.toList();
+				mrsInRange.stream().filter(mrs -> "merged".equalsIgnoreCase(mrs.getState())).toList();
 
 		long totalMerged = mergedRequests.size();
 		long revertedCount = countRevertedPRs(mergedRequests);
