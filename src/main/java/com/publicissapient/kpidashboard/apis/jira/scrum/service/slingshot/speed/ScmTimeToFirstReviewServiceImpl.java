@@ -302,13 +302,25 @@ public class ScmTimeToFirstReviewServiceImpl
 	}
 
 	/**
+	 * A merge request counts as picked for review only when a positive timestamp is stored; the SCM
+	 * processor stores 0 when no reviewer action has happened yet.
+	 *
+	 * @param mergeRequest the merge request
+	 * @return true when a first review time is available
+	 */
+	private boolean isPickedForReview(ScmMergeRequests mergeRequest) {
+		Long pickedForReviewOn = mergeRequest.getPickedForReviewOn();
+		return pickedForReviewOn != null && pickedForReviewOn > 0;
+	}
+
+	/**
 	 * Calculates pickup time in hours for a single merge request.
 	 *
 	 * @param mergeRequest the merge request
 	 * @return pickup time in fractional hours (e.g. 0.5 = 30 minutes)
 	 */
 	private double calculatePickupTimeHours(ScmMergeRequests mergeRequest) {
-		if (mergeRequest.getPickedForReviewOn() == null) {
+		if (!isPickedForReview(mergeRequest)) {
 			return 0;
 		}
 		LocalDateTime pickedForReviewOn =
@@ -400,7 +412,7 @@ public class ScmTimeToFirstReviewServiceImpl
 		LocalDateTime createdDateTime =
 				DateUtil.convertMillisToLocalDateTime(mergeRequest.getCreatedDate());
 		LocalDateTime pickUpDateTime =
-				mergeRequest.getPickedForReviewOn() != null
+				isPickedForReview(mergeRequest)
 						? DateUtil.convertMillisToLocalDateTime(mergeRequest.getPickedForReviewOn())
 						: null;
 
