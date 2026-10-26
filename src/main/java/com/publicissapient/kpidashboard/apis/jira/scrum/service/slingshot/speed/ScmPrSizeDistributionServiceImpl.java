@@ -238,9 +238,7 @@ public class ScmPrSizeDistributionServiceImpl
 		String branchName = getBranchSubFilter(tool, projectName);
 
 		List<ScmMergeRequests> mergedRequests =
-				mrsInRange.stream()
-						.filter(mrs -> mrs.isClosed() && "merged".equalsIgnoreCase(mrs.getState()))
-						.toList();
+				mrsInRange.stream().filter(mrs -> "merged".equalsIgnoreCase(mrs.getState())).toList();
 
 		List<PullRequestsValue> overAllPRValues =
 				mergedRequests.stream().map(this::createPullRequestValue).collect(Collectors.toList());

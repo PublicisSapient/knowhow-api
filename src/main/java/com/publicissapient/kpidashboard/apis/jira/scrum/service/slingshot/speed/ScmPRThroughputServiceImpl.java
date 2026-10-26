@@ -232,9 +232,7 @@ public class ScmPRThroughputServiceImpl
 		String overallKpiGroup = branchName + "#" + Constant.AGGREGATED_VALUE;
 
 		List<ScmMergeRequests> mergeRequests =
-				mrsInRange.stream()
-						.filter(mrs -> mrs.isClosed() && "merged".equalsIgnoreCase(mrs.getState()))
-						.toList();
+				mrsInRange.stream().filter(mrs -> "merged".equalsIgnoreCase(mrs.getState())).toList();
 
 		long totalMergeRequests = mergeRequests.size();
 
