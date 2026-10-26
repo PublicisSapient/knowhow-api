@@ -231,7 +231,9 @@ public class TeamPerformanceSummaryServiceImpl implements TeamPerformanceSummary
 			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
 		List<Long> reviewTimeList =
 				mergeRequests.stream()
-						.filter(request -> request.getPickedForReviewOn() != null)
+						.filter(
+								request ->
+										request.getPickedForReviewOn() != null && request.getPickedForReviewOn() > 0)
 						.filter(
 								request ->
 										DateUtil.isWithinDateTimeRange(

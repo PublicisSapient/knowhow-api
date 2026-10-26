@@ -174,7 +174,8 @@ public class PickupTimeNonTrendKpiServiceImpl
 	private List<ScmMergeRequests> filterPickedRequestsByDateRange(
 			List<ScmMergeRequests> mergeRequests, CustomDateRange dateRange) {
 		return mergeRequests.stream()
-				.filter(request -> request.getPickedForReviewOn() != null)
+				.filter(
+						request -> request.getPickedForReviewOn() != null && request.getPickedForReviewOn() > 0)
 				.filter(
 						request ->
 								DateUtil.isWithinDateTimeRange(
@@ -270,7 +271,11 @@ public class PickupTimeNonTrendKpiServiceImpl
 															null))));
 
 							return userMergeRequests.stream()
-									.filter(mr -> mr.getCreatedDate() != null && mr.getPickedForReviewOn() != null)
+									.filter(
+											mr ->
+													mr.getCreatedDate() != null
+															&& mr.getPickedForReviewOn() != null
+															&& mr.getPickedForReviewOn() > 0)
 									.map(mr -> createValidationData(projectName, tool, developerName, mr))
 									.toList();
 						})

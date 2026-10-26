@@ -22,6 +22,6 @@ import lombok.Data;
 @Builder
 public class ScmBranchDTO {
 	private String branchName;
-	private long lastUpdatedTimestamp;
+	private Long lastUpdatedTimestamp;
 	private int order;
 }
