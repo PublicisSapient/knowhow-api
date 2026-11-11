@@ -118,14 +118,10 @@ public class DefaultAuthenticationServiceImpl implements AuthenticationService {
 			authentication.setApproved(true);
 		}
 		authentication = authenticationRepository.save(authentication);
-		UserInfo userInfo =
-				userInfoRepository.findByUsernameAndEmailAddress(
-						authentication.getUsername(), authentication.getEmail());
 
 		UsernamePasswordAuthenticationToken token =
 				new UsernamePasswordAuthenticationToken(
-						new UserInfoPrincipal(
-								userInfo.getUsername(), userInfo.getEmailAddress(), userInfo.getAuthType().name()),
+						new UserInfoPrincipal(username, email, AuthType.STANDARD.name()),
 						authentication.getPassword(),
 						new ArrayList<>());
 		token.setDetails(AuthType.STANDARD);
