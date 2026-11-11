@@ -90,6 +90,10 @@ public class AiKpiRecommendationProviderServiceImpl implements KpiRecommendation
 			ChatGenerationRequest chatGenerationRequest =
 					ChatGenerationRequest.builder().prompt(prompt).build();
 			ChatGenerationResponseDTO chatResponse = aiGatewayClient.generate(chatGenerationRequest);
+			if (chatResponse == null) {
+				throw new IllegalStateException(
+						"AI Gateway returned no response (the HTTP status is logged by AiGatewayClient)");
+			}
 			Object responseObject = parserStategy.parse(chatResponse.content());
 			projectWiseKpiRecommendations = buildProjectWiseRecommendations(kpiRequest, responseObject);
 		} catch (Exception ex) {
